@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminAuth } from '@/lib/admin-auth';
-import { EVENTS } from '@/lib/dummy-data';
-
-// Shared mutable reference — for a real app, use a database
-const store: any[] = [...EVENTS];
+import { dbConnect } from '@/lib/mongodb';
+import Event from '@/lib/models/Event';
+import { sanitizeObject } from '@/lib/sanitizer';
 
 export async function PUT(
   req: NextRequest,
@@ -12,12 +11,26 @@ export async function PUT(
   if (!(await verifyAdminAuth())) {
     return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
   }
-  const { id } = await params;
-  const body = await req.json();
-  const idx = store.findIndex((e) => e.id === id);
-  if (idx < 0) return NextResponse.json({ success: false, message: 'Not found' }, { status: 404 });
-  store[idx] = { ...store[idx], ...body };
-  return NextResponse.json({ success: true, data: store[idx] });
+
+  try {
+    const { id } = await params;
+    const rawBody = await req.json();
+    const body = sanitizeObject(rawBody);
+
+    const conn = await dbConnect();
+    if (!conn) {
+      return NextResponse.json({ success: false, message: 'Database connection failed' }, { status: 500 });
+    }
+
+    const updated = await Event.findByIdAndUpdate(id, { $set: body }, { new: true });
+    if (!updated) {
+      return NextResponse.json({ success: false, message: 'Event not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, data: updated });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, message: err?.message || 'Server error' }, { status: 500 });
+  }
 }
 
 export async function DELETE(
@@ -27,9 +40,21 @@ export async function DELETE(
   if (!(await verifyAdminAuth())) {
     return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
   }
-  const { id } = await params;
-  const idx = store.findIndex((e) => e.id === id);
-  if (idx >= 0) store.splice(idx, 1);
-  return NextResponse.json({ success: true });
-}
 
+  try {
+    const { id } = await params;
+    const conn = await dbConnect();
+    if (!conn) {
+      return NextResponse.json({ success: false, message: 'Database connection failed' }, { status: 500 });
+    }
+
+    const deleted = await Event.findByIdAndDelete(id);
+    if (!deleted) {
+      return NextResponse.json({ success: false, message: 'Event not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Event deleted successfully' });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, message: err?.message || 'Server error' }, { status: 500 });
+  }
+}

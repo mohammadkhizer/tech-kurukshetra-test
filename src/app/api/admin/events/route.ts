@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminAuth } from '@/lib/admin-auth';
 import { dbConnect } from '@/lib/mongodb';
 import Event from '@/lib/models/Event';
-import { EVENTS } from '@/lib/dummy-data';
 import { sanitizeObject, sanitizeString } from '@/lib/sanitizer';
-
-let memoryStore: any[] = [...EVENTS];
 
 export async function GET() {
   if (!(await verifyAdminAuth())) {
@@ -16,15 +13,14 @@ export async function GET() {
     const conn = await dbConnect();
     if (conn) {
       const items = await Event.find({}).lean();
-      if (items && items.length > 0) {
-        return NextResponse.json({ success: true, data: items });
-      }
+      const formatted = items.map((item: any) => ({ ...item, id: item._id ? item._id.toString() : '' }));
+      return NextResponse.json({ success: true, data: formatted });
     }
   } catch (err) {
     console.error('[GET /api/admin/events]', err);
   }
 
-  return NextResponse.json({ success: true, data: memoryStore });
+  return NextResponse.json({ success: true, data: [] });
 }
 
 export async function POST(req: NextRequest) {
@@ -61,14 +57,11 @@ export async function POST(req: NextRequest) {
     };
 
     const conn = await dbConnect();
-    if (conn) {
-      const newDoc = await Event.findOneAndUpdate({ slug }, { $set: payload }, { upsert: true, new: true });
-      return NextResponse.json({ success: true, data: newDoc });
-    } else {
-      const newItem = { id: Date.now().toString(), ...payload };
-      memoryStore.push(newItem);
-      return NextResponse.json({ success: true, data: newItem });
+    if (!conn) {
+      return NextResponse.json({ success: false, message: 'Database connection failed' }, { status: 500 });
     }
+    const newDoc = await Event.findOneAndUpdate({ slug }, { $set: payload }, { upsert: true, new: true });
+    return NextResponse.json({ success: true, data: newDoc });
   } catch (err: any) {
     return NextResponse.json(
       { success: false, message: err.message || 'Server error' },

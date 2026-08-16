@@ -11,7 +11,6 @@ const navItems = [
   { href: "/arenas", icon: Gamepad2, label: "Arenas" },
   { href: "/timeline", icon: Calendar, label: "Timeline" },
   { href: "/announcements", icon: Megaphone, label: "Announcements" },
-  { href: "/team", icon: Users, label: "Team" },
   { href: "/contact", icon: MessageSquare, label: "Contact Us" },
   { href: "/register", icon: ClipboardList, label: "Participant Registration" },
 ];

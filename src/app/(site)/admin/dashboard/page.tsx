@@ -65,7 +65,6 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { eventsData as INITIAL_EVENTS } from '@/lib/events-data';
 import { useFetch } from '@/hooks/use-fetch';
 
 const architectCategories = [
@@ -155,19 +154,16 @@ export default function DashboardPage() {
     fetchRegistrations();
   }, [isAuthorized]);
   
-  const { data: adminUsers, isLoading: adminUsersLoading } = { data: [] as any[], isLoading: false };
-  const { data: admins, isLoading: adminsLoading } = { data: [] as any[], isLoading: false };
-  const { data: teamMembers, isLoading: teamMembersLoading } = useFetch<any[]>(isAuthorized ? '/api/admin/team' : null);
-  const { data: announcements, isLoading: announcementsLoading } = useFetch<any[]>(isAuthorized ? '/api/admin/announcements' : null);
+  const { data: adminUsers, isLoading: adminUsersLoading, refetch: refetchAdminUsers } = useFetch<any[]>(isAuthorized ? '/api/admin/users' : null);
+  const { data: teamMembers, isLoading: teamMembersLoading, refetch: refetchTeamMembers } = useFetch<any[]>(isAuthorized ? '/api/admin/team' : null);
+  const { data: announcements, isLoading: announcementsLoading, refetch: refetchAnnouncements } = useFetch<any[]>(isAuthorized ? '/api/admin/announcements' : null);
   const { data: contactMessages, isLoading: contactMessagesLoading } = { data: [] as any[], isLoading: false };
 
 
   const sortedTeamMembers = useMemo(() => 
-    teamMembers?.slice().sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)) || [],
+    teamMembers?.slice().sort((a, b) => (a.order || 0) - (b.order || 0)) || [],
     [teamMembers]
   );
-  
-  const adminIds = useMemo(() => new Set(admins?.map(admin => admin.id)), [admins]);
 
   const [newSponsor, setNewSponsor] = useState({ name: '', logoUrl: '', tier: 'Platinum', websiteUrl: '' });
   const [editingEvent, setEditingEvent] = useState<any | null>(null);
@@ -383,16 +379,19 @@ export default function DashboardPage() {
     handleCancelEdit();
   };
   
-  const handleSeedEvents = async () => {
-    for (const event of INITIAL_EVENTS) {
-      await fetch('/api/admin/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(event),
+  const handleSeedDatabase = async () => {
+    const res = await fetch('/api/admin/seed', { method: 'POST' });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      const s = data.stats;
+      refetchEvents();
+      toast({
+        title: 'Database Seeded',
+        description: `Events: ${s.eventsInserted}, Announcements: ${s.announcementsInserted}, Sponsors: ${s.sponsorsInserted}, Team: ${s.teamMembersInserted}, Timeline: ${s.timelineInserted}`,
       });
+    } else {
+      toast({ variant: 'destructive', title: 'Seed Failed', description: data.message || 'Could not seed database.' });
     }
-    refetchEvents();
-    toast({ title: "Database Seeded", description: "Initial event data deployed." });
   };
 
   const handleNewArchitectChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -557,12 +556,25 @@ export default function DashboardPage() {
     router.push('/admin/auth');
   };
 
-  const handleToggleAdmin = (userId: string, isAdmin: boolean) => {
-    toast({ title: isAdmin ? "Access Revoked" : "Access Granted" });
+  const handleToggleAdmin = async (userId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'approved' ? 'pending' : 'approved';
+    const res = await fetch(`/api/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus }),
+    });
+    if (res.ok) {
+      refetchAdminUsers();
+      toast({ title: newStatus === 'approved' ? 'Access Granted' : 'Access Suspended', description: `Admin status updated to ${newStatus}.` });
+    }
   };
 
-  const handleDeleteAdminUser = (userId: string) => {
-    toast({ title: "User Deleted" });
+  const handleDeleteAdminUser = async (userId: string) => {
+    const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+    if (res.ok) {
+      refetchAdminUsers();
+      toast({ title: 'Admin User Deleted', description: 'The admin account has been removed.' });
+    }
   };
   
     const handleRegistrationInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -733,14 +745,20 @@ export default function DashboardPage() {
               </CardHeader>
             </Card>
           </div>
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={handleSeedDatabase} variant="outline" className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 rounded-none text-xs font-headline tracking-widest uppercase">
+              <DatabaseZap className="w-4 h-4 mr-2" /> SEED MONGODB DATABASE
+            </Button>
+          </div>
           <Card className="glass-panel border-primary/10 rounded-none bg-black/20">
             <CardHeader>
               <CardTitle className="font-headline text-lg tracking-widest uppercase">System Logs</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <div className="text-[10px] font-code text-muted-foreground/60">[08:45:12] Protocol Neon Horizon Initialized</div>
-              <div className="text-[10px] font-code text-muted-foreground/60">[09:12:05] Admin Auth Session Verified</div>
-              <div className="text-[10px] font-code text-muted-foreground/60">[10:30:44] New Registration: Warrior ID 001</div>
+              <div className="text-[10px] font-code text-muted-foreground/60">[SYS] MongoDB connection: Active</div>
+              <div className="text-[10px] font-code text-muted-foreground/60">[SYS] Events in database: {events?.length || 0}</div>
+              <div className="text-[10px] font-code text-muted-foreground/60">[SYS] Registered admins: {adminUsers?.length || 0}</div>
+              <div className="text-[10px] font-code text-muted-foreground/60">[SYS] Total registrations: {registrations?.length ?? 0}</div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -881,7 +899,11 @@ export default function DashboardPage() {
 
             <div className="lg:col-span-2 space-y-4">
               <h3 className="font-headline text-xs tracking-widest text-accent uppercase mb-4">ACTIVE PARTNERS</h3>
-              {sponsorsLoading && <TableRow><TableCell colSpan={3} className="text-center"><Loader2 className="mx-auto animate-spin" /></TableCell></TableRow>}
+              {sponsorsLoading && (
+                <div className="flex justify-center py-6">
+                  <Loader2 className="w-6 h-6 text-accent animate-spin" />
+                </div>
+              )}
               {sponsors?.map((sponsor) => (
                 <div key={sponsor.id} className="glass-panel p-4 border-white/5 bg-white/5 flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -1030,7 +1052,7 @@ export default function DashboardPage() {
                       CANCEL EDIT
                     </Button>
                 )}
-                 <Button onClick={handleSeedEvents} variant="outline" className="w-full border-accent/20 text-accent hover:bg-accent/10 rounded-none font-headline tracking-widest text-[10px] py-4 uppercase">
+                 <Button onClick={handleSeedDatabase} variant="outline" className="w-full border-accent/20 text-accent hover:bg-accent/10 rounded-none font-headline tracking-widest text-[10px] py-4 uppercase">
                   <DatabaseZap className="w-4 h-4 mr-2" /> SEED INITIAL EVENTS
                 </Button>
               </CardContent>
@@ -1560,76 +1582,87 @@ export default function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(adminUsersLoading || adminsLoading) && (
-                      <TableRow>
-                          <TableCell colSpan={3} className="text-center">
-                              <Loader2 className="mx-auto animate-spin" />
-                          </TableCell>
-                      </TableRow>
+                  {adminUsersLoading && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-6">
+                        <Loader2 className="mx-auto animate-spin w-6 h-6 text-primary" />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!adminUsersLoading && (!adminUsers || adminUsers.length === 0) && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-6 text-muted-foreground text-xs font-mono uppercase tracking-widest">
+                        No admin accounts registered yet. Use the Signup form on /admin/auth to create one.
+                      </TableCell>
+                    </TableRow>
                   )}
                   {adminUsers?.map((adminUser) => {
-                    const isAdmin = adminIds.has(adminUser.id);
-                    const isSelf = false; // No auth user object in dummy mode
+                    const isApproved = adminUser.status === 'approved';
+                    const isSuper = adminUser.role === 'superadmin';
 
                     return (
-                        <TableRow key={adminUser.id} className="border-white/5 hover:bg-white/5">
-                            <TableCell>
-                                <div className="font-bold text-white tracking-widest uppercase text-[11px]">{adminUser.fullName}</div>
-                                <div className="text-[10px] text-muted-foreground">{adminUser.email}</div>
-                            </TableCell>
-                            <TableCell>
-                                {isAdmin ? (
-                                    <Badge variant="outline" className="text-primary border-primary/40 text-[9px] uppercase tracking-widest">
-                                        <ShieldCheck className="w-3 h-3 mr-1" />
-                                        Admin
-                                    </Badge>
-                                ) : (
-                                    <Badge variant="outline" className="text-muted-foreground border-muted-foreground/40 text-[9px] uppercase tracking-widest">
-                                        <ShieldOff className="w-3 h-3 mr-1" />
-                                        Participant
-                                    </Badge>
-                                )}
-                            </TableCell>
-                            <TableCell className="text-right">
-                                <div className="flex items-center justify-end gap-2">
-                                    <Button
-                                        variant={isAdmin ? "destructive" : "secondary"}
-                                        size="sm"
-                                        className="text-[10px] font-headline tracking-widest rounded-none uppercase disabled:opacity-50"
-                                        onClick={() => handleToggleAdmin(adminUser.id, isAdmin)}
-                                        disabled={isSelf}
-                                        title={isSelf ? "Cannot change your own role" : ""}
-                                    >
-                                        {isAdmin ? "Revoke Access" : "Grant Access"}
-                                    </Button>
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="text-muted-foreground hover:text-destructive h-9 w-9 disabled:opacity-50"
-                                            disabled={isSelf}
-                                            title={isSelf ? "Cannot delete your own account" : "Delete user record"}
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent className="glass-panel border-destructive/40 bg-black/60 rounded-none">
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle className="font-headline text-destructive uppercase">Confirm Deletion</AlertDialogTitle>
-                                            <AlertDialogDescription className="text-muted-foreground">
-                                            Are you sure you want to delete the user record for {adminUser.fullName}? This removes them from the admin system but does not delete their authentication account. This action cannot be undone.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel className="rounded-none uppercase text-xs tracking-widest">Cancel</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleDeleteAdminUser(adminUser.id)} className="bg-destructive hover:bg-destructive/80 rounded-none uppercase text-xs tracking-widest">Delete User</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
-                                </div>
-                            </TableCell>
-                        </TableRow>
+                      <TableRow key={adminUser.id} className="border-white/5 hover:bg-white/5">
+                        <TableCell>
+                          <div className="font-bold text-white tracking-widest uppercase text-[11px]">
+                            {adminUser.username || adminUser.fullName}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">{adminUser.email}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`text-[9px] uppercase tracking-widest ${isSuper ? 'text-[#FF6B00] border-[#FF6B00]/40' : 'text-blue-400 border-blue-400/40'}`}>
+                            {adminUser.role || 'admin'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {isApproved ? (
+                            <Badge variant="outline" className="text-green-400 border-green-400/40 text-[9px] uppercase tracking-widest">
+                              <ShieldCheck className="w-3 h-3 mr-1" />
+                              Approved
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-amber-400 border-amber-400/40 text-[9px] uppercase tracking-widest">
+                              <ShieldOff className="w-3 h-3 mr-1" />
+                              Pending
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant={isApproved ? "destructive" : "secondary"}
+                              size="sm"
+                              className="text-[10px] font-headline tracking-widest rounded-none uppercase"
+                              onClick={() => handleToggleAdmin(adminUser.id, adminUser.status)}
+                            >
+                              {isApproved ? "Suspend" : "Approve"}
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-muted-foreground hover:text-destructive h-9 w-9"
+                                  title="Delete admin account"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="glass-panel border-destructive/40 bg-black/60 rounded-none">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="font-headline text-destructive uppercase">Confirm Deletion</AlertDialogTitle>
+                                  <AlertDialogDescription className="text-muted-foreground">
+                                    Are you sure you want to delete the admin account for <strong className="text-white">{adminUser.username}</strong> ({adminUser.email})? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="rounded-none uppercase text-xs tracking-widest">Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteAdminUser(adminUser.id)} className="bg-destructive hover:bg-destructive/80 rounded-none uppercase text-xs tracking-widest">Delete Admin</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
                 </TableBody>

@@ -19,19 +19,11 @@ interface Milestone {
 
 const STATUS_CONFIG: Record<MilestoneStatus, { color: string; bg: string; dot: string; label: string }> = {
   Completed: { color: 'text-green-400', bg: 'bg-green-400/10 border-green-400/30', dot: 'bg-green-400', label: 'COMPLETED' },
-  Live:      { color: 'text-[#FF6B00]', bg: 'bg-[#FF6B00]/10 border-[#FF6B00]/30', dot: 'bg-[#FF6B00] animate-pulse', label: 'LIVE NOW' },
-  Upcoming:  { color: 'text-[#8A8A8A]', bg: 'bg-white/5 border-white/10', dot: 'bg-[#8A8A8A]', label: 'UPCOMING' },
+  Live: { color: 'text-[#FF6B00]', bg: 'bg-[#FF6B00]/10 border-[#FF6B00]/30', dot: 'bg-[#FF6B00] animate-pulse', label: 'LIVE NOW' },
+  Upcoming: { color: 'text-[#8A8A8A]', bg: 'bg-white/5 border-white/10', dot: 'bg-[#8A8A8A]', label: 'UPCOMING' },
 };
 
-// Fallback data when database is empty
-const FALLBACK_MILESTONES: Milestone[] = [
-  { id: '1', date: 'AUG 2026', title: 'Registrations Open', description: 'Team and individual registrations go live. Early bird slots limited.', status: 'Completed', order: 1 },
-  { id: '2', date: 'OCT 2026', title: 'Abstract Submission', description: 'Submit your project abstract or team declaration for all arenas.', status: 'Completed', order: 2 },
-  { id: '3', date: 'NOV 2026', title: 'Shortlisting', description: 'Teams shortlisted based on abstracts. Final confirmations sent via email.', status: 'Live', order: 3 },
-  { id: '4', date: 'DEC 2026', title: 'Mentorship Sessions', description: 'Live Q&A sessions with domain experts to prep your team for battle.', status: 'Upcoming', order: 4 },
-  { id: '5', date: 'JAN 16, 2027', title: 'Day 1 — Battle Begins', description: 'Opening ceremony, arena briefings, and first-round competitions kick off.', status: 'Upcoming', order: 5 },
-  { id: '6', date: 'JAN 17, 2027', title: 'Day 2 — Finals & Awards', description: 'Grand finals, prize distribution, and closing ceremony.', status: 'Upcoming', order: 6 },
-];
+
 
 function MilestoneNode({ milestone, index }: { milestone: Milestone; index: number }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -56,13 +48,12 @@ function MilestoneNode({ milestone, index }: { milestone: Milestone; index: numb
           initial={{ scale: 0, opacity: 0 }}
           animate={inView ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
           transition={{ duration: 0.3, ease: 'easeOut', delay: 0.2 }}
-          className={`relative w-4 h-4 rounded-full border-2 z-10 mt-1 flex-shrink-0 ${
-            milestone.status === 'Live'
+          className={`relative w-4 h-4 rounded-full border-2 z-10 mt-1 flex-shrink-0 ${milestone.status === 'Live'
               ? 'border-[#FF6B00] bg-[#FF6B00] shadow-[0_0_12px_rgba(255,107,0,0.8)]'
               : milestone.status === 'Completed'
-              ? 'border-green-400 bg-green-400'
-              : 'border-[#8A8A8A]/50 bg-[#0A0A0F]'
-          }`}
+                ? 'border-green-400 bg-green-400'
+                : 'border-[#8A8A8A]/50 bg-[#0A0A0F]'
+            }`}
         >
           {milestone.status === 'Live' && (
             <span className="absolute inset-0 rounded-full bg-[#FF6B00] animate-ping opacity-40" />
@@ -75,11 +66,10 @@ function MilestoneNode({ milestone, index }: { milestone: Milestone; index: numb
         initial={{ opacity: 0, y: 16 }}
         animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
         transition={{ duration: 0.3, ease: 'easeOut', delay: 0.25 }}
-        className={`flex-1 pb-16 border-l-2 pl-8 -ml-2 md:border-l-0 md:pl-0 md:ml-0 ${
-          milestone.status === 'Completed' ? 'border-green-400/20' :
-          milestone.status === 'Live'      ? 'border-[#FF6B00]/30' :
-                                             'border-white/5'
-        } md:border-none`}
+        className={`flex-1 pb-16 border-l-2 pl-8 -ml-2 md:border-l-0 md:pl-0 md:ml-0 ${milestone.status === 'Completed' ? 'border-green-400/20' :
+            milestone.status === 'Live' ? 'border-[#FF6B00]/30' :
+              'border-white/5'
+          } md:border-none`}
       >
         <div className="flex items-center gap-3 mb-2">
           <span className="text-[10px] font-bold tracking-[0.25em] uppercase text-[#8A8A8A]">{milestone.date}</span>
@@ -87,11 +77,10 @@ function MilestoneNode({ milestone, index }: { milestone: Milestone; index: numb
             {cfg.label}
           </span>
         </div>
-        <h3 className={`text-xl sm:text-2xl font-black tracking-tight font-headline mb-2 ${
-          milestone.status === 'Live' ? 'text-[#FF6B00]' :
-          milestone.status === 'Completed' ? 'text-[#F1F1F1]' :
-          'text-[#F1F1F1]/60'
-        }`}>
+        <h3 className={`text-xl sm:text-2xl font-black tracking-tight font-headline mb-2 ${milestone.status === 'Live' ? 'text-[#FF6B00]' :
+            milestone.status === 'Completed' ? 'text-[#F1F1F1]' :
+              'text-[#F1F1F1]/60'
+          }`}>
           {milestone.title}
         </h3>
         <p className="text-sm text-[#8A8A8A] leading-relaxed max-w-sm">{milestone.description}</p>
@@ -101,12 +90,8 @@ function MilestoneNode({ milestone, index }: { milestone: Milestone; index: numb
 }
 
 export default function TimelinePage() {
-  const { data: rawMilestones, isLoading, error } = useFetch<Milestone[]>('/api/timeline');
-
-  // Fall back to static data when DB is empty or fails
-  const milestones: Milestone[] = (!isLoading && (error || !rawMilestones || rawMilestones.length === 0))
-    ? FALLBACK_MILESTONES
-    : ([...(rawMilestones || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
+  const { data: rawMilestones, isLoading } = useFetch<Milestone[]>('/api/timeline');
+  const milestones: Milestone[] = [...(rawMilestones || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-[#F1F1F1]">
@@ -135,7 +120,7 @@ export default function TimelinePage() {
               className="text-5xl sm:text-7xl font-black tracking-tighter font-headline leading-[0.9]"
             >
               TIMELINE<br />
-              <span className="text-[#FF6B00]">2026–27</span>
+              <span className="text-[#FF6B00]">2027</span>
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 16 }}

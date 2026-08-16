@@ -7,7 +7,6 @@ const publicPages = [
     { title: "Home", url: "/" },
     { title: "About", url: "/#about" },
     { title: "Arenas", url: "/arenas" },
-    { title: "Team", url: "/team" },
     { title: "Timeline", url: "/timeline" },
 ];
 

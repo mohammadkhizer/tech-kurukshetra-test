@@ -11,13 +11,30 @@ function getSecretKey(): string {
 }
 
 /**
+ * Simple salt & hash helper using SHA-256 for secure password storage.
+ */
+export async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const salt = 'tk_admin_salt_2027_v1';
+  const data = encoder.encode(password + salt);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  const computedHash = await hashPassword(password);
+  return computedHash === hash;
+}
+
+/**
  * Creates an edge-compatible signed session token containing timestamp, nonce, and hash signature.
  */
-export function createAdminSessionToken(): string {
+export function createAdminSessionToken(username: string = 'admin'): string {
   const secret = getSecretKey();
   const timestamp = Date.now();
   const nonce = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-  const payload = `admin:${timestamp}:${nonce}`;
+  const payload = `${username}:${timestamp}:${nonce}`;
 
   let hash = 0;
   const combined = `${payload}:${secret}`;
@@ -49,7 +66,7 @@ export function verifyAdminSessionToken(token: string): boolean {
     if (parts.length !== 4) return false;
 
     const [user, timestampStr, nonce, signature] = parts;
-    if (user !== 'admin') return false;
+    if (!user) return false;
 
     const timestamp = parseInt(timestampStr, 10);
     if (isNaN(timestamp)) return false;
@@ -87,3 +104,4 @@ export async function verifyAdminAuth(): Promise<boolean> {
 }
 
 export { ADMIN_COOKIE_NAME };
+

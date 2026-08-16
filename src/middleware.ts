@@ -13,14 +13,14 @@ export function middleware(req: NextRequest) {
   response.headers.set('X-XSS-Protection', '1; mode=block');
 
   // 2. Rate Limiting for sensitive POST routes
-  if (pathname === '/api/admin/login') {
+  if (pathname === '/api/admin/login' || pathname === '/api/admin/signup') {
     if (req.method === 'POST') {
-      const limitResult = checkRateLimit(req, 'admin_login', 5, 15 * 60 * 1000);
+      const limitResult = checkRateLimit(req, 'admin_auth', 5, 15 * 60 * 1000);
       if (!limitResult.success) {
         return NextResponse.json(
           {
             success: false,
-            message: `Too many login attempts. Please try again in ${limitResult.resetInSeconds} seconds.`,
+            message: `Too many attempts. Please try again in ${limitResult.resetInSeconds} seconds.`,
           },
           { status: 429, headers: { 'Retry-After': String(limitResult.resetInSeconds) } }
         );
@@ -57,8 +57,9 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // 4. Admin API Protection (excluding login)
-  if (pathname.startsWith('/api/admin') && !pathname.startsWith('/api/admin/login')) {
+  // 4. Admin API Protection (excluding login and signup)
+  const isPublicAdminApi = pathname.startsWith('/api/admin/login') || pathname.startsWith('/api/admin/signup');
+  if (pathname.startsWith('/api/admin') && !isPublicAdminApi) {
     const sessionCookie = req.cookies.get(ADMIN_COOKIE_NAME);
     const isAuthenticated = sessionCookie?.value
       ? verifyAdminSessionToken(sessionCookie.value)

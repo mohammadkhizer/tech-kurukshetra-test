@@ -10,7 +10,6 @@ const navItems = [
   { name: 'Arenas', path: '/arenas' },
   { name: 'Timeline', path: '/timeline' },
   { name: 'Announcements', path: '/announcements' },
-  { name: 'Team', path: '/team' },
   { name: 'Contact', path: '/contact' },
 ];
 

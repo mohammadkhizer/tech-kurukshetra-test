@@ -1,13 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ANNOUNCEMENTS } from '@/lib/dummy-data';
+import { dbConnect } from '@/lib/mongodb';
+import Announcement from '@/lib/models/Announcement';
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  const announcement = ANNOUNCEMENTS.find((a) => a.id === id);
-  if (!announcement) return NextResponse.json({ success: false, data: null }, { status: 404 });
-  return NextResponse.json({ success: true, data: announcement });
-}
+  try {
+    const { id } = await params;
+    const conn = await dbConnect();
+    if (conn) {
+      const announcement = await Announcement.findById(id).lean();
+      if (announcement) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            ...announcement,
+            id: (announcement as any)._id ? (announcement as any)._id.toString() : '',
+          },
+        });
+      }
+    }
+  } catch (err) {
+    console.error('[GET /api/announcements/[id]] Error:', err);
+  }
 
+  return NextResponse.json({ success: false, message: 'Announcement not found' }, { status: 404 });
+}

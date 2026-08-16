@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminAuth } from '@/lib/admin-auth';
 import { dbConnect } from '@/lib/mongodb';
 import TeamMember from '@/lib/models/TeamMember';
-import { TEAM_MEMBERS } from '@/lib/dummy-data';
 import { sanitizeObject, sanitizeString } from '@/lib/sanitizer';
-
-let memoryStore: any[] = [...TEAM_MEMBERS];
 
 export async function GET() {
   if (!(await verifyAdminAuth())) {
@@ -16,15 +13,14 @@ export async function GET() {
     const conn = await dbConnect();
     if (conn) {
       const items = await TeamMember.find({}).sort({ order: 1 }).lean();
-      if (items && items.length > 0) {
-        return NextResponse.json({ success: true, data: items });
-      }
+      const formatted = items.map((item: any) => ({ ...item, id: item._id ? item._id.toString() : '' }));
+      return NextResponse.json({ success: true, data: formatted });
     }
   } catch (err) {
     console.error('[GET /api/admin/team]', err);
   }
 
-  return NextResponse.json({ success: true, data: memoryStore });
+  return NextResponse.json({ success: true, data: [] });
 }
 
 export async function POST(req: NextRequest) {
@@ -52,14 +48,11 @@ export async function POST(req: NextRequest) {
     const payload = { name, role, group, linkedinUrl, photoUrl, order: body?.order || 99 };
 
     const conn = await dbConnect();
-    if (conn) {
-      const newDoc = await TeamMember.create(payload);
-      return NextResponse.json({ success: true, data: newDoc });
-    } else {
-      const newItem = { id: Date.now().toString(), ...payload };
-      memoryStore.push(newItem);
-      return NextResponse.json({ success: true, data: newItem });
+    if (!conn) {
+      return NextResponse.json({ success: false, message: 'Database connection failed' }, { status: 500 });
     }
+    const newDoc = await TeamMember.create(payload);
+    return NextResponse.json({ success: true, data: newDoc });
   } catch (err: any) {
     return NextResponse.json(
       { success: false, message: err.message || 'Server error' },

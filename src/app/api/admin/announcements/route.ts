@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminAuth } from '@/lib/admin-auth';
 import { dbConnect } from '@/lib/mongodb';
 import Announcement from '@/lib/models/Announcement';
-import { ANNOUNCEMENTS } from '@/lib/dummy-data';
 import { sanitizeObject, sanitizeString } from '@/lib/sanitizer';
-
-let memoryStore: any[] = [...ANNOUNCEMENTS];
 
 export async function GET() {
   if (!(await verifyAdminAuth())) {
@@ -16,15 +13,14 @@ export async function GET() {
     const conn = await dbConnect();
     if (conn) {
       const items = await Announcement.find({}).sort({ createdAt: -1 }).lean();
-      if (items && items.length > 0) {
-        return NextResponse.json({ success: true, data: items });
-      }
+      const formatted = items.map((item: any) => ({ ...item, id: item._id ? item._id.toString() : '' }));
+      return NextResponse.json({ success: true, data: formatted });
     }
   } catch (err) {
     console.error('[GET /api/admin/announcements]', err);
   }
 
-  return NextResponse.json({ success: true, data: memoryStore });
+  return NextResponse.json({ success: true, data: [] });
 }
 
 export async function POST(req: NextRequest) {
@@ -49,14 +45,11 @@ export async function POST(req: NextRequest) {
     }
 
     const conn = await dbConnect();
-    if (conn) {
-      const newDoc = await Announcement.create({ title, content, timestamp, author });
-      return NextResponse.json({ success: true, data: newDoc });
-    } else {
-      const newItem = { id: Date.now().toString(), title, content, timestamp, author };
-      memoryStore.unshift(newItem);
-      return NextResponse.json({ success: true, data: newItem });
+    if (!conn) {
+      return NextResponse.json({ success: false, message: 'Database connection failed' }, { status: 500 });
     }
+    const newDoc = await Announcement.create({ title, content, timestamp, author });
+    return NextResponse.json({ success: true, data: newDoc });
   } catch (err: any) {
     return NextResponse.json(
       { success: false, message: err.message || 'Server error' },

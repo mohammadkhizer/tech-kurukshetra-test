@@ -1,9 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useRef, useState, useCallback } from 'react';
+import Link from 'next/link';
 import { motion, useInView, useMotionValue, useSpring } from 'framer-motion';
-import { ArrowRight, Code2, Bot, Gamepad2, Brain, Lightbulb, Users, Trophy, Zap } from 'lucide-react';
+import { ArrowRight, Code2, Bot, Gamepad2, Brain, Lightbulb, Users, Trophy, Zap, CircleHelp, Loader2 } from 'lucide-react';
+import { useFetch } from '@/hooks/use-fetch';
 
 /* ─────────────────────────────────────────────
    ANIMATION CONSTANTS
@@ -199,64 +200,26 @@ function CountUp({ target, suffix = '' }: { target: number; suffix?: string }) {
   return <span ref={ref}>{display.toLocaleString()}{suffix}</span>;
 }
 
-/* ─────────────────────────────────────────────
-   ARENAS DATA
-───────────────────────────────────────────── */
-const ARENAS = [
-  {
-    icon: Code2,
-    title: 'Hackathon',
-    tagline: 'Build & Conquer',
-    desc: '24-hour team sprint to build real-world solutions from scratch.',
-    color: '#FF6B00',
-    href: '/arenas',
-  },
-  {
-    icon: Bot,
-    title: 'Robotics',
-    tagline: 'Metal & Code',
-    desc: 'Design, build, and battle autonomous machines on the arena floor.',
-    color: '#C81E1E',
-    href: '/arenas',
-  },
-  {
-    icon: Gamepad2,
-    title: 'Esports',
-    tagline: 'Frag or Be Fragged',
-    desc: 'High-stakes gaming tournaments across multiple titles.',
-    color: '#FF6B00',
-    href: '/arenas',
-  },
-  {
-    icon: Brain,
-    title: 'Logic Quiz',
-    tagline: 'Think. Fast. Win.',
-    desc: 'Lightning-round aptitude and technical knowledge battles.',
-    color: '#C81E1E',
-    href: '/arenas',
-  },
-];
 
-/* ─────────────────────────────────────────────
-   SPONSORS (mark as placeholder — real logos needed)
-───────────────────────────────────────────── */
-const SPONSOR_PLACEHOLDERS = [
-  'SPONSOR A', 'SPONSOR B', 'SPONSOR C', 'SPONSOR D', 'SPONSOR E',
-  'SPONSOR F', 'SPONSOR G', 'SPONSOR H',
-];
 
 function SponsorMarquee() {
-  const track = [...SPONSOR_PLACEHOLDERS, ...SPONSOR_PLACEHOLDERS];
+  const { data: sponsors } = useFetch<any[]>('/api/sponsors');
+  if (!sponsors || sponsors.length === 0) return null;
+  const track = [...sponsors, ...sponsors];
+
   return (
     <div className="relative overflow-hidden select-none">
       <div className="flex gap-16 w-max animate-[marquee_30s_linear_infinite]">
-        {track.map((name, i) => (
+        {track.map((sponsor, i) => (
           <div
-            key={i}
+            key={`${sponsor.id || i}-${i}`}
             className="flex items-center justify-center px-6 py-3 border border-white/5 min-w-[140px] text-[#8A8A8A] hover:text-[#F1F1F1] hover:border-[#FF6B00]/40 text-xs tracking-[0.25em] font-semibold uppercase transition-colors duration-300 cursor-pointer"
           >
-            {/* PLACEHOLDER — replace with real <Image> logo */}
-            {name}
+            {sponsor.logoUrl ? (
+              <img src={sponsor.logoUrl} alt={sponsor.name} className="h-8 object-contain" />
+            ) : (
+              <span>{sponsor.name}</span>
+            )}
           </div>
         ))}
       </div>
@@ -268,6 +231,7 @@ function SponsorMarquee() {
    MAIN PAGE
 ───────────────────────────────────────────── */
 export default function Home() {
+  const { data: events, isLoading: eventsLoading } = useFetch<any[]>('/api/events');
   const heroData = null;
   const counterData = null;
 
@@ -445,45 +409,60 @@ export default function Home() {
             </motion.h2>
           </motion.div>
 
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-80px' }}
-            variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-          >
-            {ARENAS.map(({ icon: Icon, title, tagline, desc, color, href }) => (
-              <motion.div
-                key={title}
-                variants={FADE_UP}
-                whileHover={{ y: -6, transition: { duration: 0.2 } }}
-                className="group relative border border-white/5 bg-white/[0.02] p-6 cursor-pointer overflow-hidden"
-                style={{ '--card-color': color } as React.CSSProperties}
-              >
-                {/* Glow edge on hover */}
-                <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                  style={{
-                    boxShadow: `inset 0 0 0 1px ${color}80`,
-                    background: `radial-gradient(circle at top left, ${color}0a, transparent 60%)`,
-                  }}
-                />
-                <div className="mb-6">
-                  <Icon size={28} style={{ color }} strokeWidth={1.5} />
-                </div>
-                <h3 className="text-xl font-black tracking-tight font-headline mb-1">{title}</h3>
-                <div className="text-[10px] tracking-[0.25em] uppercase mb-3" style={{ color }}>{tagline}</div>
-                <p className="text-sm text-[#8A8A8A] leading-relaxed">{desc}</p>
-                <Link
-                  href={href}
-                  className="mt-6 inline-flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase transition-colors"
-                  style={{ color }}
-                >
-                  View Arena <ArrowRight size={12} />
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
+          {eventsLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 text-[#FF6B00] animate-spin" />
+            </div>
+          ) : !events || events.length === 0 ? (
+            <div className="text-center py-12 text-[#8A8A8A]">
+              <p className="text-xs uppercase tracking-[0.2em]">No arenas currently listed. Check back soon!</p>
+            </div>
+          ) : (
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-80px' }}
+              variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+            >
+              {events.slice(0, 4).map((event: any) => {
+                const color = event.isTechnical === false ? '#C81E1E' : '#FF6B00';
+                return (
+                  <motion.div
+                    key={event.id || event.slug}
+                    variants={FADE_UP}
+                    whileHover={{ y: -6, transition: { duration: 0.2 } }}
+                    className="group relative border border-white/5 bg-white/[0.02] p-6 cursor-pointer overflow-hidden flex flex-col justify-between"
+                  >
+                    <div
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                      style={{
+                        boxShadow: `inset 0 0 0 1px ${color}80`,
+                        background: `radial-gradient(circle at top left, ${color}0a, transparent 60%)`,
+                      }}
+                    />
+                    <div>
+                      <div className="mb-6">
+                        <CircleHelp size={28} style={{ color }} strokeWidth={1.5} />
+                      </div>
+                      <h3 className="text-xl font-black tracking-tight font-headline mb-1 text-white">{event.name}</h3>
+                      {event.hook && (
+                        <div className="text-[10px] tracking-[0.25em] uppercase mb-3" style={{ color }}>{event.hook}</div>
+                      )}
+                      <p className="text-sm text-[#8A8A8A] leading-relaxed line-clamp-3 mb-4">{event.description}</p>
+                    </div>
+                    <Link
+                      href={`/arenas/${event.slug}`}
+                      className="inline-flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase transition-colors font-bold mt-4"
+                      style={{ color }}
+                    >
+                      View Arena <ArrowRight size={12} />
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          )}
         </div>
       </section>
 
