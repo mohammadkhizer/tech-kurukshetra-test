@@ -113,63 +113,61 @@ function GlitchText({ text, className }: { text: string; className?: string }) {
 /* ─────────────────────────────────────────────
    COUNTDOWN TIMER
 ───────────────────────────────────────────── */
-const EVENT_DATE = new Date('2027-01-16T09:00:00+05:30');
+const DEFAULT_TARGET_DATE = '2027-01-16T00:00:00+05:30';
+
+function getTargetTimestamp(): number {
+  if (typeof window !== 'undefined' && (window as any).__EVENT_TARGET_DATE) {
+    return new Date((window as any).__EVENT_TARGET_DATE).getTime();
+  }
+  const envDate = process.env.NEXT_PUBLIC_EVENT_DATE;
+  return new Date(envDate || DEFAULT_TARGET_DATE).getTime();
+}
 
 function Countdown() {
-  const calc = useCallback(() => {
-    const diff = Math.max(0, EVENT_DATE.getTime() - Date.now());
-    return {
-      days: Math.floor(diff / 86400000),
-      hrs: Math.floor((diff % 86400000) / 3600000),
-      mins: Math.floor((diff % 3600000) / 60000),
-      secs: Math.floor((diff % 60000) / 1000),
-    };
-  }, []);
-
-  // null = not yet mounted (prevents SSR/client mismatch)
-  const [time, setTime] = useState<ReturnType<typeof calc> | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hrs: 0, mins: 0, secs: 0 });
 
   useEffect(() => {
-    setTime(calc());
-    const t = setInterval(() => setTime(calc()), 1000);
-    return () => clearInterval(t);
-  }, [calc]);
+    setMounted(true);
+    const updateTimer = () => {
+      const target = getTargetTimestamp();
+      const now = Date.now();
+      const diff = Math.max(0, target - now);
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hrs = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const mins = Math.floor((diff / (1000 * 60)) % 60);
+      const secs = Math.floor((diff / 1000) % 60);
+
+      setTimeLeft({ days, hrs, mins, secs });
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const units = [
-    { label: 'DAYS', value: time?.days ?? 0 },
-    { label: 'HRS',  value: time?.hrs  ?? 0 },
-    { label: 'MINS', value: time?.mins  ?? 0 },
-    { label: 'SECS', value: time?.secs  ?? 0 },
+    { label: 'DAYS', value: mounted ? String(timeLeft.days).padStart(2, '0') : '00' },
+    { label: 'HRS',  value: mounted ? String(timeLeft.hrs).padStart(2, '0') : '00' },
+    { label: 'MINS', value: mounted ? String(timeLeft.mins).padStart(2, '0') : '00' },
+    { label: 'SECS', value: mounted ? String(timeLeft.secs).padStart(2, '0') : '00' },
   ];
 
-  // Render skeleton boxes before mount to avoid layout shift
-  if (!time) {
-    return (
-      <div className="flex items-center gap-3 sm:gap-4">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="flex items-center gap-3 sm:gap-4">
-            <div className="bg-[#0A0A0F] border border-[#FF6B00]/30 px-3 sm:px-5 py-2 sm:py-3 min-w-[56px] sm:min-w-[72px] h-[56px] sm:h-[72px]" />
-            {i < 3 && <span className="text-2xl sm:text-3xl text-[#FF6B00]/50 mb-4 select-none">:</span>}
-          </div>
-        ))}
-      </div>
-    );
-  }
-
   return (
-    <div className="flex items-center gap-3 sm:gap-4">
+    <div className="flex items-center gap-2 sm:gap-4">
       {units.map(({ label, value }, i) => (
-        <div key={label} className="flex items-center gap-3 sm:gap-4">
+        <div key={label} className="flex items-center gap-2 sm:gap-4">
           <div className="flex flex-col items-center">
-            <div className="bg-[#0A0A0F] border border-[#FF6B00]/30 px-3 sm:px-5 py-2 sm:py-3 min-w-[56px] sm:min-w-[72px] text-center">
-              <span className="text-2xl sm:text-4xl font-black text-[#FF6B00] font-headline tabular-nums">
-                {String(value).padStart(2, '0')}
+            <div className="bg-[#0A0A0F]/90 border border-[#FF6B00]/40 px-3 sm:px-6 py-2 sm:py-3 min-w-[64px] sm:min-w-[84px] text-center shadow-[0_0_15px_rgba(255,107,0,0.15)]">
+              <span className="text-2xl sm:text-4xl font-black text-[#FF6B00] font-headline tabular-nums tracking-wider">
+                {value}
               </span>
-              <div className="text-[9px] sm:text-[10px] text-[#8A8A8A] tracking-[0.2em] mt-1">{label}</div>
+              <div className="text-[9px] sm:text-[10px] text-[#8A8A8A] tracking-[0.2em] mt-1 font-bold">{label}</div>
             </div>
           </div>
           {i < units.length - 1 && (
-            <span className="text-2xl sm:text-3xl font-black text-[#FF6B00]/50 mb-4 select-none">:</span>
+            <span className="text-2xl sm:text-3xl font-black text-[#FF6B00]/60 mb-4 select-none animate-pulse">:</span>
           )}
         </div>
       ))}

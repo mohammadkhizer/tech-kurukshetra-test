@@ -8,12 +8,25 @@ import Script from 'next/script';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import * as LucideIcons from 'lucide-react';
+import { 
+  Loader2, 
+  CircleHelp, 
+  ArrowLeft, 
+  Calendar, 
+  MapPin, 
+  Tag, 
+  User, 
+  Phone, 
+  ShieldCheck, 
+  ListChecks 
+} from 'lucide-react';
 import { useFetch } from '@/hooks/use-fetch';
 
 export default function ArenaDetailPage() {
   const params = useParams();
-  const { data: event, isLoading } = useFetch<any>(slug ? `/api/events/${slug}` : null);
+  const slug = params?.slug as string;
+  const { data: events, isLoading } = useFetch<any[]>('/api/events');
+  const event = useMemo(() => events?.find((e: any) => e.slug === slug), [events, slug]);
   const festivalDay = null;
   const festivalDayLoading = false;
   
@@ -50,11 +63,11 @@ export default function ArenaDetailPage() {
     )
   }
 
-  const img = !event.imageUrl && PlaceHolderImages.find(i => i.id === event.imgId);
-  const imgSrc = event.imageUrl || img?.imageUrl || '';
-  const Icon = (LucideIcons as any)[event.iconName] || CircleHelp;
+  const img = !event.imageUrl && Array.isArray(PlaceHolderImages) ? PlaceHolderImages.find(i => i.id === event.imgId) : null;
+  const imgSrc = event.imageUrl || (img && typeof img === 'object' ? img.imageUrl : '') || '';
+  const Icon = CircleHelp;
 
-  const eventStartDate = festivalDay?.date ? new Date(festivalDay.date).toISOString().split('T')[0] : '2026-04-10';
+  const eventStartDate = festivalDay && typeof festivalDay === 'object' && (festivalDay as any).date ? new Date((festivalDay as any).date).toISOString().split('T')[0] : '2027-01-16';
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -113,7 +126,7 @@ export default function ArenaDetailPage() {
             <div className="glass-panel p-6 border-primary/10 rounded-none space-y-4">
               <div className="flex items-center gap-3 text-muted-foreground text-sm">
                 <Calendar className="w-4 h-4 text-primary" />
-                <span className="uppercase tracking-widest font-headline text-[10px]">{festivalDay ? formatDate(festivalDay.date) : 'Date TBD'}</span>
+                <span className="uppercase tracking-widest font-headline text-[10px]">{festivalDay && typeof festivalDay === 'object' ? formatDate((festivalDay as any).date) : 'JAN 16, 2027'}</span>
               </div>
               <div className="flex items-center gap-3 text-muted-foreground text-sm">
                 <MapPin className="w-4 h-4 text-primary" />

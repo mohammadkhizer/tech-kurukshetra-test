@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { LayoutDashboard, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+import { sanitizeString } from '@/lib/sanitizer';
+
 export default function AuthPage() {
   const { toast } = useToast();
   const router = useRouter();
@@ -18,8 +20,11 @@ export default function AuthPage() {
     e.preventDefault();
     setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
-    const username = formData.get('username') as string;
-    const password = formData.get('password') as string;
+    const rawUsername = formData.get('username') as string;
+    const rawPassword = formData.get('password') as string;
+
+    const username = sanitizeString(rawUsername);
+    const password = rawPassword ? rawPassword.trim() : '';
 
     toast({ title: "Authenticating...", description: "Please wait." });
     try {
@@ -59,6 +64,9 @@ export default function AuthPage() {
           <LayoutDashboard className="w-12 h-12 text-[#FF6B00] mx-auto mb-4" />
           <h1 className="font-headline text-2xl tracking-tighter text-white uppercase">KURUKSHETRA CONTROL</h1>
           <p className="text-[10px] text-muted-foreground uppercase tracking-[0.3em] mt-2">Admin Authentication</p>
+          <div className="mt-4 p-2.5 border border-[#FF6B00]/30 bg-[#FF6B00]/5 text-[11px] text-[#FF6B00] text-center uppercase tracking-widest font-mono">
+            Default Credentials: <span className="font-bold text-white">admin</span> / <span className="font-bold text-white">admin</span>
+          </div>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6 pt-6">

@@ -7,7 +7,7 @@ import { ArrowRight, Users, User, Lock, Home, AlertCircle, CheckCircle, Trophy, 
 
 // ── CONFIGURATION ───────────────────────────────────────────────
 const REGISTRATIONS_OPEN = true; // flip to true to open form
-const DEADLINE = new Date('2027-01-15T23:59:59+05:30');
+const DEADLINE_TIMESTAMP = new Date('2027-01-15T23:59:59+05:30').getTime();
 const PRIZE_POOL = '₹1,00,000+';
 const PAST_PARTICIPANTS = 2000;
 // ────────────────────────────────────────────────────────────────
@@ -19,28 +19,33 @@ type Mode = 'individual' | 'team';
 
 /* ─── Countdown ─── */
 function DeadlineCountdown() {
-  const calc = useCallback(() => {
-    const diff = Math.max(0, DEADLINE.getTime() - Date.now());
-    return {
-      days: Math.floor(diff / 86400000),
-      hrs:  Math.floor((diff % 86400000) / 3600000),
-      mins: Math.floor((diff % 3600000)  / 60000),
-      secs: Math.floor((diff % 60000)    / 1000),
-    };
-  }, []);
-  const [time, setTime] = useState<ReturnType<typeof calc> | null>(null);
-  useEffect(() => {
-    setTime(calc());
-    const t = setInterval(() => setTime(calc()), 1000);
-    return () => clearInterval(t);
-  }, [calc]);
+  const [mounted, setMounted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hrs: 0, mins: 0, secs: 0 });
 
-  if (!time) return <div className="h-16" />;
+  useEffect(() => {
+    setMounted(true);
+    const updateTimer = () => {
+      const now = Date.now();
+      const diff = Math.max(0, DEADLINE_TIMESTAMP - now);
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hrs = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const mins = Math.floor((diff / (1000 * 60)) % 60);
+      const secs = Math.floor((diff / 1000) % 60);
+
+      setTimeLeft({ days, hrs, mins, secs });
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const units = [
-    { label: 'DAYS', value: time.days },
-    { label: 'HRS',  value: time.hrs },
-    { label: 'MINS', value: time.mins },
-    { label: 'SECS', value: time.secs },
+    { label: 'DAYS', value: mounted ? String(timeLeft.days).padStart(2, '0') : '00' },
+    { label: 'HRS',  value: mounted ? String(timeLeft.hrs).padStart(2, '0') : '00' },
+    { label: 'MINS', value: mounted ? String(timeLeft.mins).padStart(2, '0') : '00' },
+    { label: 'SECS', value: mounted ? String(timeLeft.secs).padStart(2, '0') : '00' },
   ];
   return (
     <div className="flex items-center gap-1 sm:gap-2">
@@ -49,7 +54,7 @@ function DeadlineCountdown() {
           <div className="flex flex-col items-center">
             <div className="bg-[#C81E1E]/10 border border-[#C81E1E]/30 px-2 sm:px-3 py-1.5 sm:py-2 min-w-[44px] sm:min-w-[52px] text-center">
               <span className="text-xl sm:text-2xl font-black text-[#C81E1E] font-headline tabular-nums">
-                {String(value).padStart(2, '0')}
+                {value}
               </span>
               <div className="text-[8px] text-[#8A8A8A] tracking-[0.15em]">{label}</div>
             </div>
@@ -121,9 +126,36 @@ function RegisterForm() {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setSubmitting(true);
-    await new Promise(r => setTimeout(r, 1400));
-    setSubmitting(false);
-    setDone(true);
+    setErrors({});
+
+    try {
+      const orderId = `TK2027_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+      const res = await fetch('/api/registration/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          name: form.name.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          college: form.college.trim(),
+          mode,
+          teamName: form.teamName.trim(),
+          teamSize: form.teamSize.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setDone(true);
+      } else {
+        setErrors({ server: data.message || 'Registration failed. Please try again.' });
+      }
+    } catch (err) {
+      setErrors({ server: 'Connection error. Please check your network.' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (done) {
@@ -152,6 +184,11 @@ function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+      {errors.server && (
+        <div className="bg-[#C81E1E]/10 border border-[#C81E1E]/40 p-3 text-xs text-[#C81E1E]">
+          {errors.server}
+        </div>
+      )}
       {/* Mode Toggle */}
       <div className="flex border border-white/10 overflow-hidden">
         {(['individual', 'team'] as Mode[]).map(m => (

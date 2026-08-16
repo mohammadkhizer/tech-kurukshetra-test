@@ -15,7 +15,6 @@ export default {
         code: ['Source Code Pro', 'monospace'],
       },
       colors: {
-        border: "hsl(var(--border))",
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

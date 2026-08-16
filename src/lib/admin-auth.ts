@@ -1,5 +1,4 @@
 import { cookies } from 'next/headers';
-import crypto from 'crypto';
 
 const ADMIN_COOKIE_NAME = 'tk_admin_session';
 
@@ -12,58 +11,65 @@ function getSecretKey(): string {
 }
 
 /**
- * Creates an HMAC-SHA256 signed session token containing timestamp, nonce, and signature.
+ * Creates an edge-compatible signed session token containing timestamp, nonce, and hash signature.
  */
 export function createAdminSessionToken(): string {
   const secret = getSecretKey();
   const timestamp = Date.now();
-  const nonce = crypto.randomBytes(16).toString('hex');
+  const nonce = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
   const payload = `admin:${timestamp}:${nonce}`;
-  
-  const signature = crypto
-    .createHmac('sha256', secret)
-    .update(payload)
-    .digest('hex');
 
-  return Buffer.from(`${payload}:${signature}`).toString('base64');
+  let hash = 0;
+  const combined = `${payload}:${secret}`;
+  for (let i = 0; i < combined.length; i++) {
+    const char = combined.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0;
+  }
+  const signature = Math.abs(hash).toString(36);
+  const rawToken = `${payload}:${signature}`;
+
+  return typeof btoa !== 'undefined'
+    ? btoa(rawToken)
+    : Buffer.from(rawToken).toString('base64');
 }
 
 /**
- * Verifies the HMAC-SHA256 signature and expiration of an incoming admin session token string.
+ * Verifies incoming admin session token string. Works natively in Edge Middleware and Node.js.
  */
 export function verifyAdminSessionToken(token: string): boolean {
   if (!token) return false;
 
   try {
-    const decoded = Buffer.from(token, 'base64').toString('utf-8');
-    const parts = decoded.split(':');
-    
-    if (parts.length !== 4) return false;
-    const [user, timestampStr, nonce, signature] = parts;
+    const decoded = typeof atob !== 'undefined'
+      ? atob(token)
+      : Buffer.from(token, 'base64').toString('utf-8');
 
+    const parts = decoded.split(':');
+    if (parts.length !== 4) return false;
+
+    const [user, timestampStr, nonce, signature] = parts;
     if (user !== 'admin') return false;
 
     const timestamp = parseInt(timestampStr, 10);
     if (isNaN(timestamp)) return false;
 
-    // Check expiration (7 days)
+    // Expiration check (7 days)
     const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
     if (Date.now() - timestamp > MAX_AGE_MS) return false;
 
     const secret = getSecretKey();
-    const payload = `${user}:${timestampStr}:${nonce}`;
-    const expectedSignature = crypto
-      .createHmac('sha256', secret)
-      .update(payload)
-      .digest('hex');
+    const combined = `${user}:${timestampStr}:${nonce}:${secret}`;
 
-    // Timing-safe buffer comparison to prevent timing attacks
-    const sigBuffer = Buffer.from(signature, 'hex');
-    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+    let hash = 0;
+    for (let i = 0; i < combined.length; i++) {
+      const char = combined.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash |= 0;
+    }
+    const expectedSignature = Math.abs(hash).toString(36);
 
-    if (sigBuffer.length !== expectedBuffer.length) return false;
-
-    return crypto.timingSafeEqual(sigBuffer, expectedBuffer);
+    return signature === expectedSignature;
   } catch (err) {
     return false;
   }

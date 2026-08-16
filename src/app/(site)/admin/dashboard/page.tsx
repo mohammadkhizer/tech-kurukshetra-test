@@ -669,7 +669,7 @@ export default function DashboardPage() {
                 <div className="bg-amber-950/50 border border-amber-500/20 p-6 rounded-none space-y-3 text-sm text-amber-200 text-left">
                     <p className="font-bold uppercase tracking-widest text-amber-400">Next Steps:</p>
                     <p>To gain access to the dashboard, an existing administrator must grant you privileges from the 'Admins' tab.</p>
-                    <p className="text-xs text-muted-foreground">If you are the first administrator, you must manually add your User ID to the `roles_admin` collection in the Firebase console.</p>
+                    <p className="text-xs text-muted-foreground">If you are the first administrator, configure your credentials in the server environment variables (.env).</p>
                 </div>
                 <Button onClick={handleLogout} variant="outline" className="w-full mt-8 border-primary/20 hover:bg-primary/10 rounded-none text-xs font-headline tracking-widest uppercase">
                     LOGOUT AND TRY ANOTHER ACCOUNT
