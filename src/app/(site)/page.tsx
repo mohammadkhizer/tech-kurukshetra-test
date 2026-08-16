@@ -113,7 +113,7 @@ function GlitchText({ text, className }: { text: string; className?: string }) {
 /* ─────────────────────────────────────────────
    COUNTDOWN TIMER
 ───────────────────────────────────────────── */
-const EVENT_DATE = new Date('2027-01-15T09:00:00+05:30');
+const EVENT_DATE = new Date('2027-01-16T09:00:00+05:30');
 
 function Countdown() {
   const calc = useCallback(() => {

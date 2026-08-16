@@ -6,8 +6,8 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Users, User, Lock, Home, AlertCircle, CheckCircle, Trophy, Zap } from 'lucide-react';
 
 // ── CONFIGURATION ───────────────────────────────────────────────
-const REGISTRATIONS_OPEN = false; // flip to true to open form
-const DEADLINE = new Date('2026-12-15T23:59:59+05:30');
+const REGISTRATIONS_OPEN = true; // flip to true to open form
+const DEADLINE = new Date('2027-01-15T23:59:59+05:30');
 const PRIZE_POOL = '₹1,00,000+';
 const PAST_PARTICIPANTS = 2000;
 // ────────────────────────────────────────────────────────────────

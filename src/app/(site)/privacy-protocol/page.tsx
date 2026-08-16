@@ -47,7 +47,7 @@ export default function PrivacyProtocolPage() {
 
       <h2 id="storage">Storage & Security</h2>
       <p>
-        Your data is stored securely using Google Firebase (Firestore), which is SOC 2 and ISO 27001 compliant. We employ HTTPS encryption for all data transmission. Access to the admin dashboard is restricted to authorized committee members only.
+        Your data is stored securely using encrypted MongoDB database infrastructure with enterprise-grade access controls. We employ HTTPS encryption for all data transmission. Access to the admin dashboard is strictly restricted to authenticated administrators only.
       </p>
 
       <h2 id="rights">Your Rights</h2>

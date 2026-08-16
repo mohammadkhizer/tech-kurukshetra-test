@@ -23,14 +23,14 @@ const STATUS_CONFIG: Record<MilestoneStatus, { color: string; bg: string; dot: s
   Upcoming:  { color: 'text-[#8A8A8A]', bg: 'bg-white/5 border-white/10', dot: 'bg-[#8A8A8A]', label: 'UPCOMING' },
 };
 
-// Fallback data when Firestore is empty
+// Fallback data when database is empty
 const FALLBACK_MILESTONES: Milestone[] = [
   { id: '1', date: 'AUG 2026', title: 'Registrations Open', description: 'Team and individual registrations go live. Early bird slots limited.', status: 'Completed', order: 1 },
   { id: '2', date: 'OCT 2026', title: 'Abstract Submission', description: 'Submit your project abstract or team declaration for all arenas.', status: 'Completed', order: 2 },
   { id: '3', date: 'NOV 2026', title: 'Shortlisting', description: 'Teams shortlisted based on abstracts. Final confirmations sent via email.', status: 'Live', order: 3 },
   { id: '4', date: 'DEC 2026', title: 'Mentorship Sessions', description: 'Live Q&A sessions with domain experts to prep your team for battle.', status: 'Upcoming', order: 4 },
-  { id: '5', date: 'JAN 14, 2027', title: 'Day 1 — Battle Begins', description: 'Opening ceremony, arena briefings, and first-round competitions kick off.', status: 'Upcoming', order: 5 },
-  { id: '6', date: 'JAN 15, 2027', title: 'Day 2 — Finals & Awards', description: 'Grand finals, prize distribution, and closing ceremony.', status: 'Upcoming', order: 6 },
+  { id: '5', date: 'JAN 16, 2027', title: 'Day 1 — Battle Begins', description: 'Opening ceremony, arena briefings, and first-round competitions kick off.', status: 'Upcoming', order: 5 },
+  { id: '6', date: 'JAN 17, 2027', title: 'Day 2 — Finals & Awards', description: 'Grand finals, prize distribution, and closing ceremony.', status: 'Upcoming', order: 6 },
 ];
 
 function MilestoneNode({ milestone, index }: { milestone: Milestone; index: number }) {
