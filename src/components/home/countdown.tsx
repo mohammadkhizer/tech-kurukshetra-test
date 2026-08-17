@@ -13,8 +13,16 @@ function getTargetTimestamp(): number {
     dateStr = process.env.NEXT_PUBLIC_EVENT_DATE;
   }
 
+  dateStr = dateStr.trim();
+
+  // If input is purely YYYY-MM-DD, expand to full ISO time string T00:00:00
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    dateStr += 'T00:00:00';
+  }
+
   // Ensure string has explicit timezone offset if missing (force IST +05:30)
-  if (!dateStr.includes('+') && !dateStr.includes('-') && !dateStr.endsWith('Z')) {
+  // Check if string does NOT end with Z or a timezone offset like +05:30 or -05:00
+  if (!/(?:Z|[+-]\d{2}:?\d{2})$/i.test(dateStr)) {
     dateStr += '+05:30';
   }
 
@@ -22,37 +30,44 @@ function getTargetTimestamp(): number {
   return isNaN(parsed) ? new Date(DEFAULT_TARGET_DATE).getTime() : parsed;
 }
 
+function calculateTimeLeft() {
+  const target = getTargetTimestamp();
+  const now = Date.now();
+  const diff = Math.max(0, target - now);
+
+  return {
+    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+    hrs: Math.floor((diff / (1000 * 60 * 60)) % 24),
+    mins: Math.floor((diff / (1000 * 60)) % 60),
+    secs: Math.floor((diff / 1000) % 60),
+  };
+}
+
 export function Countdown() {
   const [mounted, setMounted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hrs: 0, mins: 0, secs: 0 });
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft);
 
   useEffect(() => {
     setMounted(true);
     let intervalId: NodeJS.Timeout | null = null;
 
     const updateTimer = () => {
-      const target = getTargetTimestamp();
-      const now = Date.now();
-      const diff = Math.max(0, target - now);
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hrs = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const mins = Math.floor((diff / (1000 * 60)) % 60);
-      const secs = Math.floor((diff / 1000) % 60);
+      const nextTime = calculateTimeLeft();
 
       setTimeLeft((prev) => {
         if (
-          prev.days === days &&
-          prev.hrs === hrs &&
-          prev.mins === mins &&
-          prev.secs === secs
+          prev.days === nextTime.days &&
+          prev.hrs === nextTime.hrs &&
+          prev.mins === nextTime.mins &&
+          prev.secs === nextTime.secs
         ) {
           return prev;
         }
-        return { days, hrs, mins, secs };
+        return nextTime;
       });
 
-      if (diff <= 0 && intervalId) {
+      const target = getTargetTimestamp();
+      if (target - Date.now() <= 0 && intervalId) {
         clearInterval(intervalId);
         intervalId = null;
       }
@@ -67,10 +82,10 @@ export function Countdown() {
   }, []);
 
   const units = [
-    { label: 'DAYS', value: mounted ? String(timeLeft.days).padStart(2, '0') : '00' },
-    { label: 'HRS',  value: mounted ? String(timeLeft.hrs).padStart(2, '0') : '00' },
-    { label: 'MINS', value: mounted ? String(timeLeft.mins).padStart(2, '0') : '00' },
-    { label: 'SECS', value: mounted ? String(timeLeft.secs).padStart(2, '0') : '00' },
+    { label: 'DAYS', value: String(timeLeft.days).padStart(2, '0') },
+    { label: 'HRS',  value: String(timeLeft.hrs).padStart(2, '0') },
+    { label: 'MINS', value: String(timeLeft.mins).padStart(2, '0') },
+    { label: 'SECS', value: String(timeLeft.secs).padStart(2, '0') },
   ];
 
   return (
