@@ -42,7 +42,7 @@
   }
   
   h1, h2, h3, h4, h5, h6, .font-headline {
-    font-family: 'Orbitron', sans-serif;
+    font-family: var(--font-orbitron), sans-serif;
   }
 }
 
@@ -114,16 +114,16 @@
 }
 
 .font-headline {
-  font-family: 'Orbitron', sans-serif;
+  font-family: var(--font-orbitron), sans-serif;
 }
 
 .font-body {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-inter), sans-serif;
 }
 
 /* Legal page prose */
 .prose-legal h2 {
-  font-family: 'Orbitron', sans-serif;
+  font-family: var(--font-orbitron), sans-serif;
   font-size: 1.1rem;
   font-weight: 900;
   letter-spacing: -0.02em;

@@ -1,8 +1,25 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
+import { Inter } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { Navbar } from "@/components/Navbar";
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const orbitron = localFont({
+  src: './fonts/Orbitron.woff2',
+  variable: '--font-orbitron',
+  display: 'swap',
+  // Covers weight 700–900 (variable font subset served by Google Fonts)
+  weight: '700 900',
+});
 
 const siteConfig = {
   name: 'TECH KURUKSHETRA',
@@ -78,12 +95,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="en" className={`dark ${inter.variable} ${orbitron.variable}`}>
       <body className="font-body antialiased min-h-screen relative flex flex-col">
           <Navbar />
           <main className="flex-1">

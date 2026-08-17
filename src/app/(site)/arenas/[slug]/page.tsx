@@ -5,22 +5,76 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import Script from 'next/script';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { 
-  Loader2, 
-  CircleHelp, 
-  ArrowLeft, 
-  Calendar, 
-  MapPin, 
-  Tag, 
-  User, 
-  Phone, 
-  ShieldCheck, 
-  ListChecks 
+import {
+  CircleHelp,
+  ArrowLeft,
+  Calendar,
+  MapPin,
+  Tag,
+  User,
+  Phone,
+  ShieldCheck,
+  ListChecks,
 } from 'lucide-react';
 import { useFetch } from '@/hooks/use-fetch';
+
+const EASE_OUT = { duration: 0.3, ease: 'easeOut' };
+const FADE_UP = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: EASE_OUT },
+};
+
+/* ─── Shape-matched skeleton that mirrors the real two-column layout ─── */
+function ArenaDetailSkeleton() {
+  return (
+    <div className="pt-32 pb-40 px-6 max-w-5xl mx-auto min-h-screen">
+      <div className="h-4 w-28 bg-white/10 mb-12 animate-pulse" />
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+        {/* Left column */}
+        <div className="lg:col-span-2 space-y-8 animate-pulse">
+          <div className="aspect-square bg-white/5" />
+          <div className="p-6 border border-white/5 space-y-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-4 h-4 bg-white/10 rounded-sm" />
+                <div className="h-3 bg-white/5 w-40" />
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Right column */}
+        <div className="lg:col-span-3 space-y-10 animate-pulse">
+          <div>
+            <div className="h-5 w-20 bg-white/10 mb-4" />
+            <div className="h-12 bg-white/10 w-3/4 mb-3" />
+            <div className="h-12 bg-white/5 w-1/2" />
+          </div>
+          <div className="space-y-4">
+            <div className="h-5 bg-white/10 w-32" />
+            <div className="h-3 bg-white/5 w-full" />
+            <div className="h-3 bg-white/5 w-5/6" />
+            <div className="h-3 bg-white/5 w-4/6" />
+          </div>
+          <div className="space-y-4">
+            <div className="h-5 bg-white/10 w-40" />
+            <div className="p-6 border border-white/5 space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-3 bg-white/5 w-full" />
+              ))}
+            </div>
+          </div>
+          <div className="pt-8">
+            <div className="h-14 bg-white/10 w-full md:w-72" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ArenaDetailPage() {
   const params = useParams();
@@ -29,45 +83,43 @@ export default function ArenaDetailPage() {
   const event = useMemo(() => events?.find((e: any) => e.slug === slug), [events, slug]);
   const festivalDay = null;
   const festivalDayLoading = false;
-  
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Date TBD';
     return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
-  }
+  };
 
   if (isLoading || festivalDayLoading) {
-    return (
-      <div className="pt-32 pb-40 px-6 max-w-5xl mx-auto min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 text-primary animate-spin" />
-      </div>
-    );
+    return <ArenaDetailSkeleton />;
   }
 
   if (!event) {
     return (
       <div className="pt-32 pb-40 px-6 max-w-5xl mx-auto min-h-screen text-center">
         <h1 className="font-headline text-5xl md:text-6xl tracking-tighter text-destructive mb-6 uppercase">
-            Arena Not Found
+          Arena Not Found
         </h1>
         <p className="text-xl text-muted-foreground font-light leading-relaxed">
-            The event you are looking for does not exist or has been moved.
+          The event you are looking for does not exist or has been moved.
         </p>
-         <Button asChild size="lg" className="mt-8 bg-primary hover:bg-primary/80 px-12 py-8 font-headline tracking-widest text-lg rounded-none w-full md:w-auto">
-            <Link href="/arenas">VIEW ALL ARENAS</Link>
+        <Button asChild size="lg" className="mt-8 bg-primary hover:bg-primary/80 px-12 py-8 font-headline tracking-widest text-lg rounded-none w-full md:w-auto">
+          <Link href="/arenas">VIEW ALL ARENAS</Link>
         </Button>
       </div>
-    )
+    );
   }
 
   const img = !event.imageUrl && Array.isArray(PlaceHolderImages) ? PlaceHolderImages.find(i => i.id === event.imgId) : null;
   const imgSrc = event.imageUrl || (img && typeof img === 'object' ? img.imageUrl : '') || '';
   const Icon = CircleHelp;
 
-  const eventStartDate = festivalDay && typeof festivalDay === 'object' && (festivalDay as any).date ? new Date((festivalDay as any).date).toISOString().split('T')[0] : '2027-01-16';
+  const eventStartDate = festivalDay && typeof festivalDay === 'object' && (festivalDay as any).date
+    ? new Date((festivalDay as any).date).toISOString().split('T')[0]
+    : '2027-01-16';
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -106,27 +158,42 @@ export default function ArenaDetailPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="pt-32 pb-40 px-6 max-w-5xl mx-auto min-h-screen">
-        <Link href="/arenas" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-12 font-headline text-xs tracking-widest uppercase group">
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          Back to Arenas
-        </Link>
+        <motion.div
+          initial={{ opacity: 0, x: -12 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ ...EASE_OUT, delay: 0.1 }}
+        >
+          <Link
+            href="/arenas"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-12 font-headline text-xs tracking-widest uppercase group"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            Back to Arenas
+          </Link>
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-          <div className="lg:col-span-2 space-y-8">
-            <div className="relative aspect-square overflow-hidden glass-panel border-primary/20 rounded-none shadow-2xl">
-              <Image
-                src={imgSrc}
-                alt={event.name}
-                fill
-                className="object-cover grayscale"
-              />
+          {/* Left: image + meta */}
+          <motion.div
+            className="lg:col-span-2 space-y-8"
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.1, delayChildren: 0.15 } } }}
+          >
+            <motion.div
+              variants={FADE_UP}
+              className="relative aspect-square overflow-hidden glass-panel border-primary/20 rounded-none shadow-2xl"
+            >
+              <Image src={imgSrc} alt={event.name} fill className="object-cover grayscale" />
               <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
-            </div>
+            </motion.div>
 
-            <div className="glass-panel p-6 border-primary/10 rounded-none space-y-4">
+            <motion.div variants={FADE_UP} className="glass-panel p-6 border-primary/10 rounded-none space-y-4">
               <div className="flex items-center gap-3 text-muted-foreground text-sm">
                 <Calendar className="w-4 h-4 text-primary" />
-                <span className="uppercase tracking-widest font-headline text-[10px]">{festivalDay && typeof festivalDay === 'object' ? formatDate((festivalDay as any).date) : 'JAN 16, 2027'}</span>
+                <span className="uppercase tracking-widest font-headline text-[10px]">
+                  {festivalDay && typeof festivalDay === 'object' ? formatDate((festivalDay as any).date) : 'JAN 16, 2027'}
+                </span>
               </div>
               <div className="flex items-center gap-3 text-muted-foreground text-sm">
                 <MapPin className="w-4 h-4 text-primary" />
@@ -150,29 +217,33 @@ export default function ArenaDetailPage() {
                   <span className="uppercase tracking-widest font-headline text-[10px]">{event.organiserContact}</span>
                 </div>
               )}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          <div className="lg:col-span-3 space-y-10">
-            <div>
+          {/* Right: content */}
+          <motion.div
+            className="lg:col-span-3 space-y-10"
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.1, delayChildren: 0.2 } } }}
+          >
+            <motion.div variants={FADE_UP}>
               <Badge className={`bg-primary/20 ${event.color} border-none rounded-none font-headline text-[10px] tracking-[0.2em] uppercase mb-4 px-4 py-1`}>
                 {event.type}
               </Badge>
               <h1 className="font-headline text-5xl md:text-6xl tracking-tighter text-white mb-6 uppercase">
                 {event.name}
               </h1>
-            </div>
+            </motion.div>
 
-            <div className="space-y-6">
+            <motion.div variants={FADE_UP} className="space-y-6">
               <h2 className="font-headline text-xl text-primary tracking-widest uppercase flex items-center gap-3">
                 <ShieldCheck className="w-5 h-5" /> The Protocol
               </h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {event.longDescription}
-              </p>
-            </div>
+              <p className="text-muted-foreground leading-relaxed">{event.longDescription}</p>
+            </motion.div>
 
-            <div className="space-y-6">
+            <motion.div variants={FADE_UP} className="space-y-6">
               <h2 className="font-headline text-xl text-accent tracking-widest uppercase flex items-center gap-3">
                 <ListChecks className="w-5 h-5" /> Entry Constraints
               </h2>
@@ -185,14 +256,14 @@ export default function ArenaDetailPage() {
                   ))}
                 </ul>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="pt-8">
+            <motion.div variants={FADE_UP} className="pt-8">
               <Button asChild size="lg" className="bg-primary hover:bg-primary/80 px-12 py-8 font-headline tracking-widest text-lg rounded-none w-full md:w-auto accent-glow">
                 <Link href="/register">INITIALIZE REGISTRATION</Link>
               </Button>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
     </>
