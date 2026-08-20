@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-const DEFAULT_TARGET_DATE = '2027-01-16T00:00:00+05:30';
+const DEFAULT_TARGET_DATE = '2027-01-23T00:00:00+05:30';
 
 function getTargetTimestamp(): number {
   let dateStr = DEFAULT_TARGET_DATE;

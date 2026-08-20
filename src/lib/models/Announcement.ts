@@ -6,6 +6,9 @@ export interface IAnnouncement extends Document {
   content: string;
   timestamp: string;
   author?: string;
+  category?: 'Update' | 'Deadline' | 'General';
+  deadlineDate?: string;
+  isPinned?: boolean;
 }
 
 const AnnouncementSchema: Schema = new Schema(
@@ -14,6 +17,9 @@ const AnnouncementSchema: Schema = new Schema(
     content: { type: String, required: true },
     timestamp: { type: String, required: true },
     author: { type: String, default: 'Organizing Committee' },
+    category: { type: String, enum: ['Update', 'Deadline', 'General'], default: 'General' },
+    deadlineDate: { type: String },
+    isPinned: { type: Boolean, default: false },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );

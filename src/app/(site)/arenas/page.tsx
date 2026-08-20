@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import * as LucideIcons from 'lucide-react';
-import { CircleHelp, ArrowRight, Trophy, Zap, ChevronDown, X } from 'lucide-react';
+import { CircleHelp, ArrowRight, Trophy, Zap, ChevronDown, X, Users, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFetch } from '@/hooks/use-fetch';
 
@@ -17,10 +17,11 @@ const FILTER_TABS = ['All', 'Coding', 'Hardware', 'Gaming', 'Non-Technical'] as 
 type Filter = typeof FILTER_TABS[number];
 
 const DIFFICULTY_COLORS: Record<string, string> = {
-  Beginner: 'text-green-400 border-green-400/30 bg-green-400/5',
-  Intermediate: 'text-[#FF6B00] border-[#FF6B00]/30 bg-[#FF6B00]/5',
-  Advanced: 'text-[#C81E1E] border-[#C81E1E]/30 bg-[#C81E1E]/5',
-  Expert: 'text-[#C81E1E] border-[#C81E1E]/30 bg-[#C81E1E]/5',
+  Beginner: 'text-[#FF6B00] border-[#FF6B00]/40 bg-[#FF6B00]/10',
+  Intermediate: 'text-[#FF6B00] border-[#FF6B00]/40 bg-[#FF6B00]/10',
+  Advanced: 'text-[#FF6B00] border-[#FF6B00]/40 bg-[#FF6B00]/10',
+  Pro: 'text-[#FF6B00] border-[#FF6B00]/40 bg-[#FF6B00]/10',
+  Expert: 'text-[#FF6B00] border-[#FF6B00]/40 bg-[#FF6B00]/10',
 };
 
 interface Arena {
@@ -38,6 +39,9 @@ interface Arena {
   rules?: string[];
   eligibility?: string;
   teamSize?: string;
+  duration?: string;
+  sponsorLogo?: string;
+  sponsorName?: string;
 }
 
 function SkeletonCard() {
@@ -145,59 +149,92 @@ function ArenaModal({ arena, onClose }: { arena: Arena; onClose: () => void }) {
 
 function ArenaCard({ arena, onClick }: { arena: Arena; onClick: () => void }) {
   const Icon = (LucideIcons as any)[arena.iconName || ''] || CircleHelp;
-  const diffClass = DIFFICULTY_COLORS[arena.difficulty || ''] || 'text-[#8A8A8A] border-white/10 bg-white/5';
 
   return (
     <motion.div
       variants={FADE_UP}
-      whileHover={{ y: -6, transition: { duration: 0.2 } }}
-      className="group relative border border-white/5 bg-white/[0.02] p-6 cursor-pointer overflow-hidden flex flex-col"
+      whileHover={{ scale: 1.02, y: -4, transition: { duration: 0.2, ease: 'easeOut' } }}
+      className="group relative border border-white/10 group-hover:border-[#FF6B00]/50 bg-white/[0.02] p-6 cursor-pointer overflow-hidden flex flex-col justify-between transition-all duration-200 ease-out"
       onClick={onClick}
-      style={{ '--glow-color': '#FF6B00' } as React.CSSProperties}
     >
-      {/* Hover glow */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+      {/* Inner Hover Glow */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
         style={{
           boxShadow: 'inset 0 0 0 1px rgba(255,107,0,0.5)',
-          background: 'radial-gradient(circle at top left, rgba(255,107,0,0.06), transparent 60%)',
+          background: 'radial-gradient(circle at top left, rgba(255,107,0,0.08), transparent 60%)',
         }}
       />
 
-      <div className="mb-5">
-        <div className="p-2.5 bg-[#FF6B00]/10 border border-[#FF6B00]/20 inline-block">
-          <Icon size={24} className="text-[#FF6B00]" strokeWidth={1.5} />
+      <div>
+        {/* Top Row: Icon + Top-Right Difficulty Badge */}
+        <div className="flex items-start justify-between gap-2 mb-5">
+          <div className="p-2.5 bg-[#FF6B00]/10 border border-[#FF6B00]/20">
+            <Icon size={24} className="text-[#FF6B00]" strokeWidth={1.5} />
+          </div>
+
+          <div className="border border-[#FF6B00]/40 bg-[#FF6B00]/10 text-[#FF6B00] px-2.5 py-0.5 text-[10px] font-headline font-bold tracking-widest uppercase rounded-sm">
+            {arena.difficulty || 'Intermediate'}
+          </div>
         </div>
+
+        <h3 className="text-xl font-black tracking-tight font-headline text-[#F1F1F1] group-hover:text-[#FF6B00] transition-colors mb-1.5">
+          {arena.name}
+        </h3>
+
+        {arena.hook && (
+          <p className="text-[10px] text-[#FF6B00]/90 tracking-[0.15em] uppercase mb-3 font-semibold">{arena.hook}</p>
+        )}
+
+        <p className="text-xs text-[#8A8A8A] leading-relaxed line-clamp-2 mb-6">
+          {arena.description}
+        </p>
       </div>
 
-      <h3 className="text-xl font-black tracking-tight font-headline text-[#F1F1F1] group-hover:text-[#FF6B00] transition-colors mb-2">
-        {arena.name}
-      </h3>
+      <div>
+        {/* Footer Stats Row (Prize / Team Size / Duration) */}
+        <div className="grid grid-cols-3 gap-2 pt-4 border-t border-white/10 mb-4">
+          <div className="flex flex-col items-start">
+            <div className="flex items-center gap-1 text-[#8A8A8A] text-[9px] uppercase tracking-wider font-semibold">
+              <Trophy size={11} className="text-[#FF6B00]" />
+              <span>Prize</span>
+            </div>
+            <span className="text-xs font-headline font-bold text-[#F1F1F1] mt-0.5 truncate">{arena.prize || 'TBA'}</span>
+          </div>
 
-      {arena.hook && (
-        <p className="text-xs text-[#FF6B00]/80 tracking-[0.1em] uppercase mb-3 font-semibold">{arena.hook}</p>
-      )}
+          <div className="flex flex-col items-start border-l border-white/5 pl-2">
+            <div className="flex items-center gap-1 text-[#8A8A8A] text-[9px] uppercase tracking-wider font-semibold">
+              <Users size={11} className="text-[#FF6B00]" />
+              <span>Team</span>
+            </div>
+            <span className="text-xs font-headline font-bold text-[#F1F1F1] mt-0.5 truncate">{arena.teamSize || '1-4'}</span>
+          </div>
 
-      <p className="text-sm text-[#8A8A8A] leading-relaxed line-clamp-2 flex-1 mb-5">
-        {arena.description}
-      </p>
+          <div className="flex flex-col items-start border-l border-white/5 pl-2">
+            <div className="flex items-center gap-1 text-[#8A8A8A] text-[9px] uppercase tracking-wider font-semibold">
+              <Clock size={11} className="text-[#FF6B00]" />
+              <span>Duration</span>
+            </div>
+            <span className="text-xs font-headline font-bold text-[#F1F1F1] mt-0.5 truncate">{arena.duration || '24h'}</span>
+          </div>
+        </div>
 
-      <div className="flex items-center gap-2 flex-wrap mb-5">
-        {arena.prize && (
-          <div className="flex items-center gap-1.5 border border-[#FF6B00]/20 bg-[#FF6B00]/5 px-2.5 py-1">
-            <Trophy size={10} className="text-[#FF6B00]" />
-            <span className="text-[10px] text-[#FF6B00] font-bold tracking-[0.1em]">{arena.prize}</span>
+        {/* Optional Bottom-Left Co-Branded Sponsor Slot */}
+        {(arena.sponsorName || arena.sponsorLogo) && (
+          <div className="flex items-center gap-1.5 text-[9px] text-[#8A8A8A] tracking-wider uppercase mb-3">
+            <span>Powered by</span>
+            {arena.sponsorLogo ? (
+              <img src={arena.sponsorLogo} alt={arena.sponsorName || 'Sponsor'} className="h-3.5 w-auto object-contain max-w-[80px]" />
+            ) : (
+              <span className="text-[#FF6B00] font-bold">{arena.sponsorName}</span>
+            )}
           </div>
         )}
-        {arena.difficulty && (
-          <div className={`border px-2.5 py-1 text-[10px] font-bold tracking-[0.1em] ${diffClass}`}>
-            {arena.difficulty}
-          </div>
-        )}
+
+        <button className="flex items-center gap-1.5 text-[11px] font-headline font-bold tracking-[0.15em] uppercase text-[#FF6B00] group-hover:gap-3 transition-all duration-200">
+          VIEW DETAILS <ArrowRight size={12} />
+        </button>
       </div>
-
-      <button className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-[#FF6B00] group-hover:gap-3 transition-all duration-200">
-        VIEW DETAILS <ArrowRight size={12} />
-      </button>
     </motion.div>
   );
 }

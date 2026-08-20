@@ -24,6 +24,9 @@ export interface IEvent extends Document {
   eventHead?: string;
   organiserContact?: string;
   festivalDayId?: string;
+  duration?: string;
+  sponsorLogo?: string;
+  sponsorName?: string;
   startTime?: string;
   endTime?: string;
 }
@@ -44,6 +47,9 @@ const EventSchema: Schema = new Schema(
     rules: [{ type: String }],
     eligibility: { type: String },
     teamSize: { type: String },
+    duration: { type: String },
+    sponsorLogo: { type: String },
+    sponsorName: { type: String },
     imageUrl: { type: String },
     imgId: { type: String },
     color: { type: String },

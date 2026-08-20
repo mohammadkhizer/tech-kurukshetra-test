@@ -126,15 +126,12 @@ export default function Home() {
       {/* ═══════════════════════════════════
           SPONSORS MARQUEE
       ═══════════════════════════════════ */}
-      <section className="py-16 border-t border-white/5">
-        <div className="max-w-6xl mx-auto px-6 mb-10 flex flex-col gap-2">
-          <div className="text-xs text-[#8A8A8A] tracking-[0.3em] uppercase">◈ SPONSORS & PARTNERS</div>
+      <section className="py-16">
+        <div className="max-w-6xl mx-auto px-6 mb-10 text-center">
+          <div className="text-xs text-[#8A8A8A] tracking-[0.3em] uppercase mb-2">◈ SPONSORS &amp; PARTNERS</div>
+          <h2 className="font-headline text-lg tracking-widest text-white/80 uppercase">Backed by the Best</h2>
         </div>
-        <div className="relative overflow-hidden">
-          <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-[#0A0A0F] to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-[#0A0A0F] to-transparent z-10 pointer-events-none" />
-          <SponsorMarqueeClient />
-        </div>
+        <SponsorMarqueeClient />
       </section>
     </div>
   );
