@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminAuth } from '@/lib/admin-auth';
 import { dbConnect } from '@/lib/mongodb';
 import Sponsor from '@/lib/models/Sponsor';
-import { sanitizeObject, sanitizeString } from '@/lib/sanitizer';
+import { sanitizeObject, sanitizeString, sanitizeUrl, decodeHtmlEntities } from '@/lib/sanitizer';
 
 export async function GET() {
   if (!(await verifyAdminAuth())) {
@@ -13,7 +13,13 @@ export async function GET() {
     const conn = await dbConnect();
     if (conn) {
       const items = await Sponsor.find({}).sort({ order: 1 }).lean();
-      const formatted = items.map((item: any) => ({ ...item, id: item._id ? item._id.toString() : '' }));
+      const formatted = items.map((item: any) => ({
+        ...item,
+        id: item._id ? item._id.toString() : '',
+        // Decode any HTML-entity-corrupted URLs stored from previous sanitizeString() misuse
+        logoUrl: item.logoUrl ? decodeHtmlEntities(item.logoUrl) : item.logoUrl,
+        websiteUrl: item.websiteUrl ? decodeHtmlEntities(item.websiteUrl) : item.websiteUrl,
+      }));
       return NextResponse.json({ success: true, data: formatted });
     }
   } catch (err) {
@@ -34,8 +40,8 @@ export async function POST(req: NextRequest) {
 
     const name = sanitizeString(body?.name);
     const category = sanitizeString(body?.category) || 'Partner';
-    const logoUrl = sanitizeString(body?.logoUrl);
-    const websiteUrl = sanitizeString(body?.websiteUrl);
+    const logoUrl = sanitizeUrl(body?.logoUrl);
+    const websiteUrl = sanitizeUrl(body?.websiteUrl);
 
     if (!name) {
       return NextResponse.json(

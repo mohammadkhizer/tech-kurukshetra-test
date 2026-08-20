@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useFetch } from '@/hooks/use-fetch';
+import { decodeHtmlEntities } from '@/lib/sanitizer';
 
 export function SponsorMarquee() {
   const { data: sponsors } = useFetch<any[]>('/api/sponsors');
@@ -18,7 +19,7 @@ export function SponsorMarquee() {
           >
             {sponsor.logoUrl ? (
               <Image
-                src={sponsor.logoUrl}
+                src={decodeHtmlEntities(sponsor.logoUrl)}
                 alt={sponsor.name}
                 width={120}
                 height={32}

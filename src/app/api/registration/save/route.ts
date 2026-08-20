@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/mongodb';
 import Registration from '@/lib/models/Registration';
-import { sanitizeString, sanitizeObject, isValidEmail } from '@/lib/sanitizer';
+import { sanitizeString, sanitizeObject } from '@/lib/sanitizer';
+import { RegistrationSaveSchema } from '@/lib/schemas';
 
 // In-memory fallback if MongoDB connection is unavailable
 const fallbackRegistrations: any[] = [];
@@ -9,38 +10,28 @@ const fallbackRegistrations: any[] = [];
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.json();
-    const body = sanitizeObject(rawBody);
-
-    const orderId = sanitizeString(body?.orderId);
-    const name = sanitizeString(body?.name);
-    const email = sanitizeString(body?.email);
-
-    if (!orderId || !name || !email) {
+    const parsed = RegistrationSaveSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
       return NextResponse.json(
-        { success: false, message: 'Missing required fields (orderId, name, email).' },
+        { success: false, message: issue ? `${issue.path.join('.')}: ${issue.message}` : 'Invalid request payload.' },
         { status: 400 }
       );
     }
 
-    if (!isValidEmail(email)) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid email address format.' },
-        { status: 400 }
-      );
-    }
+    const { orderId, name, email, phone, college, mode, teamName, teamSize, eventSlug, paymentStatus } = parsed.data;
 
     const payload = {
-      orderId,
-      name,
-      email,
-      phone: sanitizeString(body?.phone),
-      college: sanitizeString(body?.college),
-      mode: body?.mode === 'team' ? 'team' : 'individual',
-      teamName: sanitizeString(body?.teamName),
-      teamSize: sanitizeString(body?.teamSize),
-      eventSlug: sanitizeString(body?.eventSlug),
-      paymentStatus: sanitizeString(body?.paymentStatus) || 'completed',
-      rawPayload: body,
+      orderId: sanitizeString(orderId),
+      name: sanitizeString(name),
+      email: sanitizeString(email),
+      phone: sanitizeString(phone),
+      college: sanitizeString(college),
+      mode,
+      teamName: sanitizeString(teamName),
+      teamSize: sanitizeString(teamSize),
+      eventSlug: sanitizeString(eventSlug),
+      paymentStatus: sanitizeString(paymentStatus),
     };
 
     const conn = await dbConnect();

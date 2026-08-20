@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import { ArrowRight, Lightbulb, Users, Trophy, Zap } from 'lucide-react';
-import { GridCanvas } from '@/components/home/grid-canvas';
 import { Countdown } from '@/components/home/countdown';
 import { HeroCTA } from '@/components/home/hero-cta';
-import { ArenasPreview } from '@/components/home/arenas-preview';
-import { SponsorMarquee } from '@/components/home/sponsor-marquee';
+import { GridCanvasClient } from '@/components/home/grid-canvas-client';
+import { ArenasPreviewClient } from '@/components/home/arenas-preview-client';
+import { SponsorMarqueeClient } from '@/components/home/sponsor-marquee-client';
 
 function GlitchText({ text, className }: { text: string; className?: string }) {
   return (
@@ -21,7 +21,7 @@ export default function Home() {
           HERO
       ═══════════════════════════════════ */}
       <section className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 sm:px-6">
-        <GridCanvas />
+        <GridCanvasClient />
 
         {/* Vignette overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,#0A0A0F_100%)] pointer-events-none z-[1]" />
@@ -72,7 +72,7 @@ export default function Home() {
           ARENAS PREVIEW
       ═══════════════════════════════════ */}
       <section id="arenas" className="py-24 sm:py-32 px-4 sm:px-6">
-        <ArenasPreview />
+        <ArenasPreviewClient />
       </section>
 
       {/* ═══════════════════════════════════
@@ -133,7 +133,7 @@ export default function Home() {
         <div className="relative overflow-hidden">
           <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-[#0A0A0F] to-transparent z-10 pointer-events-none" />
           <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-[#0A0A0F] to-transparent z-10 pointer-events-none" />
-          <SponsorMarquee />
+          <SponsorMarqueeClient />
         </div>
       </section>
     </div>

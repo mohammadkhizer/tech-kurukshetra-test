@@ -5,20 +5,24 @@ import Admin from '@/lib/models/Admin';
 import { ADMIN_COOKIE_NAME, createAdminSessionToken, verifyPassword } from '@/lib/admin-auth';
 import { sanitizeString } from '@/lib/sanitizer';
 
+import { AdminLoginSchema } from '@/lib/schemas';
+import { logApiRequest } from '@/lib/logger';
+
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const rawUsername = body?.username;
-    const password = typeof body?.password === 'string' ? body.password.trim() : '';
+    const rawBody = await req.json();
+    const parsed = AdminLoginSchema.safeParse(rawBody);
 
-    const username = sanitizeString(rawUsername)?.toLowerCase();
-
-    if (!username || !password) {
+    if (!parsed.success) {
+      logApiRequest(req, 400);
       return NextResponse.json(
         { success: false, message: 'Username and password are required.' },
         { status: 400 }
       );
     }
+
+    const { username: rawUsername, password } = parsed.data;
+    const username = sanitizeString(rawUsername)?.toLowerCase();
 
     // Try authenticating against MongoDB Admin collection
     const conn = await dbConnect();
@@ -43,7 +47,7 @@ export async function POST(req: NextRequest) {
           cookieStore.set(ADMIN_COOKIE_NAME, sessionToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            sameSite: 'strict',
             path: '/',
             maxAge: 60 * 60 * 24 * 7, // 7 days
           });
@@ -59,29 +63,6 @@ export async function POST(req: NextRequest) {
           });
         }
       }
-    }
-
-    // Fallback to environment default credentials
-    const expectedUser = (process.env.ADMIN_USERNAME || 'admin').toLowerCase();
-    const expectedPass = process.env.ADMIN_PASSWORD || 'admin';
-
-    if (username === expectedUser && password === expectedPass) {
-      const cookieStore = await cookies();
-      const sessionToken = createAdminSessionToken('admin');
-
-      cookieStore.set(ADMIN_COOKIE_NAME, sessionToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: 'Authentication successful (Master Admin)',
-        data: { username: 'admin', role: 'superadmin' },
-      });
     }
 
     return NextResponse.json(

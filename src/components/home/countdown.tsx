@@ -43,49 +43,31 @@ function calculateTimeLeft() {
   };
 }
 
+const ZERO_TIME = { days: 0, hrs: 0, mins: 0, secs: 0 };
+
 export function Countdown() {
   const [mounted, setMounted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft);
+  const [timeLeft, setTimeLeft] = useState(ZERO_TIME);
 
   useEffect(() => {
     setMounted(true);
-    let intervalId: NodeJS.Timeout | null = null;
+    setTimeLeft(calculateTimeLeft());
 
     const updateTimer = () => {
-      const nextTime = calculateTimeLeft();
-
-      setTimeLeft((prev) => {
-        if (
-          prev.days === nextTime.days &&
-          prev.hrs === nextTime.hrs &&
-          prev.mins === nextTime.mins &&
-          prev.secs === nextTime.secs
-        ) {
-          return prev;
-        }
-        return nextTime;
-      });
-
-      const target = getTargetTimestamp();
-      if (target - Date.now() <= 0 && intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
-      }
+      setTimeLeft(calculateTimeLeft());
     };
 
-    updateTimer();
-    intervalId = setInterval(updateTimer, 1000);
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
+    const intervalId = setInterval(updateTimer, 1000);
+    return () => clearInterval(intervalId);
   }, []);
 
+  const activeTime = mounted ? timeLeft : ZERO_TIME;
+
   const units = [
-    { label: 'DAYS', value: String(timeLeft.days).padStart(2, '0') },
-    { label: 'HRS',  value: String(timeLeft.hrs).padStart(2, '0') },
-    { label: 'MINS', value: String(timeLeft.mins).padStart(2, '0') },
-    { label: 'SECS', value: String(timeLeft.secs).padStart(2, '0') },
+    { label: 'DAYS', value: String(activeTime.days).padStart(2, '0') },
+    { label: 'HRS',  value: String(activeTime.hrs).padStart(2, '0') },
+    { label: 'MINS', value: String(activeTime.mins).padStart(2, '0') },
+    { label: 'SECS', value: String(activeTime.secs).padStart(2, '0') },
   ];
 
   return (

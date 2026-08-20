@@ -1,7 +1,6 @@
-
-
 "use client"
 
+import Image from 'next/image';
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -66,6 +65,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFetch } from '@/hooks/use-fetch';
+import { decodeHtmlEntities } from '@/lib/sanitizer';
 
 const architectCategories = [
   "Organiser",
@@ -907,8 +907,8 @@ export default function DashboardPage() {
               {sponsors?.map((sponsor) => (
                 <div key={sponsor.id} className="glass-panel p-4 border-white/5 bg-white/5 flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 glass-panel flex items-center justify-center p-1 bg-white">
-                      <img src={sponsor.logoUrl} alt={sponsor.name} className="max-w-full max-h-full object-contain" />
+                    <div className="w-12 h-12 glass-panel flex items-center justify-center p-1 bg-white relative">
+                      <Image src={decodeHtmlEntities(sponsor.logoUrl || '')} alt={sponsor.name} width={48} height={48} className="max-w-full max-h-full object-contain" />
                     </div>
                     <div>
                       <h4 className="font-headline text-[11px] text-white tracking-widest uppercase">{sponsor.name}</h4>
@@ -1266,7 +1266,7 @@ export default function DashboardPage() {
                   <div key={member.id} className="glass-panel p-4 border-white/5 bg-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <span className="font-headline text-primary text-sm w-6 text-center">{idx + 1}.</span>
-                      <img src={member.profileImageUrl} alt={member.fullName} className="w-10 h-10 rounded-full object-cover bg-white/10" />
+                      <Image src={member.profileImageUrl} alt={member.fullName} width={40} height={40} className="w-10 h-10 rounded-full object-cover bg-white/10" />
                       <div>
                         <h4 className="font-headline text-[11px] text-white tracking-widest uppercase">{member.fullName}</h4>
                         <p className="text-[8px] text-muted-foreground uppercase tracking-widest">{member.role} - <span className="text-accent">{member.category}</span></p>

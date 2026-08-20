@@ -4,6 +4,8 @@
 
 /**
  * Escapes HTML characters and strips dangerous script tags, event handlers, and NoSQL injection patterns.
+ * NOTE: Do NOT use this for URL fields — use sanitizeUrl() instead, which preserves
+ * URL-safe characters like slashes and ampersands.
  */
 export function sanitizeString(input: unknown): string {
   if (typeof input !== 'string') {
@@ -28,6 +30,49 @@ export function sanitizeString(input: unknown): string {
     .replace(/\//g, '&#x2F;');
 
   return sanitized.trim();
+}
+
+/**
+ * Sanitizes a URL field. Strips dangerous schemes (javascript:, data:, vbscript:)
+ * and inline event handlers WITHOUT HTML-encoding URL characters like slashes and
+ * ampersands. Always use this instead of sanitizeString() for any URL/href field.
+ */
+export function sanitizeUrl(input: unknown): string {
+  if (typeof input !== 'string') {
+    return '';
+  }
+
+  const url = input.trim();
+
+  // Decode any previously HTML-encoded entities so we can validate the real URL
+  const decoded = decodeHtmlEntities(url);
+
+  // Block dangerous schemes
+  if (/^(javascript|data|vbscript):/i.test(decoded.replace(/\s/g, ''))) {
+    return '';
+  }
+
+  // Strip inline event handler patterns
+  const cleaned = decoded
+    .replace(/on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    .replace(/<[^>]*>/g, '') // strip any stray HTML tags
+    .replace(/^\$/, '');     // NoSQL prefix guard
+
+  return cleaned.trim();
+}
+
+/**
+ * Decodes HTML entities that may have been incorrectly stored in the database
+ * (e.g., &#x2F; → /, &amp; → &, &lt; → <).
+ */
+export function decodeHtmlEntities(input: string): string {
+  return input
+    .replace(/&#x2F;/gi, '/')
+    .replace(/&#x27;/gi, "'")
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"');
 }
 
 /**
