@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-const DEFAULT_TARGET_DATE = '2027-01-23T00:00:00+05:30';
+const DEFAULT_TARGET_DATE = '2027-01-23T09:00:00+05:30';
 
 function getTargetTimestamp(): number {
   let dateStr = DEFAULT_TARGET_DATE;
@@ -13,21 +13,29 @@ function getTargetTimestamp(): number {
     dateStr = process.env.NEXT_PUBLIC_EVENT_DATE;
   }
 
-  dateStr = dateStr.trim();
+  dateStr = dateStr.trim().replace(/^["']|["']$/g, '');
 
-  // If input is purely YYYY-MM-DD, expand to full ISO time string T00:00:00
+  // If input is purely YYYY-MM-DD, expand to full ISO time string T09:00:00
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    dateStr += 'T00:00:00';
+    dateStr += 'T09:00:00';
   }
 
   // Ensure string has explicit timezone offset if missing (force IST +05:30)
-  // Check if string does NOT end with Z or a timezone offset like +05:30 or -05:00
   if (!/(?:Z|[+-]\d{2}:?\d{2})$/i.test(dateStr)) {
     dateStr += '+05:30';
   }
 
-  const parsed = new Date(dateStr).getTime();
-  return isNaN(parsed) ? new Date(DEFAULT_TARGET_DATE).getTime() : parsed;
+  let parsed = new Date(dateStr).getTime();
+  if (isNaN(parsed) || parsed <= Date.now()) {
+    parsed = new Date(DEFAULT_TARGET_DATE).getTime();
+  }
+
+  // Fallback to future date (Jan 23, 2027) if past or invalid
+  if (isNaN(parsed) || parsed <= Date.now()) {
+    parsed = new Date('2027-01-23T09:00:00+05:30').getTime();
+  }
+
+  return parsed;
 }
 
 function calculateTimeLeft() {
@@ -61,7 +69,7 @@ export function Countdown() {
     return () => clearInterval(intervalId);
   }, []);
 
-  const activeTime = mounted ? timeLeft : ZERO_TIME;
+  const activeTime = mounted ? timeLeft : calculateTimeLeft();
 
   const units = [
     { label: 'DAYS', value: String(activeTime.days).padStart(2, '0') },
@@ -90,3 +98,4 @@ export function Countdown() {
     </div>
   );
 }
+

@@ -76,11 +76,14 @@ function ArenaDetailSkeleton() {
   );
 }
 
+import { DEFAULT_EVENTS } from '@/lib/events-data';
+
 export default function ArenaDetailPage() {
   const params = useParams();
   const slug = params?.slug as string;
   const { data: events, isLoading } = useFetch<any[]>('/api/events');
-  const event = useMemo(() => events?.find((e: any) => e.slug === slug), [events, slug]);
+  const allEvents = useMemo(() => (events && events.length > 0 ? events : DEFAULT_EVENTS), [events]);
+  const event = useMemo(() => allEvents.find((e: any) => e.slug === slug), [allEvents, slug]);
   const festivalDay = null;
   const festivalDayLoading = false;
 

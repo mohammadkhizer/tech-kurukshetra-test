@@ -239,12 +239,14 @@ function ArenaCard({ arena, onClick }: { arena: Arena; onClick: () => void }) {
   );
 }
 
+import { DEFAULT_EVENTS } from '@/lib/events-data';
+
 export default function ArenasPage() {
   const [activeFilter, setActiveFilter] = useState<Filter>('All');
   const [selectedArena, setSelectedArena] = useState<Arena | null>(null);
 
   const { data: rawEvents, isLoading } = useFetch<Arena[]>('/api/events');
-  const events: Arena[] = useMemo(() => rawEvents || [], [rawEvents]);
+  const events: Arena[] = useMemo(() => (rawEvents && rawEvents.length > 0 ? rawEvents : DEFAULT_EVENTS as any[]), [rawEvents]);
 
   const filtered = useMemo(() => {
     if (activeFilter === 'All') return events;

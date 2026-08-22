@@ -115,9 +115,26 @@ function MarqueeRow({
   );
 }
 
+const DEFAULT_SPONSORS = [
+  { id: 's1', name: 'TITLE SPONSOR' },
+  { id: 's2', name: 'TECH PARTNER' },
+  { id: 's3', name: 'CLOUD SPONSOR' },
+  { id: 's4', name: 'AI RESEARCH LABS' },
+  { id: 's5', name: 'GAMING PARTNER' },
+  { id: 's6', name: 'SECURITY LABS' },
+  { id: 's7', name: 'DEV TOOLS INC' },
+  { id: 's8', name: 'INNOVATION HUB' },
+  { id: 's9', name: 'MEDIA NETWORKS' },
+  { id: 's10', name: 'COMMUNITY GUILD' },
+];
+
 export function SponsorMarquee() {
   const { data: sponsors } = useFetch<any[]>('/api/sponsors');
-  if (!sponsors || sponsors.length === 0) return null;
+  const activeSponsors = sponsors && sponsors.length > 0 ? sponsors : DEFAULT_SPONSORS;
+
+  const half = Math.ceil(activeSponsors.length / 2);
+  const row1 = activeSponsors.slice(0, half);
+  const row2 = activeSponsors.slice(half).length > 0 ? activeSponsors.slice(half) : activeSponsors;
 
   return (
     <div className="relative select-none">
@@ -141,8 +158,8 @@ export function SponsorMarquee() {
           gap: '16px',
         }}
       >
-        <MarqueeRow sponsors={sponsors} direction="left" />
-        <MarqueeRow sponsors={sponsors} direction="right" />
+        <MarqueeRow sponsors={row1} direction="left" />
+        <MarqueeRow sponsors={row2} direction="right" />
       </div>
 
       {/* ── Amber gradient divider — bottom ── */}
@@ -157,3 +174,4 @@ export function SponsorMarquee() {
     </div>
   );
 }
+

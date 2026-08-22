@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import * as LucideIcons from 'lucide-react';
 import { ArrowRight, CircleHelp, Trophy, Users, Clock } from 'lucide-react';
 import { useFetch } from '@/hooks/use-fetch';
+import { DEFAULT_EVENTS } from '@/lib/events-data';
 
 function SkeletonArenaCard() {
   return (
@@ -25,7 +27,8 @@ const FADE_UP = {
 };
 
 export function ArenasPreview() {
-  const { data: events, isLoading: eventsLoading } = useFetch<any[]>('/api/events');
+  const { data: rawEvents, isLoading: eventsLoading } = useFetch<any[]>('/api/events');
+  const events = rawEvents && rawEvents.length > 0 ? rawEvents : DEFAULT_EVENTS;
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -49,10 +52,6 @@ export function ArenasPreview() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => <SkeletonArenaCard key={i} />)}
         </div>
-      ) : !events || events.length === 0 ? (
-        <div className="text-center py-12 text-[#8A8A8A]">
-          <p className="text-xs uppercase tracking-[0.2em]">No arenas currently listed. Check back soon!</p>
-        </div>
       ) : (
         <motion.div
           initial="hidden"
@@ -62,6 +61,7 @@ export function ArenasPreview() {
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
         >
           {events.slice(0, 4).map((event: any) => {
+            const Icon = (LucideIcons as any)[event.iconName || ''] || CircleHelp;
             return (
               <motion.div
                 key={event.id || event.slug}
@@ -79,7 +79,7 @@ export function ArenasPreview() {
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-5">
                     <div className="p-2.5 bg-[#FF6B00]/10 border border-[#FF6B00]/20">
-                      <CircleHelp size={24} className="text-[#FF6B00]" strokeWidth={1.5} />
+                      <Icon size={24} className="text-[#FF6B00]" strokeWidth={1.5} />
                     </div>
                     <div className="border border-[#FF6B00]/40 bg-[#FF6B00]/10 text-[#FF6B00] px-2.5 py-0.5 text-[10px] font-headline font-bold tracking-widest uppercase rounded-sm">
                       {event.difficulty || 'Intermediate'}
@@ -149,3 +149,4 @@ export function ArenasPreview() {
     </div>
   );
 }
+
