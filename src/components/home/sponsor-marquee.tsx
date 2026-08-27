@@ -43,6 +43,7 @@ function LogoCard({ sponsor }: { sponsor: any }) {
             alt={sponsor.name}
             width={120}
             height={40}
+            loading="lazy"
             unoptimized
             className="h-10 w-auto object-contain transition-all duration-300"
             style={{

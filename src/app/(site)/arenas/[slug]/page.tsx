@@ -187,7 +187,14 @@ export default function ArenaDetailPage() {
               variants={FADE_UP}
               className="relative aspect-square overflow-hidden glass-panel border-primary/20 rounded-none shadow-2xl"
             >
-              <Image src={imgSrc} alt={event.name} fill className="object-cover grayscale" />
+              <Image
+                src={imgSrc}
+                alt={event.name}
+                fill
+                loading="lazy"
+                sizes="(max-width: 768px) 100vw, 400px"
+                className="object-cover grayscale"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
             </motion.div>
 
