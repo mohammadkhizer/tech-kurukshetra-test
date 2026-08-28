@@ -11,6 +11,15 @@ export const ContactSubmitSchema = z.object({
   hp: z.string().max(HONEYPOT_MAX, 'Bot detected').optional().default(''),
 });
 
+export const PlayerSchema = z.object({
+  fullName: z.string().trim().min(2, 'Full name is required').max(100),
+  email: z.string().trim().email('Invalid email address format').max(255),
+  phone: z.string().trim().min(7, 'Valid phone number required').max(20),
+  college: z.string().trim().min(2, 'College name is required').max(200),
+  yearOfStudy: z.string().trim().min(1, 'Year of study is required').max(50),
+  isCaptain: z.boolean().default(false),
+});
+
 export const RegistrationSaveSchema = z.object({
   orderId: z.string().trim().min(1, 'Order ID is required').max(100),
   name: z.string().trim().min(2, 'Name is required').max(100),
@@ -22,6 +31,8 @@ export const RegistrationSaveSchema = z.object({
   teamSize: z.string().trim().max(10).optional().default(''),
   eventSlug: z.string().trim().max(100).optional().default(''),
   paymentStatus: z.string().trim().max(50).default('completed'),
+  players: z.array(PlayerSchema).optional().default([]),
+  rawPayload: z.record(z.any()).optional(),
   hp: z.string().max(HONEYPOT_MAX, 'Bot detected').optional().default(''),
 });
 

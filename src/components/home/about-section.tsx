@@ -14,10 +14,10 @@ export function AboutSection() {
   return (
     <section
       id="about"
-      className="py-24 sm:py-32 px-4 sm:px-6 relative overflow-hidden bg-tk-bg-surface"
+      className="py-20 sm:py-28 lg:py-32 px-4 sm:px-6 relative overflow-hidden bg-tk-bg-surface w-full"
       style={{ borderTop: '1px solid var(--tk-border)' }}
     >
-      {/* Single subtle orange radial — top-right corner only (one accent touch, not full bg) */}
+      {/* Single subtle orange radial — top-right corner background decor */}
       <div
         className="absolute top-0 right-0 w-[500px] h-[400px] pointer-events-none"
         style={{
@@ -25,29 +25,29 @@ export function AboutSection() {
         }}
       />
 
-      <div className="max-w-6xl mx-auto relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-          {/* Mission Left */}
+      <div className="max-w-6xl mx-auto w-full relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 xl:gap-16 items-center w-full">
+          {/* Mission Left Overview */}
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-80px' }}
             variants={FADE_UP}
-            className="lg:col-span-5 flex flex-col gap-4"
+            className="lg:col-span-5 xl:col-span-4 flex flex-col gap-4 w-full"
           >
             <div className="text-xs tracking-[0.3em] uppercase font-bold" style={{ color: 'var(--tk-accent)' }}>
               ◈ MISSION STATEMENT
             </div>
-            <h2 className="text-4xl sm:text-5xl font-black tracking-tighter font-headline leading-[0.95] text-tk-text">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter font-headline leading-[0.95] text-tk-text">
               THE BATTLEFIELD<br />
-              <span className="font-light italic text-3xl sm:text-4xl text-tk-text-muted">AWAITS.</span>
+              <span className="font-light italic text-2xl sm:text-3xl lg:text-4xl text-tk-text-muted">AWAITS.</span>
             </h2>
-            <p className="text-tk-text-muted text-sm sm:text-base leading-relaxed mt-4">
+            <p className="text-tk-text-muted text-sm sm:text-base leading-relaxed mt-2 sm:mt-4">
               TECH KURUKSHETRA is not just an ordinary festival — it is a high-intensity battleground.
               A two-day national technical crucible hosted at UCPIT, SVGU Ahmedabad, where India's sharpest
               engineers, coders, and makers collide to build, compete, and claim arena glory.
             </p>
-            <div className="mt-4">
+            <div className="mt-2 sm:mt-4">
               <Link
                 href="/about"
                 className="inline-flex items-center gap-2 text-xs tracking-[0.2em] uppercase font-bold pb-0.5 transition-colors"
@@ -61,13 +61,13 @@ export function AboutSection() {
             </div>
           </motion.div>
 
-          {/* 3-Column Cards */}
+          {/* 3-Column Cards Right Grid — fluid 100% width container */}
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-80px' }}
             variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-            className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6"
+            className="lg:col-span-7 xl:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 w-full items-stretch"
           >
             {[
               {
@@ -90,7 +90,7 @@ export function AboutSection() {
                 key={label}
                 variants={FADE_UP}
                 whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                className="group flex flex-col justify-between p-6 transition-all duration-300"
+                className="group flex flex-col justify-between p-5 sm:p-6 transition-all duration-300 h-full w-full"
                 style={{
                   border: '1px solid var(--tk-border)',
                   background: 'var(--tk-bg)',
@@ -106,7 +106,7 @@ export function AboutSection() {
               >
                 <div>
                   <div
-                    className="p-3 w-fit mb-5 transition-colors duration-200"
+                    className="p-3 w-fit mb-4 sm:mb-5 transition-colors duration-200"
                     style={{
                       background: 'var(--tk-accent-subtle)',
                       border: '1px solid var(--tk-border-accent)',

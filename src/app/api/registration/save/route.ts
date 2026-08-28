@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { orderId, name, email, phone, college, mode, teamName, teamSize, eventSlug, paymentStatus } = parsed.data;
+    const { orderId, name, email, phone, college, mode, teamName, teamSize, eventSlug, paymentStatus, players, rawPayload } = parsed.data;
 
     const payload = {
       orderId:       sanitizeString(orderId),
@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
       teamSize:      sanitizeString(teamSize),
       eventSlug:     sanitizeString(eventSlug),
       paymentStatus: sanitizeString(paymentStatus),
+      rawPayload:    rawPayload || { players, eventSlug, mode, teamName, registeredAt: new Date().toISOString() },
     };
 
     // Save directly to DB (Registration collection)

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/mongodb';
 import Event from '@/lib/models/Event';
+import { EVENTS_DATA } from '@/data/events';
 
 export async function GET() {
   try {
@@ -19,6 +20,6 @@ export async function GET() {
     console.error('[GET /api/events] DB query error:', err);
   }
 
-  // Return empty array when DB has no events — no silent static fallback
-  return NextResponse.json({ success: true, data: [] });
+  // Fallback to single source-of-truth seed events when DB is empty
+  return NextResponse.json({ success: true, data: EVENTS_DATA });
 }

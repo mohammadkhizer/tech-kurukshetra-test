@@ -10,15 +10,18 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import {
-  CircleHelp,
   ArrowLeft,
   Calendar,
   MapPin,
   Tag,
   User,
   Phone,
+  Mail,
   ShieldCheck,
   ListChecks,
+  Trophy,
+  Users,
+  Clock,
 } from 'lucide-react';
 import { useFetch } from '@/hooks/use-fetch';
 
@@ -27,6 +30,14 @@ const FADE_UP = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: EASE_OUT },
 };
+
+function formatTeamSize(ts: any): string {
+  if (!ts) return '1';
+  if (typeof ts === 'object' && ts.min !== undefined && ts.max !== undefined) {
+    return ts.min === ts.max ? `${ts.min}` : `${ts.min}-${ts.max}`;
+  }
+  return String(ts);
+}
 
 function ArenaDetailSkeleton() {
   return (
@@ -76,7 +87,9 @@ export default function ArenaDetailPage() {
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Date TBD';
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return dateString;
+    return d.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -90,33 +103,39 @@ export default function ArenaDetailPage() {
   if (!event) {
     return (
       <div className="pt-32 pb-40 px-6 max-w-5xl mx-auto min-h-screen text-center">
-        <h1 className="font-headline text-5xl md:text-6xl tracking-tighter text-destructive mb-6 uppercase">
+        <h1 className="font-headline text-5xl md:text-6xl tracking-tighter text-red-500 mb-6 uppercase">
           Arena Not Found
         </h1>
-        <p className="text-xl text-muted-foreground font-light leading-relaxed">
+        <p className="text-xl text-tk-text-muted font-light leading-relaxed">
           The event you are looking for does not exist or has not been listed yet.
         </p>
-        <Button asChild size="lg" className="mt-8 bg-primary hover:bg-primary/80 px-12 py-8 font-headline tracking-widest text-lg rounded-none w-full md:w-auto">
+        <Button asChild size="lg" className="mt-8 bg-tk-accent hover:bg-tk-accent-dim text-tk-bg px-12 py-8 font-headline tracking-widest text-lg rounded-none w-full md:w-auto">
           <Link href="/arenas">VIEW ALL ARENAS</Link>
         </Button>
       </div>
     );
   }
 
-  const img = !event.imageUrl && Array.isArray(PlaceHolderImages) ? PlaceHolderImages.find((i: any) => i.id === event.imgId) : null;
-  const imgSrc = event.imageUrl || (img && typeof img === 'object' ? img.imageUrl : '') || '';
+  const placeholderObj = !event.imageUrl && Array.isArray(PlaceHolderImages) ? PlaceHolderImages.find((i: any) => i.id === event.imgId) : null;
+  const imgSrc = event.imageUrl || event.bannerImage || (placeholderObj && typeof placeholderObj === 'object' ? placeholderObj.imageUrl : '') || '';
+
+  const prizeDisplay = event.prizePool || event.prize || 'TBA';
+  const venueDisplay = event.venue || event.location || 'Location TBD';
+  const teamSizeDisplay = formatTeamSize(event.teamSize);
+  const contact = event.coordinatorContact;
+  const feeDisplay = event.entryFee !== undefined ? (typeof event.entryFee === 'number' ? `₹${event.entryFee}` : event.entryFee) : event.registrationFee || 'Free';
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Event',
     name: event.name,
-    startDate: event.startTime || undefined,
+    startDate: event.date || event.startTime || undefined,
     endDate: event.endTime || undefined,
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     eventStatus: 'https://schema.org/EventScheduled',
     location: {
       '@type': 'Place',
-      name: event.location || 'UCPIT SVGU Campus',
+      name: venueDisplay,
       address: {
         '@type': 'PostalAddress',
         streetAddress: 'Chimanbhai Patel Institute Campus, SG Highway',
@@ -142,7 +161,7 @@ export default function ArenaDetailPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="pt-32 pb-40 px-6 max-w-5xl mx-auto min-h-screen">
+      <div className="pt-32 pb-40 px-6 max-w-5xl mx-auto min-h-screen text-tk-text">
         <motion.div
           initial={{ opacity: 0, x: -12 }}
           animate={{ opacity: 1, x: 0 }}
@@ -150,7 +169,7 @@ export default function ArenaDetailPage() {
         >
           <Link
             href="/arenas"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-12 font-headline text-xs tracking-widest uppercase group"
+            className="inline-flex items-center gap-2 text-tk-text-muted hover:text-tk-accent transition-colors mb-12 font-headline text-xs tracking-widest uppercase group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back to Arenas
@@ -158,7 +177,7 @@ export default function ArenaDetailPage() {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-          {/* Left: image + meta */}
+          {/* Left: Metadata card */}
           <motion.div
             className="lg:col-span-2 space-y-8"
             initial="hidden"
@@ -168,7 +187,7 @@ export default function ArenaDetailPage() {
             {imgSrc && (
               <motion.div
                 variants={FADE_UP}
-                className="relative aspect-square overflow-hidden glass-panel border-primary/20 rounded-none shadow-2xl"
+                className="relative aspect-square overflow-hidden border border-tk-border rounded-none shadow-2xl bg-tk-bg-surface"
               >
                 <Image
                   src={imgSrc}
@@ -176,45 +195,69 @@ export default function ArenaDetailPage() {
                   fill
                   loading="lazy"
                   sizes="(max-width: 768px) 100vw, 400px"
-                  className="object-cover grayscale"
+                  className="object-cover grayscale hover:grayscale-0 transition-all duration-500"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
+                <div className="absolute inset-0 bg-gradient-to-t from-tk-bg via-transparent to-transparent opacity-60" />
               </motion.div>
             )}
 
-            <motion.div variants={FADE_UP} className="glass-panel p-6 border-primary/10 rounded-none space-y-4">
-              <div className="flex items-center gap-3 text-muted-foreground text-sm">
-                <Calendar className="w-4 h-4 text-primary" />
+            <motion.div variants={FADE_UP} className="p-6 border border-tk-border bg-tk-bg-surface space-y-4">
+              <div className="flex items-center gap-3 text-tk-text-muted text-sm">
+                <Calendar className="w-4 h-4 text-tk-accent flex-shrink-0" />
                 <span className="uppercase tracking-widest font-headline text-[10px]">
-                  {formatDate(event.startTime)}
+                  {formatDate(event.date || event.startTime)}
                 </span>
               </div>
-              <div className="flex items-center gap-3 text-muted-foreground text-sm">
-                <MapPin className="w-4 h-4 text-primary" />
-                <span className="uppercase tracking-widest font-headline text-[10px]">{event.location || 'Location TBD'}</span>
+
+              {event.time && (
+                <div className="flex items-center gap-3 text-tk-text-muted text-sm">
+                  <Clock className="w-4 h-4 text-tk-accent flex-shrink-0" />
+                  <span className="uppercase tracking-widest font-headline text-[10px]">{event.time}</span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-3 text-tk-text-muted text-sm">
+                <MapPin className="w-4 h-4 text-tk-accent flex-shrink-0" />
+                <span className="uppercase tracking-widest font-headline text-[10px]">{venueDisplay}</span>
               </div>
-              {event.registrationFee && (
-                <div className="flex items-center gap-3 text-muted-foreground text-sm">
-                  <Tag className="w-4 h-4 text-primary" />
-                  <span className="uppercase tracking-widest font-headline text-[10px]">{event.registrationFee}</span>
-                </div>
-              )}
-              {event.eventHead && (
-                <div className="flex items-center gap-3 text-muted-foreground text-sm">
-                  <User className="w-4 h-4 text-primary" />
-                  <span className="uppercase tracking-widest font-headline text-[10px]">{event.eventHead}</span>
-                </div>
-              )}
-              {event.organiserContact && (
-                <div className="flex items-center gap-3 text-muted-foreground text-sm">
-                  <Phone className="w-4 h-4 text-primary" />
-                  <span className="uppercase tracking-widest font-headline text-[10px]">{event.organiserContact}</span>
+
+              <div className="flex items-center gap-3 text-tk-text-muted text-sm">
+                <Tag className="w-4 h-4 text-tk-accent flex-shrink-0" />
+                <span className="uppercase tracking-widest font-headline text-[10px]">Fee: {feeDisplay}</span>
+              </div>
+
+              <div className="flex items-center gap-3 text-tk-text-muted text-sm">
+                <Users className="w-4 h-4 text-tk-accent flex-shrink-0" />
+                <span className="uppercase tracking-widest font-headline text-[10px]">Team Size: {teamSizeDisplay}</span>
+              </div>
+
+              <div className="flex items-center gap-3 text-tk-text-muted text-sm">
+                <Trophy className="w-4 h-4 text-tk-accent flex-shrink-0" />
+                <span className="uppercase tracking-widest font-headline text-[10px]">Prize: {prizeDisplay}</span>
+              </div>
+
+              {/* Coordinator Contact Block */}
+              {contact && (
+                <div className="pt-4 border-t border-white/10 space-y-2">
+                  <div className="text-[10px] text-tk-text-muted uppercase tracking-[0.2em] font-bold">Coordinator Contact</div>
+                  <div className="flex items-center gap-2 text-xs text-tk-text">
+                    <User className="w-3.5 h-3.5 text-tk-accent flex-shrink-0" />
+                    <span>{contact.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-tk-text-muted">
+                    <Phone className="w-3.5 h-3.5 text-tk-accent flex-shrink-0" />
+                    <span>{contact.phone}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-tk-text-muted">
+                    <Mail className="w-3.5 h-3.5 text-tk-accent flex-shrink-0" />
+                    <span>{contact.email}</span>
+                  </div>
                 </div>
               )}
             </motion.div>
           </motion.div>
 
-          {/* Right: content */}
+          {/* Right: details */}
           <motion.div
             className="lg:col-span-3 space-y-10"
             initial="hidden"
@@ -222,31 +265,38 @@ export default function ArenaDetailPage() {
             variants={{ visible: { transition: { staggerChildren: 0.1, delayChildren: 0.2 } } }}
           >
             <motion.div variants={FADE_UP}>
-              <Badge className={`bg-primary/20 ${event.color || 'text-primary'} border-none rounded-none font-headline text-[10px] tracking-[0.2em] uppercase mb-4 px-4 py-1`}>
-                {event.type || event.category || 'Battle Arena'}
-              </Badge>
-              <h1 className="font-headline text-5xl md:text-6xl tracking-tighter text-white mb-6 uppercase">
+              <div className="flex items-center gap-2 mb-4">
+                <Badge className="bg-tk-accent/20 text-tk-accent border-none rounded-none font-headline text-[10px] tracking-[0.2em] uppercase px-4 py-1">
+                  {event.category || (event.isTechnical ? 'TECH' : 'NON-TECH')}
+                </Badge>
+                {event.type && (
+                  <Badge className="bg-white/5 text-tk-text-muted border border-tk-border rounded-none font-headline text-[10px] tracking-[0.2em] uppercase px-3 py-1">
+                    {event.type}
+                  </Badge>
+                )}
+              </div>
+              <h1 className="font-headline text-4xl sm:text-5xl md:text-6xl tracking-tighter text-tk-text mb-6 uppercase">
                 {event.name}
               </h1>
             </motion.div>
 
-            <motion.div variants={FADE_UP} className="space-y-6">
-              <h2 className="font-headline text-xl text-primary tracking-widest uppercase flex items-center gap-3">
-                <ShieldCheck className="w-5 h-5" /> The Protocol
+            <motion.div variants={FADE_UP} className="space-y-4">
+              <h2 className="font-headline text-xl text-tk-accent tracking-widest uppercase flex items-center gap-3">
+                <ShieldCheck className="w-5 h-5" /> Mission Overview
               </h2>
-              <p className="text-muted-foreground leading-relaxed">{event.longDescription || event.description}</p>
+              <p className="text-tk-text-muted leading-relaxed">{event.longDescription || event.description}</p>
             </motion.div>
 
             {event.rules && Array.isArray(event.rules) && event.rules.length > 0 && (
               <motion.div variants={FADE_UP} className="space-y-6">
-                <h2 className="font-headline text-xl text-accent tracking-widest uppercase flex items-center gap-3">
-                  <ListChecks className="w-5 h-5" /> Entry Constraints
+                <h2 className="font-headline text-xl text-tk-accent tracking-widest uppercase flex items-center gap-3">
+                  <ListChecks className="w-5 h-5" /> Rules &amp; Guidelines
                 </h2>
-                <div className="glass-panel p-6 border-white/5 bg-white/5 rounded-none">
+                <div className="p-6 border border-tk-border bg-tk-bg-surface rounded-none">
                   <ul className="space-y-4">
                     {event.rules.map((rule: string, idx: number) => (
-                      <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                        <span className="text-[#FF6B00] font-bold">◈</span>
+                      <li key={idx} className="text-sm text-tk-text-muted flex items-start gap-3">
+                        <span className="text-tk-accent font-bold mt-0.5">◈</span>
                         <span>{rule}</span>
                       </li>
                     ))}
@@ -255,8 +305,12 @@ export default function ArenaDetailPage() {
               </motion.div>
             )}
 
-            <motion.div variants={FADE_UP} className="pt-8">
-              <Button asChild size="lg" className="bg-primary hover:bg-primary/80 px-12 py-8 font-headline tracking-widest text-lg rounded-none w-full md:w-auto accent-glow">
+            <motion.div variants={FADE_UP} className="pt-6">
+              <Button
+                asChild
+                size="lg"
+                className="bg-tk-accent hover:bg-tk-accent-dim text-tk-bg px-12 py-8 font-headline tracking-widest text-lg rounded-none w-full md:w-auto font-black uppercase"
+              >
                 <Link href="/register">INITIALIZE REGISTRATION</Link>
               </Button>
             </motion.div>
