@@ -137,8 +137,11 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // 4. Admin API Protection (excluding login and signup)
-  const isPublicAdminApi = pathname.startsWith('/api/admin/login') || pathname.startsWith('/api/admin/signup');
+  // 4. Admin API Protection (excluding login, signup, and auth check)
+  const isPublicAdminApi =
+    pathname.startsWith('/api/admin/login') ||
+    pathname.startsWith('/api/admin/signup') ||
+    pathname.startsWith('/api/admin/check');
   if (pathname.startsWith('/api/admin') && !isPublicAdminApi) {
     const sessionCookie = req.cookies.get(ADMIN_COOKIE_NAME);
     const isAuthenticated = sessionCookie?.value

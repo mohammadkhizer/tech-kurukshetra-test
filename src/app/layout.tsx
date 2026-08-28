@@ -19,6 +19,7 @@ const orbitron = localFont({
   display: 'swap',
   // Covers weight 700–900 (variable font subset served by Google Fonts)
   weight: '700 900',
+  preload: false,
 });
 
 const siteConfig = {
@@ -85,7 +86,6 @@ export const metadata: Metadata = {
 
   icons: {
     icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
   },
 };
 

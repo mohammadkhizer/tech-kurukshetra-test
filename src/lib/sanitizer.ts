@@ -80,20 +80,26 @@ export function sanitizeNoSqlKey(key: string): string {
   return key.replace(/\0/g, '').replace(/^\$/, '').replace(/\./g, '_');
 }
 
+const URL_KEY_REGEX = /^(logoUrl|websiteUrl|imageUrl|bannerImage|profileImageUrl|linkedinUrl|githubUrl|portfolioUrl|resumeUrl|url|src|href)$/i;
+
 /**
  * Recursively sanitizes strings and keys inside an object or array.
+ * Uses sanitizeUrl for URL fields/values to avoid double-encoding slashes.
  */
-export function sanitizeObject<T>(obj: T): T {
+export function sanitizeObject<T>(obj: T, parentKey?: string): T {
   if (obj === null || obj === undefined) {
     return obj;
   }
 
   if (typeof obj === 'string') {
+    if ((parentKey && URL_KEY_REGEX.test(parentKey)) || /^https?:\/\//i.test(obj.trim())) {
+      return sanitizeUrl(obj) as unknown as T;
+    }
     return sanitizeString(obj) as unknown as T;
   }
 
   if (Array.isArray(obj)) {
-    return obj.map((item) => sanitizeObject(item)) as unknown as T;
+    return obj.map((item) => sanitizeObject(item, parentKey)) as unknown as T;
   }
 
   if (typeof obj === 'object') {
@@ -102,7 +108,7 @@ export function sanitizeObject<T>(obj: T): T {
       // Prevent prototype pollution and NoSQL key operator injection
       const cleanKey = sanitizeNoSqlKey(sanitizeString(key));
       if (cleanKey !== '__proto__' && cleanKey !== 'constructor' && cleanKey !== 'prototype') {
-        sanitizedObj[cleanKey] = sanitizeObject(value);
+        sanitizedObj[cleanKey] = sanitizeObject(value, cleanKey);
       }
     }
     return sanitizedObj as T;

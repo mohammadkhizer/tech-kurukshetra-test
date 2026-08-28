@@ -22,7 +22,7 @@ export async function PUT(
       return NextResponse.json({ success: false, message: 'Database connection failed' }, { status: 500 });
     }
 
-    const updated = await Event.findByIdAndUpdate(id, { $set: body }, { new: true });
+    const updated = await Event.findByIdAndUpdate(id, { $set: body }, { returnDocument: 'after' });
     if (!updated) {
       return NextResponse.json({ success: false, message: 'Event not found' }, { status: 404 });
     }

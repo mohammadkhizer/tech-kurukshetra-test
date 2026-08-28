@@ -65,7 +65,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFetch } from '@/hooks/use-fetch';
-import { decodeHtmlEntities } from '@/lib/sanitizer';
+import { decodeHtmlEntities, isValidEmail, isValidPhone } from '@/lib/sanitizer';
 
 const architectCategories = [
   "Organiser",
@@ -168,19 +168,30 @@ export default function DashboardPage() {
   const [newSponsor, setNewSponsor] = useState({ name: '', logoUrl: '', tier: 'Platinum', websiteUrl: '' });
   const [editingEvent, setEditingEvent] = useState<any | null>(null);
   
+  const [showCardPreview, setShowCardPreview] = useState(false);
   const [currentRule, setCurrentRule] = useState('');
   const [newEvent, setNewEvent] = useState({
+    id: '',
     name: '',
-    type: 'Technical',
+    category: 'TECH',
+    type: 'team',
+    minTeamSize: 1,
+    maxTeamSize: 4,
     description: '',
     eventHead: '',
     rules: [] as string[],
+    isFree: false,
     registrationFee: '',
-    organiserContact: '',
-    imageUrl: '',
-    startTime: '',
+    duration: '24h',
+    prizePool: '',
+    registrationDeadline: '',
     location: '',
     festivalDayId: '',
+    startTime: '',
+    coordinatorContactName: '',
+    coordinatorContactPhone: '',
+    coordinatorContactEmail: '',
+    imageUrl: '',
   });
 
   const [heroContent, setHeroContent] = useState({ mainHeadline: '', subHeadline: '', description: '' });
@@ -237,12 +248,38 @@ export default function DashboardPage() {
       setCounterStats(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleUpdateHero = () => {
-      toast({ title: "Protocol Updated", description: "Hero section content has been saved." });
+  const handleUpdateHero = async () => {
+    try {
+      const res = await fetch('/api/admin/hero', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(heroContent),
+      });
+      if (res.ok) {
+        toast({ title: "Protocol Updated", description: "Hero section content has been saved." });
+      } else {
+        toast({ variant: "destructive", title: "Update Failed", description: "Could not save Hero section." });
+      }
+    } catch {
+      toast({ variant: "destructive", title: "Update Failed", description: "Could not save Hero section." });
+    }
   };
-  
-  const handleUpdateCounters = () => {
-      toast({ title: "Protocol Updated", description: "Homepage counters have been saved." });
+
+  const handleUpdateCounters = async () => {
+    try {
+      const res = await fetch('/api/admin/counters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(counterStats),
+      });
+      if (res.ok) {
+        toast({ title: "Protocol Updated", description: "Homepage counters have been saved." });
+      } else {
+        toast({ variant: "destructive", title: "Update Failed", description: "Could not save counters." });
+      }
+    } catch {
+      toast({ variant: "destructive", title: "Update Failed", description: "Could not save counters." });
+    }
   };
 
   const handleAddSponsor = async () => {
@@ -271,12 +308,32 @@ export default function DashboardPage() {
     setNewEvent(prev => ({ ...prev, [name]: value }));
   };
   
+  const handleEventCategoryChange = (value: string) => {
+    setNewEvent(prev => ({ ...prev, category: value }));
+  };
+
   const handleEventTypeChange = (value: string) => {
-    setNewEvent(prev => ({...prev, type: value}));
+    setNewEvent(prev => ({
+      ...prev,
+      type: value,
+      minTeamSize: value === 'solo' ? 1 : prev.minTeamSize,
+      maxTeamSize: value === 'solo' ? 1 : prev.maxTeamSize,
+    }));
   };
   
   const handleEventDayChange = (value: string) => {
     setNewEvent(prev => ({ ...prev, festivalDayId: value }));
+  };
+
+  const handleNameBlur = () => {
+    if (!newEvent.id && newEvent.name.trim()) {
+      const generatedSlug = newEvent.name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      setNewEvent(prev => ({ ...prev, id: generatedSlug }));
+    }
   };
   
   const handleAddRule = () => {
@@ -290,93 +347,222 @@ export default function DashboardPage() {
     setNewEvent(prev => ({ ...prev, rules: prev.rules.filter((_, i) => i !== index) }));
   };
 
-  const handleAddEvent = async () => {
-    if (!newEvent.name) {
-        toast({ variant: "destructive", title: "Incomplete Data", description: "Event name is required." });
-        return;
+  const validateAndBuildPayload = () => {
+    if (!newEvent.name.trim()) return { error: "Event Name is required." };
+
+    const slug = (newEvent.id || newEvent.name)
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    if (!slug) return { error: "Event Slug/ID is required." };
+
+    // Unique slug check
+    const isDuplicate = events?.some((e: any) =>
+      (e.slug === slug || e.id === slug || e._id === slug) &&
+      (!editingEvent || (editingEvent.id !== e.id && editingEvent._id !== e._id && editingEvent.slug !== e.slug && editingEvent.id !== slug && editingEvent._id !== slug))
+    );
+
+    if (isDuplicate) {
+      return { error: `Duplicate Arena ID/Slug: An arena with slug "${slug}" already exists.` };
     }
-    const slug = newEvent.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-    const eventData = {
-        ...newEvent,
-        slug: slug,
-        isTechnical: newEvent.type === 'Technical',
-        longDescription: newEvent.description,
-        rules: newEvent.rules,
-        startTime: newEvent.startTime ? new Date(newEvent.startTime).toISOString() : '',
-        color: newEvent.type === 'Technical' ? "text-primary" : "text-accent",
+
+    if (!newEvent.category) return { error: "Event Category (TECH or NON-TECH) is required." };
+    if (!newEvent.description.trim()) return { error: "Event Description is required." };
+    if (!newEvent.location.trim()) return { error: "Location / Venue is required." };
+    if (!newEvent.festivalDayId) return { error: "Festival Day is required." };
+    if (!newEvent.startTime) return { error: "Start Time is required." };
+    if (!newEvent.duration.trim()) return { error: "Duration is required." };
+    if (!newEvent.prizePool.trim()) return { error: "Prize Pool is required." };
+    if (!newEvent.registrationDeadline) return { error: "Registration Deadline date is required." };
+
+    // Date check: registrationDeadline must be on or before Festival Day date
+    const selectedDay = festivalDays?.find((d: any) => d.id === newEvent.festivalDayId);
+    if (selectedDay?.date && newEvent.registrationDeadline > selectedDay.date) {
+      return { error: `Registration Deadline (${newEvent.registrationDeadline}) must be on or before Festival Day (${selectedDay.date}).` };
+    }
+
+    // Coordinator Contact validation
+    if (!newEvent.coordinatorContactName.trim()) return { error: "Coordinator Contact Name is required." };
+    if (!newEvent.coordinatorContactPhone.trim()) return { error: "Coordinator Contact Phone is required." };
+    if (!isValidPhone(newEvent.coordinatorContactPhone)) return { error: "Invalid Coordinator Contact Phone format (7-15 digits)." };
+    if (!newEvent.coordinatorContactEmail.trim()) return { error: "Coordinator Contact Email is required." };
+    if (!isValidEmail(newEvent.coordinatorContactEmail)) return { error: "Invalid Coordinator Contact Email format." };
+
+    // Team Size validation
+    const minSize = newEvent.type === 'solo' ? 1 : Number(newEvent.minTeamSize) || 1;
+    const maxSize = newEvent.type === 'solo' ? 1 : Number(newEvent.maxTeamSize) || 1;
+
+    if (minSize < 1 || maxSize < 1) {
+      return { error: "Team size numbers must be at least 1." };
+    }
+    if (maxSize < minSize) {
+      return { error: "Max Team Size must be greater than or equal to Min Team Size." };
+    }
+
+    const feeValue = newEvent.isFree ? 'Free' : (newEvent.registrationFee.trim() || 'Free');
+
+    const payload = {
+      id: slug,
+      slug: slug,
+      name: newEvent.name.trim(),
+      category: newEvent.category,
+      type: newEvent.type,
+      teamSize: { min: minSize, max: maxSize },
+      description: newEvent.description.trim(),
+      rules: newEvent.rules,
+      venue: newEvent.location.trim(),
+      location: newEvent.location.trim(),
+      date: selectedDay?.date || newEvent.festivalDayId,
+      festivalDayId: newEvent.festivalDayId,
+      time: newEvent.startTime,
+      startTime: newEvent.startTime,
+      duration: newEvent.duration.trim(),
+      entryFee: feeValue,
+      registrationFee: String(feeValue),
+      prizePool: newEvent.prizePool.trim(),
+      prize: newEvent.prizePool.trim(),
+      coordinatorContact: {
+        name: newEvent.coordinatorContactName.trim(),
+        phone: newEvent.coordinatorContactPhone.trim(),
+        email: newEvent.coordinatorContactEmail.trim(),
+      },
+      eventHead: newEvent.coordinatorContactName.trim(),
+      organiserContact: `${newEvent.coordinatorContactPhone.trim()} | ${newEvent.coordinatorContactEmail.trim()}`,
+      bannerImage: newEvent.imageUrl.trim(),
+      imageUrl: newEvent.imageUrl.trim(),
+      registrationDeadline: newEvent.registrationDeadline,
+      isTechnical: newEvent.category === 'TECH',
     };
-    await fetch('/api/admin/events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(eventData),
-    });
-    refetchEvents();
-    handleCancelEdit();
-    toast({ title: "Arena Initialized", description: `${newEvent.name} has been added.` });
+
+    return { payload };
+  };
+
+  const handleAddEvent = async () => {
+    const valResult = validateAndBuildPayload();
+    if (valResult.error || !valResult.payload) {
+      toast({ variant: "destructive", title: "Validation Error", description: valResult.error || "Invalid payload." });
+      return;
+    }
+
+    const payload = valResult.payload;
+
+    try {
+      const res = await fetch('/api/admin/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        toast({ variant: "destructive", title: "Save Failed", description: json.message || "Failed to add event." });
+        return;
+      }
+      refetchEvents();
+      handleCancelEdit();
+      toast({ title: "Arena Initialized", description: `${payload.name} has been added.` });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Server Error", description: err.message || "Could not save arena." });
+    }
   };
 
   const handleDeleteEvent = async (id: string) => {
-      await fetch(`/api/admin/events/${id}`, { method: 'DELETE' });
-      refetchEvents();
-      toast({ title: "Arena Decommissioned", description: "Event removed from the schedule." });
+    await fetch(`/api/admin/events/${id}`, { method: 'DELETE' });
+    refetchEvents();
+    toast({ title: "Arena Decommissioned", description: "Event removed from the schedule." });
   };
 
   const handleEditClick = (event: any) => {
     setEditingEvent(event);
+    const contact = typeof event.coordinatorContact === 'object' ? event.coordinatorContact : {};
+    const tSize = typeof event.teamSize === 'object' ? event.teamSize : {};
+    const isTeam = event.type === 'team' || Number(tSize.max) > 1;
+
     setNewEvent({
-        name: event.name || '',
-        type: event.type || 'Technical',
-        description: event.description || '',
-        eventHead: event.eventHead || '',
-        rules: Array.isArray(event.rules) ? event.rules : [],
-        registrationFee: event.registrationFee || '',
-        organiserContact: event.organiserContact || '',
-        imageUrl: event.imageUrl || '',
-        startTime: event.startTime ? new Date(event.startTime).toISOString().substring(0, 16) : '',
-        location: event.location || '',
-        festivalDayId: event.festivalDayId || '',
+      id: event.slug || event.id || '',
+      name: event.name || '',
+      category: event.category === 'NON-TECH' ? 'NON-TECH' : 'TECH',
+      type: isTeam ? 'team' : 'solo',
+      minTeamSize: Number(tSize.min) || 1,
+      maxTeamSize: Number(tSize.max) || 1,
+      description: event.description || '',
+      eventHead: event.eventHead || contact.name || '',
+      rules: Array.isArray(event.rules) ? event.rules : [],
+      isFree: event.entryFee === 'Free' || event.registrationFee === 'Free',
+      registrationFee: event.entryFee && event.entryFee !== 'Free' ? String(event.entryFee) : (event.registrationFee || ''),
+      duration: event.duration || '24h',
+      prizePool: event.prizePool || event.prize || '',
+      registrationDeadline: event.registrationDeadline ? event.registrationDeadline.substring(0, 10) : '',
+      location: event.location || event.venue || '',
+      festivalDayId: event.festivalDayId || event.date || '',
+      startTime: event.startTime || event.time || '',
+      coordinatorContactName: contact.name || event.eventHead || '',
+      coordinatorContactPhone: contact.phone || '',
+      coordinatorContactEmail: contact.email || '',
+      imageUrl: event.imageUrl || event.bannerImage || '',
     });
     setCurrentRule('');
+    setShowCardPreview(false);
   };
 
   const handleCancelEdit = () => {
     setEditingEvent(null);
-    setNewEvent({ name: '', type: 'Technical', description: '', eventHead: '', rules: [], registrationFee: '', organiserContact: '', imageUrl: '', startTime: '', location: '', festivalDayId: '' });
+    setNewEvent({
+      id: '',
+      name: '',
+      category: 'TECH',
+      type: 'team',
+      minTeamSize: 1,
+      maxTeamSize: 4,
+      description: '',
+      eventHead: '',
+      rules: [],
+      isFree: false,
+      registrationFee: '',
+      duration: '24h',
+      prizePool: '',
+      registrationDeadline: '',
+      location: '',
+      festivalDayId: '',
+      startTime: '',
+      coordinatorContactName: '',
+      coordinatorContactPhone: '',
+      coordinatorContactEmail: '',
+      imageUrl: '',
+    });
     setCurrentRule('');
+    setShowCardPreview(false);
   };
 
   const handleUpdateEvent = async () => {
     if (!editingEvent) return;
 
-    if (!newEvent.name) {
-        toast({ variant: "destructive", title: "Incomplete Data", description: "Event name is required." });
-        return;
+    const valResult = validateAndBuildPayload();
+    if (valResult.error || !valResult.payload) {
+      toast({ variant: "destructive", title: "Validation Error", description: valResult.error || "Invalid payload." });
+      return;
     }
 
-    const updateData = {
-        name: newEvent.name,
-        type: newEvent.type,
-        isTechnical: newEvent.type === 'Technical',
-        description: newEvent.description,
-        longDescription: newEvent.description,
-        eventHead: newEvent.eventHead,
-        rules: newEvent.rules,
-        registrationFee: newEvent.registrationFee,
-        organiserContact: newEvent.organiserContact,
-        imageUrl: newEvent.imageUrl,
-        startTime: newEvent.startTime ? new Date(newEvent.startTime).toISOString() : '',
-        location: newEvent.location,
-        festivalDayId: newEvent.festivalDayId,
-    };
+    const payload = valResult.payload;
 
-    await fetch(`/api/admin/events/${editingEvent.id || editingEvent._id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updateData),
-    });
-    refetchEvents();
-    toast({ title: "Arena Updated", description: `${newEvent.name} has been updated.` });
-    handleCancelEdit();
+    try {
+      const res = await fetch(`/api/admin/events/${editingEvent.id || editingEvent._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        toast({ variant: "destructive", title: "Update Failed", description: json.message || "Failed to update event." });
+        return;
+      }
+      refetchEvents();
+      toast({ title: "Arena Updated", description: `${payload.name} has been updated.` });
+      handleCancelEdit();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Server Error", description: err.message || "Could not update arena." });
+    }
   };
   
   const handleSeedDatabase = async () => {
@@ -908,7 +1094,7 @@ export default function DashboardPage() {
                 <div key={sponsor.id} className="glass-panel p-4 border-white/5 bg-white/5 flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 glass-panel flex items-center justify-center p-1 bg-white relative">
-                      <Image src={decodeHtmlEntities(sponsor.logoUrl || '')} alt={sponsor.name} width={48} height={48} className="max-w-full max-h-full object-contain" />
+                      <Image src={decodeHtmlEntities(sponsor.logoUrl || '') || '/favicon.ico'} alt={sponsor.name} width={48} height={48} className="max-w-full max-h-full object-contain" />
                     </div>
                     <div>
                       <h4 className="font-headline text-[11px] text-white tracking-widest uppercase">{sponsor.name}</h4>
@@ -927,132 +1113,409 @@ export default function DashboardPage() {
         <TabsContent value="events">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <Card className="glass-panel border-primary/20 rounded-none bg-black/40 h-fit">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <CardTitle className="font-headline text-lg tracking-widest flex items-center gap-2 uppercase">
                   {editingEvent ? <Pencil className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
                   {editingEvent ? 'EDIT ARENA' : 'ADD ARENA'}
                 </CardTitle>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCardPreview(!showCardPreview)}
+                  className="border-primary/40 text-primary hover:bg-primary/10 rounded-none text-[10px] uppercase font-headline tracking-widest"
+                >
+                  <Eye className="w-3.5 h-3.5 mr-1" />
+                  {showCardPreview ? 'Hide Preview' : 'Live Preview'}
+                </Button>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Live Card Preview Panel */}
+                {showCardPreview && (
+                  <div className="glass-panel p-4 border-primary/30 bg-primary/5 rounded-none mb-6 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-headline font-bold text-primary tracking-widest uppercase">
+                        PREVIEW: PUBLIC ARENA CARD
+                      </span>
+                      <Badge variant="outline" className="text-[9px] border-primary/40 text-primary uppercase rounded-none">
+                        {newEvent.category || 'TECH'}
+                      </Badge>
+                    </div>
+
+                    <div className="border border-white/10 p-4 bg-black/80 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="p-2 bg-primary/10 border border-primary/30 text-primary">
+                          <Gamepad2 className="w-5 h-5" />
+                        </div>
+                        <span className="px-2 py-0.5 text-[9px] font-headline font-bold tracking-widest uppercase border border-primary/30 text-primary bg-primary/10">
+                          {newEvent.category || 'TECH'}
+                        </span>
+                      </div>
+
+                      <h3 className="text-lg font-black tracking-tight font-headline text-white">
+                        {newEvent.name || 'Arena Title Placeholder'}
+                      </h3>
+
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {newEvent.description || 'Arena description will appear here...'}
+                      </p>
+
+                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/10 text-xs">
+                        <div>
+                          <div className="text-[8px] text-muted-foreground uppercase tracking-widest">Prize Pool</div>
+                          <div className="font-headline font-bold text-primary truncate">{newEvent.prizePool || 'TBA'}</div>
+                        </div>
+                        <div className="border-l border-white/10 pl-2">
+                          <div className="text-[8px] text-muted-foreground uppercase tracking-widest">Team Size</div>
+                          <div className="font-headline font-bold text-white truncate">
+                            {newEvent.type === 'solo' ? 'Solo' : `${newEvent.minTeamSize}-${newEvent.maxTeamSize} Players`}
+                          </div>
+                        </div>
+                        <div className="border-l border-white/10 pl-2">
+                          <div className="text-[8px] text-muted-foreground uppercase tracking-widest">Duration</div>
+                          <div className="font-headline font-bold text-white truncate">{newEvent.duration || '24h'}</div>
+                        </div>
+                      </div>
+
+                      <div className="text-[9px] text-muted-foreground pt-1 flex justify-between border-t border-white/5">
+                        <span>Venue: {newEvent.location || 'TBA'}</span>
+                        <span className="text-primary">Fee: {newEvent.isFree ? 'Free' : (newEvent.registrationFee || 'Free')}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 1. Event Name */}
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Event Name</Label>
-                  <Input name="name" value={newEvent.name} onChange={handleNewEventChange} className="bg-white/5 border-white/10 rounded-none" />
+                  <Label className="text-[10px] uppercase tracking-widest">Event Name <span className="text-destructive">*</span></Label>
+                  <Input
+                    name="name"
+                    value={newEvent.name}
+                    onChange={handleNewEventChange}
+                    onBlur={handleNameBlur}
+                    placeholder="e.g. Cyber Strike Arena"
+                    className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                  />
                 </div>
+
+                {/* 2. Slug / ID */}
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Event Category</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] uppercase tracking-widest">Arena ID / Slug <span className="text-destructive">*</span></Label>
+                    <button
+                      type="button"
+                      onClick={handleNameBlur}
+                      className="text-[9px] text-primary hover:underline uppercase tracking-wider"
+                    >
+                      Auto-Generate
+                    </button>
+                  </div>
+                  <Input
+                    name="id"
+                    value={newEvent.id}
+                    onChange={(e) => setNewEvent(prev => ({ ...prev, id: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))}
+                    placeholder="cyber-strike-arena"
+                    className="bg-white/5 border-white/10 rounded-none text-white text-xs font-mono"
+                  />
+                  <p className="text-[9px] text-muted-foreground">Unique identifier used in URLs (kebab-case).</p>
+                </div>
+
+                {/* 3. Event Category Dropdown (TECH vs NON-TECH) */}
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase tracking-widest">Event Category <span className="text-destructive">*</span></Label>
                   <Select 
-                    name="type" 
-                    value={newEvent.type} 
-                    onValueChange={handleEventTypeChange}
+                    value={newEvent.category} 
+                    onValueChange={handleEventCategoryChange}
                   >
                     <SelectTrigger className="w-full bg-white/5 border border-white/10 p-2 text-xs rounded-none text-white h-auto">
-                      <SelectValue />
+                      <SelectValue placeholder="Select Category" />
                     </SelectTrigger>
-                    <SelectContent className="bg-black/80 backdrop-blur-md border-white/10 text-white rounded-none">
-                      <SelectItem value="Technical">Technical</SelectItem>
-                      <SelectItem value="Non-Technical">Non-Technical</SelectItem>
-                      <SelectItem value="eSports">eSports</SelectItem>
+                    <SelectContent className="bg-black/90 backdrop-blur-md border-white/10 text-white rounded-none">
+                      <SelectItem value="TECH">TECH (Technical Events)</SelectItem>
+                      <SelectItem value="NON-TECH">NON-TECH (Sports, Gaming & Non-Technical)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* 4. Event Type (Solo vs Team) */}
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Festival Day</Label>
-                   <Select
-                      name="festivalDayId"
-                      value={newEvent.festivalDayId}
-                      onValueChange={handleEventDayChange}
+                  <Label className="text-[10px] uppercase tracking-widest">Event Type <span className="text-destructive">*</span></Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant={newEvent.type === 'solo' ? 'default' : 'outline'}
+                      onClick={() => handleEventTypeChange('solo')}
+                      className={`rounded-none text-xs uppercase font-headline tracking-widest ${newEvent.type === 'solo' ? 'bg-primary text-background' : 'border-white/10 text-white'}`}
+                    >
+                      Solo Event
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={newEvent.type === 'team' ? 'default' : 'outline'}
+                      onClick={() => handleEventTypeChange('team')}
+                      className={`rounded-none text-xs uppercase font-headline tracking-widest ${newEvent.type === 'team' ? 'bg-primary text-background' : 'border-white/10 text-white'}`}
+                    >
+                      Team Event
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Conditional Team Size Inputs */}
+                {newEvent.type === 'team' && (
+                  <div className="grid grid-cols-2 gap-3 p-3 glass-panel border-white/10 bg-white/5 rounded-none">
+                    <div className="space-y-1">
+                      <Label className="text-[9px] uppercase tracking-widest">Min Team Size <span className="text-destructive">*</span></Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={newEvent.minTeamSize}
+                        onChange={(e) => setNewEvent(prev => ({ ...prev, minTeamSize: Math.max(1, parseInt(e.target.value) || 1) }))}
+                        className="bg-white/5 border-white/10 rounded-none text-white text-xs h-8"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[9px] uppercase tracking-widest">Max Team Size <span className="text-destructive">*</span></Label>
+                      <Input
+                        type="number"
+                        min={newEvent.minTeamSize}
+                        value={newEvent.maxTeamSize}
+                        onChange={(e) => setNewEvent(prev => ({ ...prev, maxTeamSize: Math.max(1, parseInt(e.target.value) || 1) }))}
+                        className="bg-white/5 border-white/10 rounded-none text-white text-xs h-8"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 5. Duration */}
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase tracking-widest">Event Duration <span className="text-destructive">*</span></Label>
+                  <Input
+                    name="duration"
+                    value={newEvent.duration}
+                    onChange={handleNewEventChange}
+                    placeholder="e.g. 3 hours, 24h, 2 days"
+                    className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                  />
+                </div>
+
+                {/* 6. Prize Pool */}
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase tracking-widest">Prize Pool <span className="text-destructive">*</span></Label>
+                  <Input
+                    name="prizePool"
+                    value={newEvent.prizePool}
+                    onChange={handleNewEventChange}
+                    placeholder="e.g. ₹15,000 or Trophies & Certificates"
+                    className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                  />
+                </div>
+
+                {/* 7. Registration Deadline */}
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase tracking-widest">Registration Deadline Date <span className="text-destructive">*</span></Label>
+                  <Input
+                    type="date"
+                    name="registrationDeadline"
+                    value={newEvent.registrationDeadline}
+                    onChange={handleNewEventChange}
+                    className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                  />
+                  <p className="text-[9px] text-muted-foreground">Must be on or before the Festival Day.</p>
+                </div>
+
+                {/* 8. Festival Day */}
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase tracking-widest">Festival Day <span className="text-destructive">*</span></Label>
+                  <Select
+                    name="festivalDayId"
+                    value={newEvent.festivalDayId}
+                    onValueChange={handleEventDayChange}
                   >
-                      <SelectTrigger className="w-full bg-white/5 border-white/10 p-2 text-xs rounded-none text-white h-auto" disabled={festivalDaysLoading}>
-                          <SelectValue placeholder="Select a day" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-black/80 backdrop-blur-md border-white/10 text-white rounded-none">
-                          {festivalDays && festivalDays.length > 0 ? (
-                            festivalDays.map(day => (
-                                <SelectItem key={day.id} value={day.id}>{day.name}</SelectItem>
-                            ))
-                          ) : (
-                            <div className="text-muted-foreground text-xs p-4 text-center">
-                                Go to the 'Schedule' tab to add days.
-                            </div>
-                          )}
-                      </SelectContent>
+                    <SelectTrigger className="w-full bg-white/5 border-white/10 p-2 text-xs rounded-none text-white h-auto" disabled={festivalDaysLoading}>
+                      <SelectValue placeholder="Select a day" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-black/90 backdrop-blur-md border-white/10 text-white rounded-none">
+                      {festivalDays && festivalDays.length > 0 ? (
+                        festivalDays.map(day => (
+                          <SelectItem key={day.id} value={day.id}>{day.name} ({day.date || 'TBA'})</SelectItem>
+                        ))
+                      ) : (
+                        <div className="text-muted-foreground text-xs p-4 text-center">
+                          Go to the 'Schedule' tab to add days.
+                        </div>
+                      )}
+                    </SelectContent>
                   </Select>
                 </div>
+
+                {/* 9. Start Time */}
                 <div className="space-y-2">
-                    <Label className="text-[10px] uppercase tracking-widest">Start Time</Label>
-                    <Input name="startTime" value={newEvent.startTime} onChange={handleNewEventChange} type="datetime-local" className="bg-white/5 border-white/10 rounded-none" />
+                  <Label className="text-[10px] uppercase tracking-widest">Start Time <span className="text-destructive">*</span></Label>
+                  <Input
+                    name="startTime"
+                    value={newEvent.startTime}
+                    onChange={handleNewEventChange}
+                    type="datetime-local"
+                    className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                  />
                 </div>
+
+                {/* 10. Location / Venue */}
                 <div className="space-y-2">
-                    <Label className="text-[10px] uppercase tracking-widest">Location</Label>
-                    <Input name="location" value={newEvent.location} onChange={handleNewEventChange} placeholder="e.g. Main Arena" className="bg-white/5 border-white/10 rounded-none" />
+                  <Label className="text-[10px] uppercase tracking-widest">Venue / Location <span className="text-destructive">*</span></Label>
+                  <Input
+                    name="location"
+                    value={newEvent.location}
+                    onChange={handleNewEventChange}
+                    placeholder="e.g. Lab 402, Main Auditorium, Ground"
+                    className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                  />
                 </div>
+
+                {/* 11. Event Description */}
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Event Description</Label>
-                  <Textarea name="description" value={newEvent.description} onChange={handleNewEventChange} className="bg-white/5 border-white/10 rounded-none" />
+                  <Label className="text-[10px] uppercase tracking-widest">Event Description <span className="text-destructive">*</span></Label>
+                  <Textarea
+                    name="description"
+                    value={newEvent.description}
+                    onChange={handleNewEventChange}
+                    rows={3}
+                    placeholder="Provide a comprehensive summary of the event..."
+                    className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                  />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Event Head</Label>
-                  <Input name="eventHead" value={newEvent.eventHead} onChange={handleNewEventChange} className="bg-white/5 border-white/10 rounded-none" />
-                </div>
-                 <div className="space-y-2">
-                    <Label className="text-[10px] uppercase tracking-widest">Event Rules</Label>
-                    <div className="flex gap-2">
-                        <Input
-                            value={currentRule}
-                            onChange={(e) => setCurrentRule(e.target.value)}
-                            placeholder="Type a rule and click Add"
-                            className="bg-white/5 border-white/10 rounded-none"
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    handleAddRule();
-                                }
-                            }}
-                        />
-                        <Button type="button" onClick={handleAddRule} className="bg-primary hover:bg-primary/80 rounded-none px-4 text-background">
-                            Add
-                        </Button>
+
+                {/* 12. Coordinator Contact (3 required sub-fields) */}
+                <div className="space-y-2 pt-2 border-t border-white/10">
+                  <Label className="text-[10px] uppercase tracking-widest text-primary font-headline">
+                    Coordinator Contact <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="space-y-2 p-3 glass-panel border-white/10 bg-white/5 rounded-none">
+                    <div>
+                      <Label className="text-[9px] uppercase tracking-widest">Contact Name <span className="text-destructive">*</span></Label>
+                      <Input
+                        name="coordinatorContactName"
+                        value={newEvent.coordinatorContactName}
+                        onChange={handleNewEventChange}
+                        placeholder="e.g. Alex Vance"
+                        className="bg-white/5 border-white/10 rounded-none text-white text-xs h-8 mt-1"
+                      />
                     </div>
-                    <div className="space-y-2 pt-2 max-h-40 overflow-y-auto">
-                        {newEvent.rules.length > 0 ? newEvent.rules.map((rule, index) => (
-                            <div key={index} className="flex items-center justify-between text-sm glass-panel p-2 border-white/5 bg-white/5 rounded-none">
-                                <span className="text-muted-foreground break-all">{rule}</span>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleDeleteRule(index)}
-                                    className="text-muted-foreground hover:text-destructive h-6 w-6 ml-2 flex-shrink-0"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        )) : (
-                            <p className="text-xs text-muted-foreground text-center py-2">No rules added yet.</p>
-                        )}
+                    <div>
+                      <Label className="text-[9px] uppercase tracking-widest">Contact Phone <span className="text-destructive">*</span></Label>
+                      <Input
+                        name="coordinatorContactPhone"
+                        value={newEvent.coordinatorContactPhone}
+                        onChange={handleNewEventChange}
+                        placeholder="+91 9876543210"
+                        className="bg-white/5 border-white/10 rounded-none text-white text-xs h-8 mt-1"
+                      />
                     </div>
+                    <div>
+                      <Label className="text-[9px] uppercase tracking-widest">Contact Email <span className="text-destructive">*</span></Label>
+                      <Input
+                        name="coordinatorContactEmail"
+                        value={newEvent.coordinatorContactEmail}
+                        onChange={handleNewEventChange}
+                        placeholder="alex@techkurukshetra.in"
+                        className="bg-white/5 border-white/10 rounded-none text-white text-xs h-8 mt-1"
+                      />
+                    </div>
+                  </div>
                 </div>
+
+                {/* 13. Registration Fee (Number or Free Toggle) */}
+                <div className="space-y-2 pt-2 border-t border-white/10">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] uppercase tracking-widest">Registration Fee</Label>
+                    <label className="flex items-center gap-2 text-xs text-primary cursor-pointer font-headline uppercase text-[10px] tracking-wider">
+                      <input
+                        type="checkbox"
+                        checked={newEvent.isFree}
+                        onChange={(e) => setNewEvent(prev => ({ ...prev, isFree: e.target.checked }))}
+                        className="accent-primary"
+                      />
+                      Free Entry
+                    </label>
+                  </div>
+                  {!newEvent.isFree && (
+                    <Input
+                      name="registrationFee"
+                      value={newEvent.registrationFee}
+                      onChange={handleNewEventChange}
+                      placeholder="e.g. ₹100 or 100 per person"
+                      className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                    />
+                  )}
+                </div>
+
+                {/* 14. Event Rules Add-List */}
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Registration Fee</Label>
-                  <Input name="registrationFee" value={newEvent.registrationFee} onChange={handleNewEventChange} placeholder="e.g., $10 per person" className="bg-white/5 border-white/10 rounded-none" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Event Organiser Contact (Optional)</Label>
-                  <Input name="organiserContact" value={newEvent.organiserContact} onChange={handleNewEventChange} className="bg-white/5 border-white/10 rounded-none" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Event Logo/Image URL</Label>
-                  <Input name="imageUrl" value={newEvent.imageUrl} onChange={handleNewEventChange} placeholder="https://..." className="bg-white/5 border-white/10 rounded-none" />
-                </div>
-                <Button onClick={editingEvent ? handleUpdateEvent : handleAddEvent} className="w-full bg-primary text-background hover:bg-primary/80 rounded-none font-headline tracking-widest text-[10px] py-4 uppercase">
-                   {editingEvent ? 'UPDATE ARENA' : 'INITIALIZE ARENA'}
-                </Button>
-                {editingEvent && (
-                    <Button onClick={handleCancelEdit} variant="secondary" className="w-full rounded-none font-headline tracking-widest text-[10px] py-4 uppercase mt-2">
-                      CANCEL EDIT
+                  <Label className="text-[10px] uppercase tracking-widest">Event Rules &amp; Guidelines</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={currentRule}
+                      onChange={(e) => setCurrentRule(e.target.value)}
+                      placeholder="Type a rule and press Enter or Add"
+                      className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddRule();
+                        }
+                      }}
+                    />
+                    <Button type="button" onClick={handleAddRule} className="bg-primary hover:bg-primary/80 rounded-none px-4 text-background text-xs uppercase font-headline tracking-widest">
+                      Add Rule
                     </Button>
+                  </div>
+                  <div className="space-y-2 pt-2 max-h-40 overflow-y-auto">
+                    {newEvent.rules.length > 0 ? newEvent.rules.map((rule, index) => (
+                      <div key={index} className="flex items-center justify-between text-xs glass-panel p-2 border-white/5 bg-white/5 rounded-none">
+                        <span className="text-muted-foreground break-all">◈ {rule}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteRule(index)}
+                          className="text-muted-foreground hover:text-destructive h-6 w-6 ml-2 flex-shrink-0"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    )) : (
+                      <p className="text-[10px] text-muted-foreground text-center py-2">No rules added yet.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* 15. Event Logo / Banner Image URL */}
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase tracking-widest">Banner / Logo Image URL</Label>
+                  <Input
+                    name="imageUrl"
+                    value={newEvent.imageUrl}
+                    onChange={handleNewEventChange}
+                    placeholder="https://images.unsplash.com/..."
+                    className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                  />
+                </div>
+
+                {/* Submit Buttons */}
+                <Button
+                  onClick={editingEvent ? handleUpdateEvent : handleAddEvent}
+                  className="w-full bg-primary text-background hover:bg-primary/80 rounded-none font-headline tracking-widest text-[10px] py-4 uppercase mt-4"
+                >
+                  {editingEvent ? 'UPDATE ARENA METADATA' : 'INITIALIZE ARENA METADATA'}
+                </Button>
+
+                {editingEvent && (
+                  <Button onClick={handleCancelEdit} variant="secondary" className="w-full rounded-none font-headline tracking-widest text-[10px] py-4 uppercase mt-2">
+                    CANCEL EDIT
+                  </Button>
                 )}
-                 <Button onClick={handleSeedDatabase} variant="outline" className="w-full border-accent/20 text-accent hover:bg-accent/10 rounded-none font-headline tracking-widest text-[10px] py-4 uppercase">
+
+                <Button onClick={handleSeedDatabase} variant="outline" className="w-full border-accent/20 text-accent hover:bg-accent/10 rounded-none font-headline tracking-widest text-[10px] py-4 uppercase">
                   <DatabaseZap className="w-4 h-4 mr-2" /> SEED INITIAL EVENTS
                 </Button>
               </CardContent>
@@ -1266,7 +1729,7 @@ export default function DashboardPage() {
                   <div key={member.id} className="glass-panel p-4 border-white/5 bg-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <span className="font-headline text-primary text-sm w-6 text-center">{idx + 1}.</span>
-                      <Image src={member.profileImageUrl} alt={member.fullName} width={40} height={40} className="w-10 h-10 rounded-full object-cover bg-white/10" />
+                      <Image src={member.profileImageUrl || '/favicon.ico'} alt={member.fullName} width={40} height={40} className="w-10 h-10 rounded-full object-cover bg-white/10" />
                       <div>
                         <h4 className="font-headline text-[11px] text-white tracking-widest uppercase">{member.fullName}</h4>
                         <p className="text-[8px] text-muted-foreground uppercase tracking-widest">{member.role} - <span className="text-accent">{member.category}</span></p>

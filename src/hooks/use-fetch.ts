@@ -28,6 +28,9 @@ export function useFetch<T>(url: string | null): UseFetchResult<T> {
     try {
       const res = await fetch(url);
       if (!res.ok) {
+        if (res.status === 401 && typeof window !== 'undefined' && url.includes('/api/admin') && !url.includes('/api/admin/check')) {
+          window.location.href = '/admin/auth';
+        }
         throw new Error(`HTTP error ${res.status}: ${res.statusText}`);
       }
       const json = await res.json();

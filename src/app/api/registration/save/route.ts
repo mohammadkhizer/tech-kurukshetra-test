@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       saved = await Registration.findOneAndUpdate(
         { orderId: payload.orderId },
         { $set: payload },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: 'after' }
       );
     } else {
       // Fallback in-memory persistence

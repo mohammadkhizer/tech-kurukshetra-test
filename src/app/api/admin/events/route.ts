@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     const name = sanitizeString(data.name);
     const slug = sanitizeString(data.slug) || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
-    const payload = {
+    const payload: Record<string, any> = {
       ...data,
       name,
       slug,
@@ -54,20 +54,34 @@ export async function POST(req: NextRequest) {
       hook: sanitizeString(data.hook),
       longDescription: sanitizeString(data.longDescription),
       prize: sanitizeString(data.prize),
+      prizePool: sanitizeString(data.prizePool),
       category: sanitizeString(data.category),
       location: sanitizeString(data.location),
+      venue: sanitizeString(data.venue),
+      date: sanitizeString(data.date),
+      time: sanitizeString(data.time),
+      duration: sanitizeString(data.duration),
+      registrationDeadline: sanitizeString(data.registrationDeadline),
       registrationFee: sanitizeString(data.registrationFee),
+      bannerImage: sanitizeString(data.bannerImage),
+      imageUrl: sanitizeString(data.imageUrl),
     };
+
+    // Strip custom id / _id from update payload to avoid immutable path conflicts in MongoDB
+    delete payload.id;
+    delete payload._id;
 
     const conn = await dbConnect();
     if (!conn) {
       return NextResponse.json({ success: false, message: 'Database connection failed' }, { status: 500 });
     }
-    const newDoc = await Event.findOneAndUpdate({ slug }, { $set: payload }, { upsert: true, new: true });
+
+    const newDoc = await Event.findOneAndUpdate({ slug }, { $set: payload }, { upsert: true, returnDocument: 'after' });
     return NextResponse.json({ success: true, data: newDoc });
   } catch (err: any) {
+    console.error('[POST /api/admin/events] Error:', err);
     return NextResponse.json(
-      { success: false, message: 'Server error' },
+      { success: false, message: err?.message || 'Server error' },
       { status: 500 }
     );
   }

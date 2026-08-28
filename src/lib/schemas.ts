@@ -50,29 +50,54 @@ export const AdminSignupSchema = z.object({
 });
 
 export const EventSaveSchema = z.object({
+  id: z.string().optional(),
   name: z.string().trim().min(2, 'Event name is required').max(100),
   slug: z.string().trim().max(100).optional().default(''),
   hook: z.string().trim().max(150).optional().default(''),
   description: z.string().trim().min(5, 'Description is required').max(2000),
   longDescription: z.string().trim().max(10000).optional().default(''),
   iconName: z.string().trim().max(50).optional().default('Code2'),
-  prize: z.string().trim().max(50).optional().default('TBA'),
+  prize: z.string().trim().max(100).optional().default('TBA'),
+  prizePool: z.string().trim().max(100).optional().default('TBA'),
   difficulty: z.string().trim().max(50).optional().default('Intermediate'),
-  category: z.string().trim().max(50).optional().default('Coding'),
+  category: z.string().trim().max(50).optional().default('TECH'),
   isTechnical: z.boolean().default(true),
-  type: z.string().trim().max(50).optional().default('Technical'),
+  type: z.string().trim().max(50).optional().default('team'),
+  teamSize: z.union([
+    z.object({
+      min: z.number().optional().default(1),
+      max: z.number().optional().default(1),
+    }),
+    z.string(),
+    z.number(),
+    z.any()
+  ]).optional().default({ min: 1, max: 1 }),
   rules: z.array(z.string().trim().max(500)).optional().default([]),
   eligibility: z.string().trim().max(300).optional().default('Open to all students'),
-  teamSize: z.string().trim().max(20).optional().default('1-4'),
-  duration: z.string().trim().max(20).optional().default('24h'),
-  sponsorName: z.string().trim().max(100).optional().default(''),
-  sponsorLogo: z.string().trim().max(500).optional().default(''),
+  duration: z.string().trim().max(100).optional().default('24h'),
+  venue: z.string().trim().max(200).optional().default(''),
   location: z.string().trim().max(200).optional().default(''),
+  date: z.string().trim().max(100).optional().default(''),
+  time: z.string().trim().max(100).optional().default(''),
+  registrationDeadline: z.string().trim().max(100).optional().default(''),
+  entryFee: z.union([z.number(), z.string()]).optional().default('Free'),
   registrationFee: z.string().trim().max(50).optional().default('Free'),
+  coordinatorContact: z.union([
+    z.object({
+      name: z.string().trim().optional().default(''),
+      phone: z.string().trim().optional().default(''),
+      email: z.string().trim().optional().default(''),
+    }),
+    z.string(),
+    z.any()
+  ]).optional().default({ name: '', phone: '', email: '' }),
+  bannerImage: z.string().trim().max(1000).optional().default(''),
+  imageUrl: z.string().trim().max(1000).optional().default(''),
   eventHead: z.string().trim().max(100).optional().default(''),
-  organiserContact: z.string().trim().max(50).optional().default(''),
+  organiserContact: z.string().trim().max(100).optional().default(''),
   startTime: z.string().trim().max(100).optional().default(''),
   endTime: z.string().trim().max(100).optional().default(''),
+  festivalDayId: z.string().trim().max(100).optional().default(''),
 });
 
 export const AnnouncementSaveSchema = z.object({
