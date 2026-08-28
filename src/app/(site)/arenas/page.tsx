@@ -6,6 +6,7 @@ import * as LucideIcons from 'lucide-react';
 import { CircleHelp, ArrowRight, Trophy, Zap, X, Users, Clock, Tag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFetch } from '@/hooks/use-fetch';
+import { formatTeamSize } from '@/lib/format-helpers';
 
 const EASE_OUT = { duration: 0.3, ease: 'easeOut' };
 const FADE_UP = {
@@ -47,13 +48,6 @@ interface Arena {
   coordinatorContact?: { name: string; phone: string; email: string };
 }
 
-function formatTeamSize(ts: any): string {
-  if (!ts) return '1';
-  if (typeof ts === 'object' && ts.min !== undefined && ts.max !== undefined) {
-    return ts.min === ts.max ? `${ts.min}` : `${ts.min}-${ts.max}`;
-  }
-  return String(ts);
-}
 
 function SkeletonCard() {
   return (

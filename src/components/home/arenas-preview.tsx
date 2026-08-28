@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import * as LucideIcons from 'lucide-react';
 import { ArrowRight, CircleHelp, Trophy, Users, Clock } from 'lucide-react';
 import { useFetch } from '@/hooks/use-fetch';
+import { formatTeamSize } from '@/lib/format-helpers';
 
 function SkeletonArenaCard() {
   return (
@@ -145,7 +146,7 @@ export function ArenasPreview() {
                         <Users size={11} className="text-[#FF6B00]" />
                         <span>Team</span>
                       </div>
-                      <span className="text-xs font-headline font-bold text-[#F1F1F1] mt-0.5 truncate">{event.teamSize || '1-4'}</span>
+                      <span className="text-xs font-headline font-bold text-[#F1F1F1] mt-0.5 truncate">{formatTeamSize(event.teamSize)}</span>
                     </div>
 
                     <div className="flex flex-col items-start border-l border-white/5 pl-2">

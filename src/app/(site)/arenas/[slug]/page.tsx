@@ -24,6 +24,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { useFetch } from '@/hooks/use-fetch';
+import { formatTeamSize } from '@/lib/format-helpers';
 
 const EASE_OUT = { duration: 0.3, ease: 'easeOut' };
 const FADE_UP = {
@@ -31,13 +32,6 @@ const FADE_UP = {
   visible: { opacity: 1, y: 0, transition: EASE_OUT },
 };
 
-function formatTeamSize(ts: any): string {
-  if (!ts) return '1';
-  if (typeof ts === 'object' && ts.min !== undefined && ts.max !== undefined) {
-    return ts.min === ts.max ? `${ts.min}` : `${ts.min}-${ts.max}`;
-  }
-  return String(ts);
-}
 
 function ArenaDetailSkeleton() {
   return (
