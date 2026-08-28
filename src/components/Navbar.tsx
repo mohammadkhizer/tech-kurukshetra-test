@@ -7,6 +7,7 @@ import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
 const navItems = [
+  { name: 'About', path: '/#about' },
   { name: 'Arenas', path: '/arenas' },
   { name: 'Timeline', path: '/timeline' },
   { name: 'Announcements', path: '/announcements' },

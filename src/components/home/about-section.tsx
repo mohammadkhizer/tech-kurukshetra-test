@@ -49,7 +49,7 @@ export function AboutSection() {
             </p>
             <div className="mt-2 sm:mt-4">
               <Link
-                href="/about"
+                href="/#about"
                 className="inline-flex items-center gap-2 text-xs tracking-[0.2em] uppercase font-bold pb-0.5 transition-colors"
                 style={{
                   color: 'var(--tk-accent)',
