@@ -12,8 +12,8 @@ const FADE_UP = {
 
 export function AboutSection() {
   return (
-    <section id="about" className="py-24 sm:py-32 px-4 sm:px-6 border-t border-white/5 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,107,0,0.05)_0%,transparent_65%)] pointer-events-none" />
+    <section id="about" className="py-24 sm:py-32 px-4 sm:px-6 border-t border-white/5 relative overflow-hidden bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,rgba(255,107,0,0.15),rgba(10,10,15,1))]">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,107,0,0.18)_0%,transparent_55%)] pointer-events-none" />
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           {/* Mission Left Overview */}

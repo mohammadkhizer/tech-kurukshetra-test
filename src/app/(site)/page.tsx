@@ -21,7 +21,7 @@ export default function Home() {
       {/* ═══════════════════════════════════
           1. HERO
       ═══════════════════════════════════ */}
-      <section className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 sm:px-6 pt-16 pb-12">
+      <section className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 sm:px-6 pt-16 pb-12 bg-[radial-gradient(ellipse_100%_70%_at_50%_-10%,rgba(255,107,0,0.40),rgba(10,10,15,1))]">
         {/* Custom Battlefield / Particle Graphic */}
         <GridCanvasClient />
 
@@ -66,12 +66,14 @@ export default function Home() {
           2. ANIMATED COUNT-UP STATS (CREDIBILITY)
           Automatically hidden if data unavailable
       ═══════════════════════════════════ */}
-      <StatsSection />
+      <div className="bg-gradient-to-b from-[#0A0A0F] via-[#1A0800] to-[#0A0A0F]">
+        <StatsSection />
+      </div>
 
       {/* ═══════════════════════════════════
           3. ARENAS PREVIEW GRID (4 CARDS)
       ═══════════════════════════════════ */}
-      <section id="arenas" className="py-20 sm:py-28 px-4 sm:px-6">
+      <section id="arenas" className="py-20 sm:py-28 px-4 sm:px-6 relative bg-[radial-gradient(circle_at_30%_50%,rgba(255,107,0,0.18),transparent_55%),radial-gradient(circle_at_70%_50%,rgba(255,107,0,0.10),transparent_55%)]">
         <ArenasPreviewClient />
       </section>
 
@@ -83,7 +85,7 @@ export default function Home() {
       {/* ═══════════════════════════════════
           5. SPONSOR MARQUEE (INFINITE SCROLL)
       ═══════════════════════════════════ */}
-      <section className="py-20">
+      <section className="py-20 bg-gradient-to-b from-[#0A0A0F] via-[#1A0600] to-[#0A0A0F]">
         <div className="max-w-6xl mx-auto px-6 mb-10 text-center">
           <div className="text-xs text-[#FF6B00] tracking-[0.3em] uppercase mb-2 font-bold">◈ SPONSORS &amp; PARTNERS</div>
           <h2 className="font-headline text-xl sm:text-2xl font-black tracking-widest text-white uppercase">Backed by the Best</h2>
