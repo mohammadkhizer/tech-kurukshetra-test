@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import Link from 'next/link';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Compass } from 'lucide-react';
 
 export function HeroCTA() {
   const mx = useMotionValue(0);
@@ -29,20 +29,19 @@ export function HeroCTA() {
       ref={ctaRef}
       onMouseMove={handleCTAMove}
       onMouseLeave={resetCTA}
-      className="relative"
+      className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 w-full max-w-lg mx-auto"
     >
-      <motion.div style={{ x: sx, y: sy }}>
-        <Link
-          href="/register"
-          className="group relative inline-flex items-center gap-3 bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-[#0A0A0F] font-black uppercase tracking-[0.2em] text-sm sm:text-base px-8 sm:px-12 py-4 sm:py-5 transition-all duration-200
-            shadow-[0_0_0_0_rgba(255,107,0,0.4)]
-            hover:shadow-[0_0_30px_8px_rgba(255,107,0,0.25)]
-            active:scale-[0.97]"
-        >
-          ENTER THE ARENA
-          <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
-        </Link>
-      </motion.div>
+
+
+      {/* Secondary CTA: VIEW ARENAS */}
+      <Link
+        href="/arenas"
+        className="group relative inline-flex items-center justify-center gap-2.5 w-full sm:w-auto bg-[#0A0A0F]/90 hover:bg-[#FF6B00]/10 text-[#F1F1F1] hover:text-[#FF6B00] border border-white/20 hover:border-[#FF6B00]/60 font-bold uppercase tracking-[0.2em] text-sm sm:text-base px-8 sm:px-10 py-4 sm:py-5 transition-all duration-200 active:scale-[0.97] backdrop-blur-sm"
+      >
+        <Compass size={18} className="text-[#FF6B00]/80 group-hover:text-[#FF6B00] transition-colors" />
+        VIEW ARENAS
+        <ArrowRight size={16} className="transition-transform group-hover:translate-x-1 opacity-70 group-hover:opacity-100" />
+      </Link>
     </div>
   );
 }

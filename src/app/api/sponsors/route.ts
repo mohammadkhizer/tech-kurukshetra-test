@@ -8,18 +8,20 @@ export async function GET() {
     const conn = await dbConnect();
     if (conn) {
       const items = await Sponsor.find({}).sort({ order: 1 }).lean();
-      const formatted = items.map((item: any) => ({
-        ...item,
-        id: item._id ? item._id.toString() : '',
-        // Decode any HTML-entity-corrupted URLs stored from previous sanitizeString() misuse
-        logoUrl: item.logoUrl ? decodeHtmlEntities(item.logoUrl) : item.logoUrl,
-        websiteUrl: item.websiteUrl ? decodeHtmlEntities(item.websiteUrl) : item.websiteUrl,
-      }));
-      return NextResponse.json({ success: true, data: formatted });
+      if (items && items.length > 0) {
+        const formatted = items.map((item: any) => ({
+          ...item,
+          id: item._id ? item._id.toString() : '',
+          logoUrl: item.logoUrl ? decodeHtmlEntities(item.logoUrl) : item.logoUrl,
+          websiteUrl: item.websiteUrl ? decodeHtmlEntities(item.websiteUrl) : item.websiteUrl,
+        }));
+        return NextResponse.json({ success: true, data: formatted });
+      }
     }
   } catch (err) {
     console.error('[GET /api/sponsors] DB query error:', err);
   }
 
+  // Return empty array when DB has no sponsors — no silent static fallback
   return NextResponse.json({ success: true, data: [] });
 }

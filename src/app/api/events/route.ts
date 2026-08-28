@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/mongodb';
 import Event from '@/lib/models/Event';
-import { DEFAULT_EVENTS } from '@/lib/events-data';
 
 export async function GET() {
   try {
@@ -20,6 +19,6 @@ export async function GET() {
     console.error('[GET /api/events] DB query error:', err);
   }
 
-  return NextResponse.json({ success: true, data: DEFAULT_EVENTS });
+  // Return empty array when DB has no events — no silent static fallback
+  return NextResponse.json({ success: true, data: [] });
 }
-

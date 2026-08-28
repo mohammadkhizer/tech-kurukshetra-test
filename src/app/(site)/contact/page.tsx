@@ -60,9 +60,23 @@ export default function ContactPage() {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setSending(true);
-    await new Promise(r => setTimeout(r, 1200)); // simulate
-    setSending(false);
-    setSent(true);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSent(true);
+      } else {
+        setErrors({ server: data.message || 'Submission failed. Please try again.' });
+      }
+    } catch {
+      setErrors({ server: 'Connection error. Please check your network.' });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -103,6 +117,21 @@ export default function ContactPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+                {/* Server error */}
+                {errors.server && (
+                  <div className="bg-[#C81E1E]/10 border border-[#C81E1E]/40 p-3 text-xs text-[#C81E1E]">
+                    {errors.server}
+                  </div>
+                )}
+                {/* Honeypot — hidden from real users; bots fill it in */}
+                <input
+                  aria-hidden="true"
+                  tabIndex={-1}
+                  name="hp"
+                  type="text"
+                  defaultValue=""
+                  style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0, overflow: 'hidden', pointerEvents: 'none' }}
+                />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <InputField label="Full Name" name="name" value={form.name} onChange={set('name')} error={errors.name} placeholder="John Doe" />
                   <InputField label="Email Address" name="email" type="email" value={form.email} onChange={set('email')} error={errors.email} placeholder="you@example.com" />

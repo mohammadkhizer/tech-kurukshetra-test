@@ -1,5 +1,16 @@
 import { z } from 'zod';
 
+// Bot honeypot: this field must remain empty on real submissions
+const HONEYPOT_MAX = 0;
+
+export const ContactSubmitSchema = z.object({
+  name: z.string().trim().min(2, 'Name is required').max(100),
+  email: z.string().trim().email('Invalid email address').max(255),
+  subject: z.string().trim().max(200).optional().default('General Inquiry'),
+  message: z.string().trim().min(5, 'Message is too short').max(5000),
+  hp: z.string().max(HONEYPOT_MAX, 'Bot detected').optional().default(''),
+});
+
 export const RegistrationSaveSchema = z.object({
   orderId: z.string().trim().min(1, 'Order ID is required').max(100),
   name: z.string().trim().min(2, 'Name is required').max(100),
@@ -11,6 +22,7 @@ export const RegistrationSaveSchema = z.object({
   teamSize: z.string().trim().max(10).optional().default(''),
   eventSlug: z.string().trim().max(100).optional().default(''),
   paymentStatus: z.string().trim().max(50).default('completed'),
+  hp: z.string().max(HONEYPOT_MAX, 'Bot detected').optional().default(''),
 });
 
 export const AdminLoginSchema = z.object({
@@ -23,5 +35,72 @@ export const AdminSignupSchema = z.object({
   email: z.string().trim().email('Invalid email address format').max(255),
   password: z.string().min(6, 'Password must be at least 6 characters').max(256),
   fullName: z.string().trim().min(2).max(100).optional().default(''),
+  role: z.enum(['admin', 'superadmin']).default('admin'),
+});
+
+export const EventSaveSchema = z.object({
+  name: z.string().trim().min(2, 'Event name is required').max(100),
+  slug: z.string().trim().max(100).optional().default(''),
+  hook: z.string().trim().max(150).optional().default(''),
+  description: z.string().trim().min(5, 'Description is required').max(2000),
+  longDescription: z.string().trim().max(10000).optional().default(''),
+  iconName: z.string().trim().max(50).optional().default('Code2'),
+  prize: z.string().trim().max(50).optional().default('TBA'),
+  difficulty: z.string().trim().max(50).optional().default('Intermediate'),
+  category: z.string().trim().max(50).optional().default('Coding'),
+  isTechnical: z.boolean().default(true),
+  type: z.string().trim().max(50).optional().default('Technical'),
+  rules: z.array(z.string().trim().max(500)).optional().default([]),
+  eligibility: z.string().trim().max(300).optional().default('Open to all students'),
+  teamSize: z.string().trim().max(20).optional().default('1-4'),
+  duration: z.string().trim().max(20).optional().default('24h'),
+  sponsorName: z.string().trim().max(100).optional().default(''),
+  sponsorLogo: z.string().trim().max(500).optional().default(''),
+  location: z.string().trim().max(200).optional().default(''),
+  registrationFee: z.string().trim().max(50).optional().default('Free'),
+  eventHead: z.string().trim().max(100).optional().default(''),
+  organiserContact: z.string().trim().max(50).optional().default(''),
+  startTime: z.string().trim().max(100).optional().default(''),
+  endTime: z.string().trim().max(100).optional().default(''),
+});
+
+export const AnnouncementSaveSchema = z.object({
+  title: z.string().trim().min(2, 'Title is required').max(200),
+  content: z.string().trim().min(5, 'Content is required').max(10000),
+  category: z.enum(['Update', 'Deadline', 'General']).default('General'),
+  isPinned: z.boolean().default(false),
+  deadlineDate: z.string().trim().max(100).optional().default(''),
+  author: z.string().trim().max(100).optional().default('Organizing Committee'),
+});
+
+export const SponsorSaveSchema = z.object({
+  name: z.string().trim().min(2, 'Sponsor name is required').max(100),
+  category: z.string().trim().max(100).optional().default('Partner'),
+  logoUrl: z.string().trim().max(1000).optional().default(''),
+  websiteUrl: z.string().trim().max(1000).optional().default(''),
+  order: z.number().int().min(0).default(0),
+});
+
+export const TeamMemberSaveSchema = z.object({
+  name: z.string().trim().min(2, 'Name is required').max(100),
+  role: z.string().trim().min(2, 'Role is required').max(100),
+  group: z.string().trim().max(100).optional().default('Organiser'),
+  photoUrl: z.string().trim().max(1000).optional().default(''),
+  linkedinUrl: z.string().trim().max(1000).optional().default(''),
+  order: z.number().int().min(0).default(0),
+});
+
+export const TimelineSaveSchema = z.object({
+  date: z.string().trim().min(2, 'Date is required').max(100),
+  title: z.string().trim().min(2, 'Title is required').max(200),
+  description: z.string().trim().min(5, 'Description is required').max(1000),
+  status: z.enum(['Completed', 'Live', 'Upcoming']).default('Upcoming'),
+  order: z.number().int().min(0).default(0),
+});
+
+export const UserSaveSchema = z.object({
+  username: z.string().trim().min(3, 'Username must be at least 3 characters').max(50),
+  email: z.string().trim().email('Invalid email address format').max(255),
+  status: z.enum(['pending', 'approved', 'rejected']).default('approved'),
   role: z.enum(['admin', 'superadmin']).default('admin'),
 });

@@ -3,6 +3,7 @@ import { verifyAdminAuth } from '@/lib/admin-auth';
 import { dbConnect } from '@/lib/mongodb';
 import Event from '@/lib/models/Event';
 import { sanitizeObject, sanitizeString } from '@/lib/sanitizer';
+import { EventSaveSchema } from '@/lib/schemas';
 
 export async function GET() {
   if (!(await verifyAdminAuth())) {
@@ -30,30 +31,32 @@ export async function POST(req: NextRequest) {
 
   try {
     const rawBody = await req.json();
-    const body = sanitizeObject(rawBody);
+    const sanitizedBody = sanitizeObject(rawBody);
+    const parsed = EventSaveSchema.safeParse(sanitizedBody);
 
-    const name = sanitizeString(body?.name);
-    const slug = sanitizeString(body?.slug) || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const description = sanitizeString(body?.description);
-
-    if (!name || !description) {
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
       return NextResponse.json(
-        { success: false, message: 'Event Name and Description are required.' },
+        { success: false, message: issue ? `${issue.path.join('.')}: ${issue.message}` : 'Invalid event payload.' },
         { status: 400 }
       );
     }
 
+    const data = parsed.data;
+    const name = sanitizeString(data.name);
+    const slug = sanitizeString(data.slug) || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
     const payload = {
-      ...body,
+      ...data,
       name,
       slug,
-      description,
-      hook: sanitizeString(body?.hook),
-      longDescription: sanitizeString(body?.longDescription),
-      prize: sanitizeString(body?.prize),
-      category: sanitizeString(body?.category),
-      location: sanitizeString(body?.location),
-      registrationFee: sanitizeString(body?.registrationFee),
+      description: sanitizeString(data.description),
+      hook: sanitizeString(data.hook),
+      longDescription: sanitizeString(data.longDescription),
+      prize: sanitizeString(data.prize),
+      category: sanitizeString(data.category),
+      location: sanitizeString(data.location),
+      registrationFee: sanitizeString(data.registrationFee),
     };
 
     const conn = await dbConnect();
@@ -64,7 +67,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: newDoc });
   } catch (err: any) {
     return NextResponse.json(
-      { success: false, message: err.message || 'Server error' },
+      { success: false, message: 'Server error' },
       { status: 500 }
     );
   }

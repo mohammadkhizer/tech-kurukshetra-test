@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from 'react';
 
-const DEFAULT_TARGET_DATE = '2027-01-23T09:00:00+05:30';
-
-function getTargetTimestamp(): number {
-  let dateStr = DEFAULT_TARGET_DATE;
+function getTargetTimestamp(): number | null {
+  let dateStr: string | undefined = undefined;
 
   if (typeof window !== 'undefined' && (window as any).__EVENT_TARGET_DATE) {
     dateStr = (window as any).__EVENT_TARGET_DATE;
@@ -13,69 +11,77 @@ function getTargetTimestamp(): number {
     dateStr = process.env.NEXT_PUBLIC_EVENT_DATE;
   }
 
+  if (!dateStr) {
+    return null;
+  }
+
   dateStr = dateStr.trim().replace(/^["']|["']$/g, '');
 
-  // If input is purely YYYY-MM-DD, expand to full ISO time string T09:00:00
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
     dateStr += 'T09:00:00';
   }
 
-  // Ensure string has explicit timezone offset if missing (force IST +05:30)
   if (!/(?:Z|[+-]\d{2}:?\d{2})$/i.test(dateStr)) {
     dateStr += '+05:30';
   }
 
-  let parsed = new Date(dateStr).getTime();
+  const parsed = new Date(dateStr).getTime();
   if (isNaN(parsed) || parsed <= Date.now()) {
-    parsed = new Date(DEFAULT_TARGET_DATE).getTime();
-  }
-
-  // Fallback to future date (Jan 23, 2027) if past or invalid
-  if (isNaN(parsed) || parsed <= Date.now()) {
-    parsed = new Date('2027-01-23T09:00:00+05:30').getTime();
+    return null;
   }
 
   return parsed;
 }
 
-function calculateTimeLeft() {
-  const target = getTargetTimestamp();
+function calculateTimeLeft(targetTimestamp: number | null) {
+  if (!targetTimestamp) {
+    return { days: 0, hrs: 0, mins: 0, secs: 0, valid: false };
+  }
+
   const now = Date.now();
-  const diff = Math.max(0, target - now);
+  const diff = Math.max(0, targetTimestamp - now);
 
   return {
     days: Math.floor(diff / (1000 * 60 * 60 * 24)),
     hrs: Math.floor((diff / (1000 * 60 * 60)) % 24),
     mins: Math.floor((diff / (1000 * 60)) % 60),
     secs: Math.floor((diff / 1000) % 60),
+    valid: diff > 0,
   };
 }
 
-const ZERO_TIME = { days: 0, hrs: 0, mins: 0, secs: 0 };
-
 export function Countdown() {
   const [mounted, setMounted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(ZERO_TIME);
+  const [targetTime, setTargetTime] = useState<number | null>(null);
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hrs: 0, mins: 0, secs: 0, valid: false });
 
   useEffect(() => {
     setMounted(true);
-    setTimeLeft(calculateTimeLeft());
+    const target = getTargetTimestamp();
+    setTargetTime(target);
+    setTimeLeft(calculateTimeLeft(target));
 
-    const updateTimer = () => {
-      setTimeLeft(calculateTimeLeft());
-    };
+    const intervalId = setInterval(() => {
+      setTimeLeft(calculateTimeLeft(target));
+    }, 1000);
 
-    const intervalId = setInterval(updateTimer, 1000);
     return () => clearInterval(intervalId);
   }, []);
 
-  const activeTime = mounted ? timeLeft : calculateTimeLeft();
+  if (!mounted || !timeLeft.valid) {
+    // Marked TODO: Event date set via NEXT_PUBLIC_EVENT_DATE env var or CMS
+    return (
+      <div className="border border-[#FF6B00]/30 bg-[#FF6B00]/5 px-4 py-2 text-xs text-[#FF6B00] tracking-[0.2em] uppercase font-headline">
+        EVENT DATE ANNOUNCEMENT COMING SOON
+      </div>
+    );
+  }
 
   const units = [
-    { label: 'DAYS', value: String(activeTime.days).padStart(2, '0') },
-    { label: 'HRS',  value: String(activeTime.hrs).padStart(2, '0') },
-    { label: 'MINS', value: String(activeTime.mins).padStart(2, '0') },
-    { label: 'SECS', value: String(activeTime.secs).padStart(2, '0') },
+    { label: 'DAYS', value: String(timeLeft.days).padStart(2, '0') },
+    { label: 'HRS',  value: String(timeLeft.hrs).padStart(2, '0') },
+    { label: 'MINS', value: String(timeLeft.mins).padStart(2, '0') },
+    { label: 'SECS', value: String(timeLeft.secs).padStart(2, '0') },
   ];
 
   return (
@@ -98,4 +104,3 @@ export function Countdown() {
     </div>
   );
 }
-

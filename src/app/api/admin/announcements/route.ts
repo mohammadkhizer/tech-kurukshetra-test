@@ -3,6 +3,7 @@ import { verifyAdminAuth } from '@/lib/admin-auth';
 import { dbConnect } from '@/lib/mongodb';
 import Announcement from '@/lib/models/Announcement';
 import { sanitizeObject, sanitizeString } from '@/lib/sanitizer';
+import { AnnouncementSaveSchema } from '@/lib/schemas';
 
 export async function GET() {
   if (!(await verifyAdminAuth())) {
@@ -12,7 +13,7 @@ export async function GET() {
   try {
     const conn = await dbConnect();
     if (conn) {
-      const items = await Announcement.find({}).sort({ createdAt: -1 }).lean();
+      const items = await Announcement.find({}).sort({ timestamp: -1 }).lean();
       const formatted = items.map((item: any) => ({ ...item, id: item._id ? item._id.toString() : '' }));
       return NextResponse.json({ success: true, data: formatted });
     }
@@ -30,29 +31,38 @@ export async function POST(req: NextRequest) {
 
   try {
     const rawBody = await req.json();
-    const body = sanitizeObject(rawBody);
+    const sanitizedBody = sanitizeObject(rawBody);
+    const parsed = AnnouncementSaveSchema.safeParse(sanitizedBody);
 
-    const title = sanitizeString(body?.title);
-    const content = sanitizeString(body?.content);
-    const timestamp = sanitizeString(body?.timestamp) || new Date().toISOString();
-    const author = sanitizeString(body?.author) || 'Organizing Committee';
-
-    if (!title || !content) {
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
       return NextResponse.json(
-        { success: false, message: 'Title and Content are required.' },
+        { success: false, message: issue ? `${issue.path.join('.')}: ${issue.message}` : 'Invalid announcement payload.' },
         { status: 400 }
       );
     }
+
+    const data = parsed.data;
+    const payload = {
+      title: sanitizeString(data.title),
+      content: sanitizeString(data.content),
+      category: data.category,
+      isPinned: data.isPinned,
+      deadlineDate: sanitizeString(data.deadlineDate),
+      author: sanitizeString(data.author),
+      timestamp: new Date().toISOString(),
+    };
 
     const conn = await dbConnect();
     if (!conn) {
       return NextResponse.json({ success: false, message: 'Database connection failed' }, { status: 500 });
     }
-    const newDoc = await Announcement.create({ title, content, timestamp, author });
+
+    const newDoc = await Announcement.create(payload);
     return NextResponse.json({ success: true, data: newDoc });
   } catch (err: any) {
     return NextResponse.json(
-      { success: false, message: err.message || 'Server error' },
+      { success: false, message: 'Server error' },
       { status: 500 }
     );
   }

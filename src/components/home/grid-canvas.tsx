@@ -22,15 +22,30 @@ export function GridCanvas() {
     resize();
     window.addEventListener('resize', resize);
 
-    const particles: { x: number; y: number; vx: number; vy: number; life: number; maxLife: number }[] = [];
-    for (let i = 0; i < 40; i++) {
+    // Particle system simulating tactical data dust & energetic embers
+    const particles: {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      size: number;
+      life: number;
+      maxLife: number;
+      color: string;
+    }[] = [];
+
+    const particleCount = Math.min(60, Math.floor(window.innerWidth / 25));
+
+    for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
-        life: Math.random() * 200,
-        maxLife: 200 + Math.random() * 100,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5 - 0.1, // subtle upward drift
+        size: Math.random() * 2 + 0.8,
+        life: Math.random() * 250,
+        maxLife: 200 + Math.random() * 150,
+        color: Math.random() > 0.3 ? 'rgba(255, 107, 0,' : 'rgba(200, 30, 30,',
       });
     }
 
@@ -42,49 +57,71 @@ export function GridCanvas() {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Grid lines
-      ctx.strokeStyle = 'rgba(255, 107, 0, 0.04)';
+      const width = canvas.width;
+      const height = canvas.height;
+
+      // Perspective cyber grid lines
+      ctx.strokeStyle = 'rgba(255, 107, 0, 0.05)';
       ctx.lineWidth = 1;
-      const gSize = 60;
-      for (let x = 0; x < canvas.width; x += gSize) {
+      const gSize = 64;
+
+      for (let x = 0; x < width; x += gSize) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-      }
-      for (let y = 0; y < canvas.height; y += gSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
+        ctx.lineTo(x, height);
         ctx.stroke();
       }
 
-      // Particles
+      for (let y = 0; y < height; y += gSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      // Draw active particles
       particles.forEach((p) => {
         p.life++;
         if (p.life > p.maxLife) {
-          p.x = Math.random() * canvas.width;
-          p.y = Math.random() * canvas.height;
+          p.x = Math.random() * width;
+          p.y = Math.random() * height;
           p.life = 0;
         }
         p.x += p.vx;
         p.y += p.vy;
-        const alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.6;
+
+        const alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.7;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 107, 0, ${alpha})`;
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `${p.color}${alpha})`;
         ctx.fill();
+
+        // Glow ring around larger particles
+        if (p.size > 1.8) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = `${p.color}${alpha * 0.25})`;
+          ctx.fill();
+        }
       });
 
-      // Scan line
-      const t = Date.now() * 0.001;
-      const scanY = (Math.sin(t * 0.3) * 0.5 + 0.5) * canvas.height;
-      const grad = ctx.createLinearGradient(0, scanY - 80, 0, scanY + 80);
+      // Animated laser scanning line
+      const t = Date.now() * 0.0008;
+      const scanY = (Math.sin(t) * 0.5 + 0.5) * height;
+      const grad = ctx.createLinearGradient(0, scanY - 90, 0, scanY + 90);
       grad.addColorStop(0, 'rgba(255,107,0,0)');
-      grad.addColorStop(0.5, 'rgba(255,107,0,0.03)');
+      grad.addColorStop(0.5, 'rgba(255,107,0,0.04)');
       grad.addColorStop(1, 'rgba(255,107,0,0)');
       ctx.fillStyle = grad;
-      ctx.fillRect(0, scanY - 80, canvas.width, 160);
+      ctx.fillRect(0, scanY - 90, width, 180);
+
+      // Bright laser beam line
+      ctx.beginPath();
+      ctx.moveTo(0, scanY);
+      ctx.lineTo(width, scanY);
+      ctx.strokeStyle = 'rgba(255, 107, 0, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
 
       rafId = requestAnimationFrame(draw);
     };
@@ -102,7 +139,6 @@ export function GridCanvas() {
       }
     };
 
-    // IntersectionObserver to pause loop when canvas is scrolled off-screen
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries;
@@ -117,7 +153,6 @@ export function GridCanvas() {
     );
     observer.observe(canvas);
 
-    // Tab visibility change listener
     const handleVisibilityChange = () => {
       isTabActive = !document.hidden;
       if (isTabActive && isVisible) {

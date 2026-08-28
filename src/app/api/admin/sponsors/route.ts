@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminAuth } from '@/lib/admin-auth';
 import { dbConnect } from '@/lib/mongodb';
 import Sponsor from '@/lib/models/Sponsor';
-import { sanitizeObject, sanitizeString, sanitizeUrl, decodeHtmlEntities } from '@/lib/sanitizer';
+import { sanitizeObject, sanitizeString, sanitizeUrl } from '@/lib/sanitizer';
+import { SponsorSaveSchema } from '@/lib/schemas';
 
 export async function GET() {
   if (!(await verifyAdminAuth())) {
@@ -13,13 +14,7 @@ export async function GET() {
     const conn = await dbConnect();
     if (conn) {
       const items = await Sponsor.find({}).sort({ order: 1 }).lean();
-      const formatted = items.map((item: any) => ({
-        ...item,
-        id: item._id ? item._id.toString() : '',
-        // Decode any HTML-entity-corrupted URLs stored from previous sanitizeString() misuse
-        logoUrl: item.logoUrl ? decodeHtmlEntities(item.logoUrl) : item.logoUrl,
-        websiteUrl: item.websiteUrl ? decodeHtmlEntities(item.websiteUrl) : item.websiteUrl,
-      }));
+      const formatted = items.map((item: any) => ({ ...item, id: item._id ? item._id.toString() : '' }));
       return NextResponse.json({ success: true, data: formatted });
     }
   } catch (err) {
@@ -36,31 +31,36 @@ export async function POST(req: NextRequest) {
 
   try {
     const rawBody = await req.json();
-    const body = sanitizeObject(rawBody);
+    const sanitizedBody = sanitizeObject(rawBody);
+    const parsed = SponsorSaveSchema.safeParse(sanitizedBody);
 
-    const name = sanitizeString(body?.name);
-    const category = sanitizeString(body?.category) || 'Partner';
-    const logoUrl = sanitizeUrl(body?.logoUrl);
-    const websiteUrl = sanitizeUrl(body?.websiteUrl);
-
-    if (!name) {
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
       return NextResponse.json(
-        { success: false, message: 'Sponsor Name is required.' },
+        { success: false, message: issue ? `${issue.path.join('.')}: ${issue.message}` : 'Invalid sponsor payload.' },
         { status: 400 }
       );
     }
 
-    const payload = { name, category, logoUrl, websiteUrl, order: body?.order || 0 };
+    const data = parsed.data;
+    const payload = {
+      name: sanitizeString(data.name),
+      category: sanitizeString(data.category),
+      logoUrl: sanitizeUrl(data.logoUrl),
+      websiteUrl: sanitizeUrl(data.websiteUrl),
+      order: data.order,
+    };
 
     const conn = await dbConnect();
     if (!conn) {
       return NextResponse.json({ success: false, message: 'Database connection failed' }, { status: 500 });
     }
+
     const newDoc = await Sponsor.create(payload);
     return NextResponse.json({ success: true, data: newDoc });
   } catch (err: any) {
     return NextResponse.json(
-      { success: false, message: err.message || 'Server error' },
+      { success: false, message: 'Server error' },
       { status: 500 }
     );
   }
