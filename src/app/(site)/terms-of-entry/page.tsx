@@ -15,7 +15,7 @@ export default function TermsOfEntryPage() {
     <LegalLayout
       title="TERMS OF ENTRY"
       subtitle="Please read these terms carefully before registering for TECH KURUKSHETRA 2027."
-      lastUpdated="July 2026"
+      lastUpdated="July 2027"
       sections={SECTIONS}
     >
       <h2 id="eligibility">Eligibility</h2>

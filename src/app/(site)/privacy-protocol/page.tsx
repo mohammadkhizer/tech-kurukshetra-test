@@ -14,7 +14,7 @@ export default function PrivacyProtocolPage() {
     <LegalLayout
       title="PRIVACY PROTOCOL"
       subtitle="Your data is yours. Here's exactly how we handle it at TECH KURUKSHETRA."
-      lastUpdated="July 2026"
+      lastUpdated="July 2027"
       sections={SECTIONS}
     >
       <h2 id="collection">Data We Collect</h2>
@@ -52,12 +52,12 @@ export default function PrivacyProtocolPage() {
 
       <h2 id="rights">Your Rights</h2>
       <p>
-        You have the right to request access to, correction of, or deletion of your personal data at any time. To exercise these rights, contact us at <a href="mailto:privacy@techkurukshetra.in">privacy@techkurukshetra.in</a>.
+        You have the right to request access to, correction of, or deletion of your personal data at any time. To exercise these rights, contact us at <a href="mailto:btech_events@svgu.ac.in">btech_events@svgu.ac.in</a>.
       </p>
 
       <h2 id="contact">Contact Us</h2>
       <p>
-        For any privacy-related questions or concerns, please reach out to our data officer at <a href="mailto:privacy@techkurukshetra.in">privacy@techkurukshetra.in</a> or visit the <a href="/contact">Contact page</a>.
+        For any privacy-related questions or concerns, please reach out to our data officer at <a href="mailto:btech_events@svgu.ac.in">btech_events@svgu.ac.in</a> or visit the <a href="/contact">Contact page</a>.
       </p>
     </LegalLayout>
   );

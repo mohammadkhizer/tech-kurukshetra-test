@@ -16,7 +16,7 @@ export default function CodeOfConductPage() {
     <LegalLayout
       title="CODE OF CONDUCT"
       subtitle="TECH KURUKSHETRA is a battlefield of minds — but every warrior is bound by a code."
-      lastUpdated="July 2026"
+      lastUpdated="July 2027"
       sections={SECTIONS}
     >
       <h2 id="spirit">Spirit of the Event</h2>
@@ -80,7 +80,7 @@ export default function CodeOfConductPage() {
 
       <h2 id="reporting">Reporting Violations</h2>
       <p>
-        If you witness or experience a code of conduct violation, report it immediately to any organizing committee member or contact us at <a href="mailto:conduct@techkurukshetra.in">conduct@techkurukshetra.in</a>. All reports will be handled discreetly and with urgency.
+        If you witness or experience a code of conduct violation, report it immediately to any organizing committee member or contact us at <a href="mailto:btech_events@svgu.ac.in">btech_events@svgu.ac.in</a>. All reports will be handled discreetly and with urgency.
       </p>
     </LegalLayout>
   );
