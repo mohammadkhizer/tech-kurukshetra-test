@@ -26,9 +26,15 @@ function InputField({
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`bg-white/[0.03] border text-[#F1F1F1] text-sm px-4 py-3 outline-none transition-all duration-200 placeholder:text-[#8A8A8A]/50
-          focus:border-[#FF6B00] focus:bg-[#FF6B00]/[0.04] focus:shadow-[0_0_0_1px_rgba(255,107,0,0.3)]
-          ${error ? 'border-[#C81E1E] bg-[#C81E1E]/[0.04]' : 'border-white/10 hover:border-white/20'}`}
+        className={`bg-tk-bg-raised border text-tk-text text-sm px-4 py-3 outline-none transition-all duration-200 placeholder:text-tk-text-dim
+          ${
+            error
+              ? 'border-red-600 bg-red-600/[0.05]'
+              : 'border-tk-border hover:border-tk-border-accent focus:border-tk-accent'
+          }`}
+        style={{
+          '--tw-shadow': error ? 'none' : undefined,
+        } as any}
       />
       {error && (
         <span className="flex items-center gap-1 text-[10px] text-[#C81E1E]">
@@ -80,15 +86,19 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] text-[#F1F1F1]">
+    <div className="min-h-screen bg-tk-bg text-tk-text">
       {/* Header */}
-      <section className="pt-20 pb-16 px-4 sm:px-6 border-b border-white/5 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,107,0,0.04),transparent_60%)] pointer-events-none" />
+      <section className="pt-20 pb-16 px-4 sm:px-6 relative overflow-hidden" style={{ borderBottom: '1px solid var(--tk-border)' }}>
+        {/* Subtle orange radial — top corner only, low opacity */}
+        <div
+          className="absolute top-0 left-0 w-[600px] h-[300px] pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at top left, rgba(255,122,47,0.12) 0%, transparent 65%)' }}
+        />
         <div className="max-w-6xl mx-auto relative z-10">
           <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.08 } } }} className="flex flex-col gap-4">
-            <motion.div variants={FADE_UP} className="text-xs text-[#FF6B00] tracking-[0.3em] uppercase">◈ REACH OUT</motion.div>
-            <motion.h1 variants={FADE_UP} className="text-5xl sm:text-7xl font-black tracking-tighter font-headline leading-[0.9]">
-              CONTACT<br /><span className="text-[#FF6B00]">US</span>
+            <motion.div variants={FADE_UP} className="text-xs tracking-[0.3em] uppercase" style={{ color: 'var(--tk-accent)' }}>◈ REACH OUT</motion.div>
+            <motion.h1 variants={FADE_UP} className="text-5xl sm:text-7xl font-black tracking-tighter font-headline leading-[0.9] text-tk-text">
+              CONTACT<br /><span style={{ color: 'var(--tk-accent)' }}>US</span>
             </motion.h1>
           </motion.div>
         </div>
@@ -173,7 +183,10 @@ export default function ContactPage() {
                   disabled={sending}
                   whileHover={{ scale: 1.02, boxShadow: '0 0 24px rgba(255,107,0,0.3)' }}
                   whileTap={{ scale: 0.97 }}
-                  className="self-start inline-flex items-center gap-3 bg-[#FF6B00] hover:bg-[#FF6B00]/90 disabled:opacity-50 text-[#0A0A0F] font-black uppercase tracking-[0.2em] text-sm px-8 py-4 transition-colors duration-200"
+                  className="self-start inline-flex items-center gap-3 font-black uppercase tracking-[0.2em] text-sm px-8 py-4 transition-colors duration-200 disabled:opacity-50"
+                  style={{ background: 'var(--tk-accent)', color: 'var(--tk-bg)' }}
+                  onMouseEnter={e => { if (!sending) (e.currentTarget as HTMLButtonElement).style.background = 'var(--tk-accent-dim)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--tk-accent)'; }}
                 >
                   {sending ? 'SENDING...' : 'SEND MESSAGE'}
                   {!sending && <ArrowRight size={16} />}

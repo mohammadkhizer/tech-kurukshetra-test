@@ -12,11 +12,22 @@ const FADE_UP = {
 
 export function AboutSection() {
   return (
-    <section id="about" className="py-24 sm:py-32 px-4 sm:px-6 border-t border-white/5 relative overflow-hidden bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,rgba(255,107,0,0.15),rgba(10,10,15,1))]">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,107,0,0.18)_0%,transparent_55%)] pointer-events-none" />
-      <div className="max-w-6xl mx-auto">
+    <section
+      id="about"
+      className="py-24 sm:py-32 px-4 sm:px-6 relative overflow-hidden bg-tk-bg-surface"
+      style={{ borderTop: '1px solid var(--tk-border)' }}
+    >
+      {/* Single subtle orange radial — top-right corner only (one accent touch, not full bg) */}
+      <div
+        className="absolute top-0 right-0 w-[500px] h-[400px] pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at top right, rgba(255,122,47,0.10) 0%, transparent 65%)',
+        }}
+      />
+
+      <div className="max-w-6xl mx-auto relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-          {/* Mission Left Overview */}
+          {/* Mission Left */}
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -24,12 +35,14 @@ export function AboutSection() {
             variants={FADE_UP}
             className="lg:col-span-5 flex flex-col gap-4"
           >
-            <div className="text-xs text-[#FF6B00] tracking-[0.3em] uppercase font-bold">◈ MISSION STATEMENT</div>
-            <h2 className="text-4xl sm:text-5xl font-black tracking-tighter font-headline leading-[0.95]">
+            <div className="text-xs tracking-[0.3em] uppercase font-bold" style={{ color: 'var(--tk-accent)' }}>
+              ◈ MISSION STATEMENT
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-black tracking-tighter font-headline leading-[0.95] text-tk-text">
               THE BATTLEFIELD<br />
-              <span className="text-[#8A8A8A] font-light italic text-3xl sm:text-4xl">AWAITS.</span>
+              <span className="font-light italic text-3xl sm:text-4xl text-tk-text-muted">AWAITS.</span>
             </h2>
-            <p className="text-[#8A8A8A] text-sm sm:text-base leading-relaxed mt-4">
+            <p className="text-tk-text-muted text-sm sm:text-base leading-relaxed mt-4">
               TECH KURUKSHETRA is not just an ordinary festival — it is a high-intensity battleground.
               A two-day national technical crucible hosted at UCPIT, SVGU Ahmedabad, where India's sharpest
               engineers, coders, and makers collide to build, compete, and claim arena glory.
@@ -37,14 +50,18 @@ export function AboutSection() {
             <div className="mt-4">
               <Link
                 href="/about"
-                className="inline-flex items-center gap-2 text-xs text-[#FF6B00] tracking-[0.2em] uppercase font-bold border-b border-[#FF6B00]/40 hover:border-[#FF6B00] pb-0.5 transition-colors"
+                className="inline-flex items-center gap-2 text-xs tracking-[0.2em] uppercase font-bold pb-0.5 transition-colors"
+                style={{
+                  color: 'var(--tk-accent)',
+                  borderBottom: '1px solid var(--tk-accent-border)',
+                }}
               >
                 READ THE LEGEND <ArrowRight size={12} />
               </Link>
             </div>
           </motion.div>
 
-          {/* 3-Column Innovation / Collaboration / Competition Cards */}
+          {/* 3-Column Cards */}
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -73,16 +90,35 @@ export function AboutSection() {
                 key={label}
                 variants={FADE_UP}
                 whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                className="group flex flex-col justify-between border border-white/10 p-6 hover:border-[#FF6B00]/50 transition-colors duration-300 bg-white/[0.02] hover:bg-white/[0.03] hover:shadow-[0_0_20px_rgba(255,107,0,0.1)]"
+                className="group flex flex-col justify-between p-6 transition-all duration-300"
+                style={{
+                  border: '1px solid var(--tk-border)',
+                  background: 'var(--tk-bg)',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--tk-border-accent)';
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 20px var(--tk-accent-glow)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--tk-border)';
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+                }}
               >
                 <div>
-                  <div className="p-3 bg-[#FF6B00]/10 border border-[#FF6B00]/20 text-[#FF6B00] w-fit mb-5 group-hover:bg-[#FF6B00] group-hover:text-[#0A0A0F] transition-colors duration-200">
+                  <div
+                    className="p-3 w-fit mb-5 transition-colors duration-200"
+                    style={{
+                      background: 'var(--tk-accent-subtle)',
+                      border: '1px solid var(--tk-border-accent)',
+                      color: 'var(--tk-accent)',
+                    }}
+                  >
                     <Icon strokeWidth={1.5} size={24} />
                   </div>
-                  <div className="text-base font-black uppercase tracking-[0.1em] font-headline mb-2 text-white group-hover:text-[#FF6B00] transition-colors">
+                  <div className="text-base font-black uppercase tracking-[0.1em] font-headline mb-2 text-tk-text">
                     {label}
                   </div>
-                  <p className="text-xs text-[#8A8A8A] leading-relaxed">{desc}</p>
+                  <p className="text-xs text-tk-text-muted leading-relaxed">{desc}</p>
                 </div>
               </motion.div>
             ))}

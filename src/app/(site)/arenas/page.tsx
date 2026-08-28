@@ -69,14 +69,15 @@ function ArenaModal({ arena, onClose }: { arena: Arena; onClose: () => void }) {
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
-      <div className="absolute inset-0 bg-[#0A0A0F]/90 backdrop-blur-md" />
+      <div className="absolute inset-0 bg-[var(--tk-bg)]/90 backdrop-blur-md" />
       <motion.div
         initial={{ opacity: 0, y: 24, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 24, scale: 0.97 }}
         transition={EASE_OUT}
         onClick={(e) => e.stopPropagation()}
-        className="relative z-10 w-full max-w-lg bg-[#0A0A0F] border border-[#FF6B00]/30 p-8 max-h-[90vh] overflow-y-auto"
+        className="relative z-10 w-full max-w-lg p-8 max-h-[90vh] overflow-y-auto bg-tk-bg-surface"
+        style={{ border: '1px solid var(--tk-border-accent)' }}
       >
         <button
           onClick={onClose}
@@ -154,17 +155,21 @@ function ArenaCard({ arena, onClick }: { arena: Arena; onClick: () => void }) {
     <motion.div
       variants={FADE_UP}
       whileHover={{ scale: 1.02, y: -4, transition: { duration: 0.2, ease: 'easeOut' } }}
-      className="group relative border border-white/10 group-hover:border-[#FF6B00]/50 bg-white/[0.02] p-6 cursor-pointer overflow-hidden flex flex-col justify-between transition-all duration-200 ease-out"
+      className="group relative p-6 cursor-pointer overflow-hidden flex flex-col justify-between transition-all duration-200 ease-out"
+      style={{ border: '1px solid var(--tk-border)', background: 'var(--tk-bg-surface)' }}
       onClick={onClick}
+      onMouseEnter={e => {
+        const el = e.currentTarget as HTMLDivElement;
+        el.style.borderColor = 'var(--tk-border-accent)';
+        el.style.boxShadow = '0 0 28px var(--tk-accent-glow)';
+      }}
+      onMouseLeave={e => {
+        const el = e.currentTarget as HTMLDivElement;
+        el.style.borderColor = 'var(--tk-border)';
+        el.style.boxShadow = 'none';
+      }}
     >
-      {/* Inner Hover Glow */}
-      <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-        style={{
-          boxShadow: 'inset 0 0 0 1px rgba(255,107,0,0.5)',
-          background: 'radial-gradient(circle at top left, rgba(255,107,0,0.08), transparent 60%)',
-        }}
-      />
+        {/* Hover glow managed via onMouseEnter above — no always-visible gradient */}
 
       <div>
         {/* Top Row: Icon + Top-Right Difficulty Badge */}
@@ -268,10 +273,13 @@ export default function ArenasPage() {
   }, [events, activeFilter]);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] text-[#F1F1F1]">
+    <div className="min-h-screen bg-tk-bg text-tk-text">
       {/* Page Header */}
-      <section className="pt-20 pb-16 px-4 sm:px-6 border-b border-white/5 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,107,0,0.04),transparent_60%)] pointer-events-none" />
+      <section className="pt-20 pb-16 px-4 sm:px-6 relative overflow-hidden" style={{ borderBottom: '1px solid var(--tk-border)' }}>
+        <div
+          className="absolute top-0 left-0 w-[600px] h-[300px] pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at top left, rgba(255,122,47,0.10) 0%, transparent 65%)' }}
+        />
         <div className="max-w-6xl mx-auto relative z-10">
           <motion.div
             initial="hidden"
@@ -294,7 +302,7 @@ export default function ArenasPage() {
       </section>
 
       {/* Filter Tabs */}
-      <div className="sticky top-14 z-30 bg-[#0A0A0F]/90 backdrop-blur-md border-b border-white/5">
+      <div className="sticky top-14 z-30 backdrop-blur-md" style={{ background: 'rgba(17,17,17,0.90)', borderBottom: '1px solid var(--tk-border)' }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex gap-0 overflow-x-auto no-scrollbar">
             {FILTER_TABS.map(tab => (

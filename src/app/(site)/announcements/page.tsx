@@ -33,12 +33,12 @@ function getCategory(a: any): 'Update' | 'Deadline' | 'General' {
 function getCategoryBorderClass(category: 'Update' | 'Deadline' | 'General') {
   switch (category) {
     case 'Update':
-      return 'border-l-4 border-l-[#FF6B00]';
+      return 'border-l-4 border-l-tk-accent';
     case 'Deadline':
-      return 'border-l-4 border-l-[#C81E1E]';
+      return 'border-l-4 border-l-red-600';
     case 'General':
     default:
-      return 'border-l-4 border-l-[#8A8A8A]';
+      return 'border-l-4 border-l-tk-text-muted';
   }
 }
 
@@ -131,13 +131,13 @@ export default function AnnouncementsPage() {
       >
         <motion.h1
           variants={FADE_UP}
-          className="font-headline text-5xl md:text-6xl mb-4 tracking-tighter uppercase"
+          className="font-headline text-5xl md:text-6xl mb-4 tracking-tighter uppercase text-tk-text"
         >
-          Mission <span className="text-[#FF6B00]">Briefings</span>
+          Mission <span className="text-tk-accent">Briefings</span>
         </motion.h1>
         <motion.p
           variants={FADE_UP}
-          className="text-[#8A8A8A] text-lg uppercase tracking-widest font-light max-w-xl mx-auto"
+          className="text-tk-text-muted text-lg uppercase tracking-widest font-light max-w-xl mx-auto"
         >
           Official Intelligence, Protocol Updates &amp; Deadlines
         </motion.p>
@@ -151,8 +151,8 @@ export default function AnnouncementsPage() {
             onClick={() => setActiveTab(tab)}
             className={`px-5 py-2 text-xs font-headline tracking-[0.2em] uppercase transition-all duration-200 border ${
               activeTab === tab
-                ? 'bg-[#FF6B00] border-[#FF6B00] text-[#0A0A0F] font-bold shadow-[0_0_15px_rgba(255,107,0,0.3)]'
-                : 'bg-white/[0.03] border-white/10 text-[#8A8A8A] hover:text-[#F1F1F1] hover:border-white/30'
+                ? 'bg-tk-accent border-tk-accent text-tk-bg font-bold shadow-[0_0_15px_var(--tk-accent-glow)]'
+                : 'bg-tk-bg-surface border-tk-border text-tk-text-muted hover:text-tk-text hover:border-tk-border-accent'
             }`}
           >
             {tab}
@@ -178,7 +178,7 @@ export default function AnnouncementsPage() {
               <motion.div key={announcement.id || announcement.title} variants={FADE_UP}>
                 <Link href={`/announcements/${announcement.id}`} className="group block h-full">
                   <Card
-                    className={`glass-panel ${borderClass} border-white/10 hover:border-white/30 p-8 rounded-none bg-black/30 h-full flex flex-col transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-[#FF6B00]/10 relative overflow-hidden`}
+                    className={`glass-panel ${borderClass} border-tk-border hover:border-tk-border-accent p-8 rounded-none bg-tk-bg-surface h-full flex flex-col transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-[var(--tk-accent-glow)] relative overflow-hidden`}
                   >
                     {/* Top Badges Row: Category + Pinned + NEW Pill */}
                     <div className="flex items-center justify-between gap-2 mb-4">
@@ -188,17 +188,17 @@ export default function AnnouncementsPage() {
                             <AlertCircle className="w-3 h-3" /> URGENT DEADLINE
                           </span>
                         ) : announcement.category === 'Update' ? (
-                          <span className="flex items-center gap-1 text-[#FF6B00] font-bold bg-[#FF6B00]/10 border border-[#FF6B00]/30 px-2 py-0.5">
+                          <span className="flex items-center gap-1 text-tk-accent font-bold bg-tk-accent/10 border border-tk-border-accent px-2 py-0.5">
                             <Megaphone className="w-3 h-3" /> SYSTEM UPDATE
                           </span>
                         ) : (
-                          <span className="text-[#8A8A8A] font-bold bg-white/5 border border-white/10 px-2 py-0.5">
+                          <span className="text-tk-text-muted font-bold bg-white/5 border border-tk-border px-2 py-0.5">
                             GENERAL
                           </span>
                         )}
 
                         {announcement.isPinned && (
-                          <span className="flex items-center gap-1 text-[#FF6B00] text-[9px] font-bold tracking-widest">
+                          <span className="flex items-center gap-1 text-tk-accent text-[9px] font-bold tracking-widest">
                             <Pin className="w-3 h-3 rotate-45" /> PINNED
                           </span>
                         )}
@@ -206,7 +206,7 @@ export default function AnnouncementsPage() {
 
                       {/* NEW Pill (under 24h old) */}
                       {announcement.isNew && (
-                        <span className="bg-[#FF6B00] text-[#0A0A0F] font-headline font-black text-[9px] px-2 py-0.5 uppercase tracking-wider rounded-sm shadow-md animate-pulse">
+                        <span className="bg-tk-accent text-tk-bg font-headline font-black text-[9px] px-2 py-0.5 uppercase tracking-wider rounded-sm shadow-md animate-pulse">
                           NEW
                         </span>
                       )}
@@ -237,7 +237,7 @@ export default function AnnouncementsPage() {
                         <span />
                       )}
 
-                      <div className="text-xs font-headline text-[#FF6B00] tracking-[0.2em] uppercase flex items-center group-hover:gap-2 transition-all">
+                      <div className="text-xs font-headline text-tk-accent tracking-[0.2em] uppercase flex items-center group-hover:gap-2 transition-all">
                         Read Briefing
                         <ArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </div>

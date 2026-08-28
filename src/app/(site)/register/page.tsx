@@ -77,7 +77,7 @@ function DeadlineCountdown() {
 
 function ClosedState() {
   return (
-    <div className="min-h-screen bg-[#0A0A0F] text-[#F1F1F1] flex flex-col items-center justify-center px-6 text-center py-24">
+    <div className="min-h-screen bg-tk-bg text-tk-text flex flex-col items-center justify-center px-6 text-center py-24">
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={EASE_OUT} className="flex flex-col items-center gap-6 max-w-md">
         <div className="relative">
           <div className="absolute inset-0 bg-[#C81E1E]/20 blur-2xl animate-pulse rounded-full" />
@@ -181,9 +181,9 @@ function RegisterForm() {
       <input
         id={name} type={type} value={(form as any)[name]} placeholder={placeholder}
         onChange={e => set(name)(e.target.value)}
-        className={`bg-white/[0.03] border text-[#F1F1F1] text-sm px-4 py-3 outline-none transition-all duration-200 placeholder:text-[#8A8A8A]/40
-          focus:border-[#FF6B00] focus:shadow-[0_0_0_1px_rgba(255,107,0,0.3)]
-          ${errors[name] ? 'border-[#C81E1E]' : 'border-white/10 hover:border-white/20'}`}
+        className={`bg-tk-bg-raised border text-tk-text text-sm px-4 py-3 outline-none transition-all duration-200 placeholder:text-tk-text-dim
+          focus:border-tk-accent
+          ${errors[name] ? 'border-red-600' : 'border-tk-border hover:border-tk-border-accent'}`}
       />
       {errors[name] && <span className="text-[10px] text-[#C81E1E]">{errors[name]}</span>}
     </div>
@@ -200,7 +200,11 @@ function RegisterForm() {
         {(['individual', 'team'] as Mode[]).map(m => (
           <button key={m} type="button" onClick={() => setMode(m)}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-200 ${
-              mode === m ? 'bg-[#FF6B00] text-[#0A0A0F]' : 'text-[#8A8A8A] hover:text-[#F1F1F1]'}`}>
+              mode === m
+                ? 'text-tk-bg font-bold'
+                : 'text-tk-text-muted hover:text-tk-text'
+            }`}
+            style={mode === m ? { background: 'var(--tk-accent)' } : {}}>
             {m === 'individual' ? <User size={12} /> : <Users size={12} />}
             {m}
           </button>
@@ -224,7 +228,10 @@ function RegisterForm() {
         disabled={submitting}
         whileHover={{ scale: 1.02, boxShadow: '0 0 30px rgba(200,30,30,0.4)' }}
         whileTap={{ scale: 0.97 }}
-        className="w-full inline-flex items-center justify-center gap-3 bg-[#C81E1E] hover:bg-[#C81E1E]/90 disabled:opacity-50 text-white font-black uppercase tracking-[0.2em] text-sm py-5 transition-colors duration-200"
+        className="w-full inline-flex items-center justify-center gap-3 font-black uppercase tracking-[0.2em] text-sm py-5 transition-colors duration-200 disabled:opacity-50"
+        style={{ background: 'var(--tk-accent)', color: 'var(--tk-bg)' }}
+        onMouseEnter={e => { if (!submitting) (e.currentTarget as HTMLButtonElement).style.background = 'var(--tk-accent-dim)'; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--tk-accent)'; }}
       >
         {submitting ? 'SUBMITTING...' : 'ENTER THE ARENA'}
         {!submitting && <ArrowRight size={16} />}
@@ -251,7 +258,7 @@ export default function RegisterPage() {
   if (!REGISTRATIONS_OPEN) return <ClosedState />;
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] text-[#F1F1F1]">
+    <div className="min-h-screen bg-tk-bg text-tk-text">
       <section className="px-4 sm:px-6 py-16 sm:py-20">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
 

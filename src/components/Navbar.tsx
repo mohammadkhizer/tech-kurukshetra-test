@@ -22,12 +22,13 @@ export function Navbar() {
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-        className="sticky top-0 z-40 w-full border-b border-white/5 bg-[#0A0A0F]/80 backdrop-blur-xl"
+        className="sticky top-0 z-40 w-full border-b bg-[var(--tk-bg)]/80 backdrop-blur-xl"
+        style={{ borderColor: 'var(--tk-border)' }}
       >
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="font-black tracking-tighter text-base font-headline text-[#FF6B00] hover:opacity-80 transition-opacity">
-            TK·<span className="text-[#F1F1F1]">2027</span>
+          <Link href="/" className="font-black tracking-tighter text-base font-headline hover:opacity-80 transition-opacity" style={{ color: 'var(--tk-accent)' }}>
+            TK·<span className="text-tk-text">2027</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -36,14 +37,26 @@ export function Navbar() {
               <Link
                 key={item.name}
                 href={item.path}
-                className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8A8A8A] hover:text-[#F1F1F1] transition-colors duration-200"
+                className="text-[10px] font-semibold uppercase tracking-[0.2em] text-tk-text-muted hover:text-tk-text transition-colors duration-200"
               >
                 {item.name}
               </Link>
             ))}
             <Link
               href="/register"
-              className="border border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00] hover:text-[#0A0A0F] text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2 transition-all duration-200 active:scale-95"
+              className="border text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2 transition-all duration-200 active:scale-95"
+              style={{
+                borderColor: 'var(--tk-accent)',
+                color: 'var(--tk-accent)',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLAnchorElement).style.background = 'var(--tk-accent)';
+                (e.currentTarget as HTMLAnchorElement).style.color = 'var(--tk-bg)';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLAnchorElement).style.background = 'transparent';
+                (e.currentTarget as HTMLAnchorElement).style.color = 'var(--tk-accent)';
+              }}
             >
               REGISTER
             </Link>
@@ -66,14 +79,15 @@ export function Navbar() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="fixed top-14 left-0 right-0 z-30 bg-[#0A0A0F] border-b border-white/5 flex flex-col py-6 px-6 gap-5"
+          className="fixed top-14 left-0 right-0 z-30 border-b flex flex-col py-6 px-6 gap-5"
+          style={{ background: 'var(--tk-bg)', borderColor: 'var(--tk-border)' }}
         >
           {navItems.map((item) => (
             <Link
               key={item.name}
               href={item.path}
               onClick={() => setOpen(false)}
-              className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8A8A8A] hover:text-[#F1F1F1] transition-colors"
+              className="text-xs font-semibold uppercase tracking-[0.2em] text-tk-text-muted hover:text-tk-text transition-colors"
             >
               {item.name}
             </Link>
@@ -81,7 +95,8 @@ export function Navbar() {
           <Link
             href="/register"
             onClick={() => setOpen(false)}
-            className="border border-[#FF6B00] text-[#FF6B00] text-xs font-black uppercase tracking-[0.2em] px-5 py-3 text-center mt-2"
+            className="border text-xs font-black uppercase tracking-[0.2em] px-5 py-3 text-center mt-2"
+            style={{ borderColor: 'var(--tk-accent)', color: 'var(--tk-accent)' }}
           >
             REGISTER NOW
           </Link>

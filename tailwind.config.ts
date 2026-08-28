@@ -65,7 +65,24 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        /* ── Brand design token aliases ──────────────────────────
+           Usage: bg-tk-bg, text-tk-accent, border-tk-border, etc.
+           All values resolve through CSS variables — change the
+           var() in globals.css and it propagates everywhere.       */
+        tk: {
+          bg:            'var(--tk-bg)',
+          'bg-surface':  'var(--tk-bg-surface)',
+          'bg-raised':   'var(--tk-bg-raised)',
+          accent:        'var(--tk-accent)',
+          'accent-dim':  'var(--tk-accent-dim)',
+          text:          'var(--tk-text)',
+          'text-muted':  'var(--tk-text-muted)',
+          'text-dim':    'var(--tk-text-dim)',
+          border:        'var(--tk-border)',
+          'border-accent': 'var(--tk-border-accent)',
+        },
       },
+
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',

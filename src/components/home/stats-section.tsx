@@ -27,7 +27,6 @@ function CountUpItem({ item }: { item: any }) {
     const animate = (now: number) => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
       const easeProgress = 1 - Math.pow(1 - progress, 3);
       setCurrentVal(Math.floor(easeProgress * target));
 
@@ -54,24 +53,48 @@ function CountUpItem({ item }: { item: any }) {
   return (
     <div
       ref={ref}
-      className="group relative border border-white/10 hover:border-[#FF6B00]/40 bg-white/[0.02] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_0_25px_rgba(255,107,0,0.12)]"
+      className="group relative p-6 sm:p-8 flex flex-col justify-between transition-all duration-300"
+      style={{
+        border: '1px solid var(--tk-border)',
+        background: 'var(--tk-bg)',
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--tk-border-accent)';
+        (e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 24px var(--tk-accent-glow)';
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--tk-border)';
+        (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+      }}
     >
       <div className="flex items-center justify-between gap-4 mb-4">
-        <div className="p-3 bg-[#FF6B00]/10 border border-[#FF6B00]/20 text-[#FF6B00]">
+        <div
+          className="p-3"
+          style={{
+            background: 'var(--tk-accent-subtle)',
+            border: '1px solid var(--tk-border-accent)',
+            color: 'var(--tk-accent)',
+          }}
+        >
           <IconComponent size={24} strokeWidth={1.5} />
         </div>
-        <div className="flex items-center gap-1.5 text-[10px] font-mono tracking-widest text-[#FF6B00]/80 uppercase">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B00] animate-ping" />
+        <div
+          className="flex items-center gap-1.5 text-[10px] font-mono tracking-widest uppercase"
+          style={{ color: 'rgba(255,122,47,0.80)' }}
+        >
+          <span className="w-1.5 h-1.5 rounded-full animate-ping" style={{ background: 'var(--tk-accent)' }} />
           <span>VERIFIED DATA</span>
         </div>
       </div>
 
       <div>
-        <div className="text-3xl sm:text-4xl md:text-5xl font-black font-headline tracking-tight text-[#F1F1F1] group-hover:text-[#FF6B00] transition-colors tabular-nums">
+        <div
+          className="text-3xl sm:text-4xl md:text-5xl font-black font-headline tracking-tight transition-colors tabular-nums text-tk-text group-hover:text-tk-accent"
+        >
           {formatNumber(currentVal)}
           {item.suffix}
         </div>
-        <div className="text-xs text-[#8A8A8A] tracking-[0.2em] uppercase font-bold mt-2">
+        <div className="text-xs text-tk-text-muted tracking-[0.2em] uppercase font-bold mt-2">
           {item.label}
         </div>
       </div>
@@ -82,7 +105,6 @@ function CountUpItem({ item }: { item: any }) {
 export function StatsSection() {
   const { data: res, isLoading, error } = useFetch<any>('/api/stats');
 
-  // Condition: Hide section if data is unavailable
   if (error || (!isLoading && (!res || !res.success || !res.data || !Array.isArray(res.data) || res.data.length === 0))) {
     return null;
   }
@@ -94,7 +116,7 @@ export function StatsSection() {
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-36 border border-white/5 bg-white/[0.02]" />
+            <div key={i} className="h-36" style={{ border: '1px solid var(--tk-border)', background: 'var(--tk-bg)' }} />
           ))}
         </div>
       ) : (

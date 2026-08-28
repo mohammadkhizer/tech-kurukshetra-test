@@ -80,25 +80,48 @@ export function ArenasPreview() {
                 key={event.id || event.slug}
                 variants={FADE_UP}
                 whileHover={{ y: -4, transition: { duration: 0.2, ease: 'easeOut' } }}
-                className="group relative border border-white/10 hover:border-[#FF6B00]/60 bg-white/[0.02] p-6 cursor-pointer overflow-hidden flex flex-col justify-between transition-all duration-300 ease-out hover:shadow-[0_0_30px_rgba(255,107,0,0.15)]"
+                className="group relative p-6 cursor-pointer overflow-hidden flex flex-col justify-between transition-all duration-300 ease-out"
+                style={{
+                  border: '1px solid var(--tk-border)',
+                  background: 'var(--tk-bg-surface)',
+                }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLDivElement;
+                  el.style.borderColor = 'var(--tk-border-accent)';
+                  el.style.boxShadow = '0 0 28px var(--tk-accent-glow)';
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLDivElement;
+                  el.style.borderColor = 'var(--tk-border)';
+                  el.style.boxShadow = 'none';
+                }}
               >
-                <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                  style={{
-                    background: 'radial-gradient(circle at top left, rgba(255,107,0,0.1), transparent 70%)',
-                  }}
-                />
+                {/* Hover glow applied via onMouseEnter above — no always-visible gradient */}
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-5">
-                    <div className="p-3 bg-[#FF6B00]/10 border border-[#FF6B00]/20 text-[#FF6B00] group-hover:bg-[#FF6B00] group-hover:text-[#0A0A0F] transition-colors duration-200">
+                    <div
+                      className="p-3 transition-colors duration-200"
+                      style={{
+                        background: 'var(--tk-accent-subtle)',
+                        border: '1px solid var(--tk-border-accent)',
+                        color: 'var(--tk-accent)',
+                      }}
+                    >
                       <Icon size={24} strokeWidth={1.5} />
                     </div>
-                    <div className="border border-[#FF6B00]/40 bg-[#FF6B00]/10 text-[#FF6B00] px-2.5 py-0.5 text-[10px] font-headline font-bold tracking-widest uppercase">
+                    <div
+                      className="px-2.5 py-0.5 text-[10px] font-headline font-bold tracking-widest uppercase"
+                      style={{
+                        border: '1px solid var(--tk-border-accent)',
+                        background: 'var(--tk-accent-subtle)',
+                        color: 'var(--tk-accent)',
+                      }}
+                    >
                       {event.type || event.difficulty || 'Battle'}
                     </div>
                   </div>
 
-                  <h3 className="text-xl font-black tracking-tight font-headline mb-1 text-white group-hover:text-[#FF6B00] transition-colors">
+                  <h3 className="text-xl font-black tracking-tight font-headline mb-1 text-tk-text group-hover:text-tk-accent transition-colors">
                     {event.name}
                   </h3>
                   {event.hook && (

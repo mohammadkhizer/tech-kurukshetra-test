@@ -20,8 +20,8 @@ interface Milestone {
 
 const STATUS_CONFIG: Record<MilestoneStatus, { color: string; bg: string; dot: string; label: string }> = {
   Completed: { color: 'text-green-400', bg: 'bg-green-400/10 border-green-400/30', dot: 'bg-green-400', label: 'COMPLETED' },
-  Live: { color: 'text-[#FF6B00]', bg: 'bg-[#FF6B00]/10 border-[#FF6B00]/30', dot: 'bg-[#FF6B00]', label: 'CURRENT / NEXT' },
-  Upcoming: { color: 'text-[#8A8A8A]', bg: 'bg-white/5 border-white/10', dot: 'bg-[#8A8A8A]', label: 'UPCOMING' },
+  Live: { color: 'text-tk-accent', bg: 'bg-tk-accent/10 border-tk-border-accent', dot: 'bg-tk-accent', label: 'CURRENT / NEXT' },
+  Upcoming: { color: 'text-tk-text-muted', bg: 'bg-white/5 border-tk-border', dot: 'bg-tk-text-muted', label: 'UPCOMING' },
 };
 
 function MilestoneNode({ milestone, index }: { milestone: Milestone; index: number }) {
@@ -131,10 +131,13 @@ export default function TimelinePage() {
   }, [milestones]);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] text-[#F1F1F1]">
+    <div className="min-h-screen bg-tk-bg text-tk-text">
       {/* Header */}
-      <section className="pt-20 pb-16 px-4 sm:px-6 border-b border-white/5 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,107,0,0.04),transparent_60%)] pointer-events-none" />
+      <section className="pt-20 pb-16 px-4 sm:px-6 relative overflow-hidden" style={{ borderBottom: '1px solid var(--tk-border)' }}>
+        <div
+          className="absolute top-0 left-0 w-[600px] h-[300px] pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at top left, rgba(255,122,47,0.10) 0%, transparent 65%)' }}
+        />
         <div className="max-w-6xl mx-auto relative z-10">
           <motion.div
             initial="hidden"
