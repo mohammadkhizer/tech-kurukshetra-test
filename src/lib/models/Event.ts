@@ -11,7 +11,7 @@ export interface IEvent extends Document {
   prize?: string;
   prizePool?: string;
   difficulty?: string;
-  category?: 'TECH' | 'NONTECH' | string;
+  category?: 'TECH' | 'NON-TECH' | string;
   isTechnical?: boolean;
   type?: 'solo' | 'team' | string;
   teamSize?: Schema.Types.Mixed;
