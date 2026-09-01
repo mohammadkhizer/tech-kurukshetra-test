@@ -32,12 +32,13 @@ const siteConfig = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
-  manifest: '/manifest.ts',
+  manifest: '/manifest.webmanifest',
   title: {
     default: `${siteConfig.name} | Futuristic Tech Festival`,
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
+  alternates: { canonical: siteConfig.url },
   keywords: siteConfig.keywords,
   authors: [{ name: 'Tech Kurukshetra Committee', url: siteConfig.url }],
   creator: 'Tech Kurukshetra Committee',

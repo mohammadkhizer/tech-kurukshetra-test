@@ -47,6 +47,9 @@ export function AboutSection() {
               A two-day national technical crucible hosted at UCPIT, SVGU Ahmedabad, where India's sharpest
               engineers, coders, and makers collide to build, compete, and claim arena glory.
             </p>
+            <p className="text-xs text-tk-text-muted/80 leading-relaxed border-l-2 border-tk-accent/50 pl-3 py-0.5">
+              Tech Kurukshetra 2027 is a two-day national tech festival organized by the B.Tech Department at SVGU (Sardar Vallabhbhai Global University), held on January 20–21, 2027 at UCPIT, Ahmedabad. Participation in all 12 competitive arenas is free and open to all enrolled undergraduate and postgraduate students across India.
+            </p>
             <div className="mt-2 sm:mt-4">
               <Link
                 href="/#about"

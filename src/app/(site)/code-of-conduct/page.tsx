@@ -1,4 +1,12 @@
 import { LegalLayout } from '@/components/LegalLayout';
+import { buildPageMeta } from '@/lib/seo';
+
+export const metadata = buildPageMeta({
+  title: 'Code of Conduct | TECH KURUKSHETRA 2027',
+  description:
+    'Rules and behavioral expectations for all Tech Kurukshetra 2027 participants, judges, volunteers, and sponsors.',
+  path: '/code-of-conduct',
+});
 
 const SECTIONS = [
   { id: 'spirit', title: 'Spirit of the Event' },
@@ -16,7 +24,7 @@ export default function CodeOfConductPage() {
     <LegalLayout
       title="CODE OF CONDUCT"
       subtitle="TECH KURUKSHETRA is a battlefield of minds — but every warrior is bound by a code."
-      lastUpdated="July 2027"
+      lastUpdated="January 2027"
       sections={SECTIONS}
     >
       <h2 id="spirit">Spirit of the Event</h2>

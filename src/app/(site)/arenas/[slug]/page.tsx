@@ -123,8 +123,9 @@ export default function ArenaDetailPage() {
     '@context': 'https://schema.org',
     '@type': 'Event',
     name: event.name,
-    startDate: event.date || event.startTime || undefined,
-    endDate: event.endTime || undefined,
+    url: `https://www.techkurukshetra.in/arenas/${event.slug}`,
+    startDate: event.date || event.startTime || '2027-01-20',
+    endDate: event.endTime || '2027-01-21',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     eventStatus: 'https://schema.org/EventScheduled',
     location: {
@@ -144,8 +145,25 @@ export default function ArenaDetailPage() {
     organizer: {
       '@type': 'Organization',
       name: 'TECH KURUKSHETRA',
-      url: 'https://www.techkurukshetra.com',
+      url: 'https://www.techkurukshetra.in',
     },
+    offers: {
+      '@type': 'Offer',
+      price: typeof event.entryFee === 'number' ? String(event.entryFee) : '0',
+      priceCurrency: 'INR',
+      availability: 'https://schema.org/InStock',
+      url: `https://www.techkurukshetra.in/register?event=${event.slug}`,
+    },
+  };
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.techkurukshetra.in' },
+      { '@type': 'ListItem', position: 2, name: 'Arenas', item: 'https://www.techkurukshetra.in/arenas' },
+      { '@type': 'ListItem', position: 3, name: event.name, item: `https://www.techkurukshetra.in/arenas/${event.slug}` },
+    ],
   };
 
   return (
@@ -154,6 +172,11 @@ export default function ArenaDetailPage() {
         id="event-jsonld"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <Script
+        id="breadcrumb-jsonld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
       <div className="pt-32 pb-40 px-6 max-w-5xl mx-auto min-h-screen text-tk-text">
         <motion.div
@@ -220,35 +243,52 @@ export default function ArenaDetailPage() {
                 <span className="uppercase tracking-widest font-headline text-[10px]">Fee: {feeDisplay}</span>
               </div>
 
-              <div className="flex items-center gap-3 text-tk-text-muted text-sm">
-                <Users className="w-4 h-4 text-tk-accent flex-shrink-0" />
-                <span className="uppercase tracking-widest font-headline text-[10px]">Team Size: {teamSizeDisplay}</span>
-              </div>
+              {teamSizeDisplay && (
+                <div className="flex items-center gap-3 text-tk-text-muted text-sm">
+                  <Users className="w-4 h-4 text-tk-accent flex-shrink-0" />
+                  <span className="uppercase tracking-widest font-headline text-[10px]">
+                    Team Size: {teamSizeDisplay}
+                  </span>
+                </div>
+              )}
 
-              <div className="flex items-center gap-3 text-tk-text-muted text-sm">
-                <Trophy className="w-4 h-4 text-tk-accent flex-shrink-0" />
-                <span className="uppercase tracking-widest font-headline text-[10px]">Prize: {prizeDisplay}</span>
-              </div>
-
-              {/* Coordinator Contact Block */}
-              {contact && (
-                <div className="pt-4 border-t border-white/10 space-y-2">
-                  <div className="text-[10px] text-tk-text-muted uppercase tracking-[0.2em] font-bold">Coordinator Contact</div>
-                  <div className="flex items-center gap-2 text-xs text-tk-text">
-                    <User className="w-3.5 h-3.5 text-tk-accent flex-shrink-0" />
-                    <span>{contact.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-tk-text-muted">
-                    <Phone className="w-3.5 h-3.5 text-tk-accent flex-shrink-0" />
-                    <span>{contact.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-tk-text-muted">
-                    <Mail className="w-3.5 h-3.5 text-tk-accent flex-shrink-0" />
-                    <span>{contact.email}</span>
-                  </div>
+              {event.difficulty && (
+                <div className="flex items-center gap-3 text-tk-text-muted text-sm">
+                  <Trophy className="w-4 h-4 text-tk-accent flex-shrink-0" />
+                  <span className="uppercase tracking-widest font-headline text-[10px]">
+                    Level: {event.difficulty}
+                  </span>
                 </div>
               )}
             </motion.div>
+
+            {contact && (typeof contact === 'object' ? contact.name : contact) && (
+              <motion.div variants={FADE_UP} className="p-6 border border-tk-border bg-tk-bg-surface space-y-3">
+                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-tk-accent">
+                  Arena Coordinator
+                </div>
+                <div className="flex items-center gap-2 text-sm text-tk-text font-medium">
+                  <User className="w-4 h-4 text-tk-accent" />
+                  <span>{typeof contact === 'object' ? contact.name : contact}</span>
+                </div>
+                {typeof contact === 'object' && contact.phone && (
+                  <div className="flex items-center gap-2 text-xs text-tk-text-muted">
+                    <Phone className="w-3.5 h-3.5 text-tk-text-dim" />
+                    <a href={`tel:${contact.phone}`} className="hover:text-tk-accent transition-colors">
+                      {contact.phone}
+                    </a>
+                  </div>
+                )}
+                {typeof contact === 'object' && contact.email && (
+                  <div className="flex items-center gap-2 text-xs text-tk-text-muted">
+                    <Mail className="w-3.5 h-3.5 text-tk-text-dim" />
+                    <a href={`mailto:${contact.email}`} className="hover:text-tk-accent transition-colors">
+                      {contact.email}
+                    </a>
+                  </div>
+                )}
+              </motion.div>
+            )}
           </motion.div>
 
           {/* Right: details */}
@@ -272,6 +312,11 @@ export default function ArenaDetailPage() {
               <h1 className="font-headline text-4xl sm:text-5xl md:text-6xl tracking-tighter text-tk-text mb-6 uppercase">
                 {event.name}
               </h1>
+
+              {/* AEO / GEO Direct Answer Summary Sentence */}
+              <p className="text-xs text-tk-text-muted/90 font-mono border-l-2 border-tk-accent/60 pl-3 py-1 bg-tk-accent/5">
+                {event.name} is a {event.duration || '24h'} {event.type || 'team'} competition in the {event.category || (event.isTechnical ? 'TECH' : 'NON-TECH')} arena category at Tech Kurukshetra 2027, taking place at {venueDisplay}. Participation is {feeDisplay}.
+              </p>
             </motion.div>
 
             <motion.div variants={FADE_UP} className="space-y-4">
@@ -305,7 +350,7 @@ export default function ArenaDetailPage() {
                 size="lg"
                 className="bg-tk-accent hover:bg-tk-accent-dim text-tk-bg px-12 py-8 font-headline tracking-widest text-lg rounded-none w-full md:w-auto font-black uppercase"
               >
-                <Link href="/register">INITIALIZE REGISTRATION</Link>
+                <Link href={`/register?event=${event.slug}`}>INITIALIZE REGISTRATION</Link>
               </Button>
             </motion.div>
           </motion.div>

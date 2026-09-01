@@ -69,7 +69,7 @@ export function SiteFooter() {
                 
                 <motion.div variants={FADE_UP} className="space-y-4">
                     <h3 className="font-headline text-xs tracking-[0.2em] text-accent uppercase font-bold">Location and Contact</h3>
-                    <ul className="space-y-4 text-sm text-muted-foreground font-light">
+                    <ul className="space-y-3 text-sm text-muted-foreground font-light">
                         <li className="flex items-start gap-3">
                             <Mail className="w-4 h-4 text-primary mt-1 shrink-0" />
                             <a href="mailto:btech_events@svgu.ac.in" className="hover:text-primary transition-colors">btech_events@svgu.ac.in</a>
@@ -78,9 +78,17 @@ export function SiteFooter() {
                             <MapPin className="w-4 h-4 text-primary mt-1 shrink-0" />
                             <span>Chimanbhai Patel Institute Campus, SG Highway, Near Prahlad Nagar, Ahmedabad, Gujarat - 380015.</span>
                         </li>
-                        <li className="flex items-start gap-3">
-                             <Instagram className="w-4 h-4 text-primary mt-1 shrink-0" />
-                            <a href="https://www.instagram.com/svgutechkurukshetra" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Instagram</a>
+                        <li className="flex items-center gap-3">
+                            <Instagram className="w-4 h-4 text-primary shrink-0" />
+                            <a href="https://www.instagram.com/svgutechkurukshetra" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">@svgutechkurukshetra</a>
+                        </li>
+                        <li className="flex items-center gap-3">
+                            <Instagram className="w-4 h-4 text-primary shrink-0" />
+                            <a href="https://www.instagram.com/svguniversity" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">@svguniversity</a>
+                        </li>
+                        <li className="flex items-center gap-3">
+                            <LucideIcons.Globe className="w-4 h-4 text-primary shrink-0" />
+                            <a href="https://svgu.ac.in" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">SVGU Official Website</a>
                         </li>
                     </ul>
                 </motion.div>

@@ -57,30 +57,45 @@ export default function AnnouncementDetailPage() {
     dateModified: announcement.timestamp,
     description: announcement.content,
     author: [{
-        '@type': 'Organization',
-        name: 'TECH KURUKSHETRA',
-        url: 'https://www.techkurukshetra.com'
+      '@type': 'Organization',
+      name: 'TECH KURUKSHETRA',
+      url: 'https://www.techkurukshetra.in',
     }],
-     publisher: {
-        '@type': 'Organization',
-        name: 'TECH KURUKSHETRA',
-        logo: {
-            '@type': 'ImageObject',
-            url: 'https://www.techkurukshetra.com/logo.png' // Placeholder
-        }
+    publisher: {
+      '@type': 'Organization',
+      name: 'TECH KURUKSHETRA',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://www.techkurukshetra.in/favicon.ico',
+      },
     },
     mainEntityOfPage: {
-        '@type': 'WebPage',
-        '@id': `https://www.techkurukshetra.com/announcements/${id}`
-    }
+      '@type': 'WebPage',
+      '@id': `https://www.techkurukshetra.in/announcements/${id}`,
+    },
+  };
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.techkurukshetra.in' },
+      { '@type': 'ListItem', position: 2, name: 'Announcements', item: 'https://www.techkurukshetra.in/announcements' },
+      { '@type': 'ListItem', position: 3, name: announcement.title, item: `https://www.techkurukshetra.in/announcements/${id}` },
+    ],
   };
 
   return (
     <>
       <Script
-          id="announcement-jsonld"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        id="announcement-jsonld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <Script
+        id="breadcrumb-announcement-jsonld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
       <div className="pt-32 pb-40 px-6 max-w-4xl mx-auto min-h-screen">
         <Link href="/announcements" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-12 font-headline text-xs tracking-widest uppercase group">

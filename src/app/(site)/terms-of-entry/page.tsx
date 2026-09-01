@@ -1,4 +1,12 @@
 import { LegalLayout } from '@/components/LegalLayout';
+import { buildPageMeta } from '@/lib/seo';
+
+export const metadata = buildPageMeta({
+  title: 'Terms of Entry | TECH KURUKSHETRA 2027',
+  description:
+    'Official eligibility, registration, and conduct terms for Tech Kurukshetra 2027 participants at UCPIT, SVGU Ahmedabad.',
+  path: '/terms-of-entry',
+});
 
 const SECTIONS = [
   { id: 'eligibility', title: 'Eligibility' },
@@ -15,7 +23,7 @@ export default function TermsOfEntryPage() {
     <LegalLayout
       title="TERMS OF ENTRY"
       subtitle="Please read these terms carefully before registering for TECH KURUKSHETRA 2027."
-      lastUpdated="July 2027"
+      lastUpdated="January 2027"
       sections={SECTIONS}
     >
       <h2 id="eligibility">Eligibility</h2>

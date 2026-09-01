@@ -1,4 +1,12 @@
 import { LegalLayout } from '@/components/LegalLayout';
+import { buildPageMeta } from '@/lib/seo';
+
+export const metadata = buildPageMeta({
+  title: 'Privacy Protocol | TECH KURUKSHETRA 2027',
+  description:
+    'How Tech Kurukshetra collects, uses, and protects participant data. Read our Privacy Protocol before registering.',
+  path: '/privacy-protocol',
+});
 
 const SECTIONS = [
   { id: 'collection', title: 'Data We Collect' },
@@ -14,7 +22,7 @@ export default function PrivacyProtocolPage() {
     <LegalLayout
       title="PRIVACY PROTOCOL"
       subtitle="Your data is yours. Here's exactly how we handle it at TECH KURUKSHETRA."
-      lastUpdated="July 2027"
+      lastUpdated="January 2027"
       sections={SECTIONS}
     >
       <h2 id="collection">Data We Collect</h2>
