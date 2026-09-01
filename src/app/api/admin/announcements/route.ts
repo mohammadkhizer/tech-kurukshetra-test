@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { verifyAdminAuth } from '@/lib/admin-auth';
 import { dbConnect } from '@/lib/mongodb';
 import Announcement from '@/lib/models/Announcement';
@@ -59,6 +60,14 @@ export async function POST(req: NextRequest) {
     }
 
     const newDoc = await Announcement.create(payload);
+
+    try {
+      revalidatePath('/api/announcements');
+      revalidatePath('/announcements');
+    } catch (cacheErr) {
+      console.warn('[POST /api/admin/announcements] Cache revalidation error:', cacheErr);
+    }
+
     return NextResponse.json({ success: true, data: newDoc });
   } catch (err: any) {
     return NextResponse.json(
@@ -67,3 +76,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

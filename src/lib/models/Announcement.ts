@@ -24,6 +24,8 @@ const AnnouncementSchema: Schema = new Schema(
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
+AnnouncementSchema.index({ createdAt: -1 });
+
 AnnouncementSchema.virtual('id').get(function (this: any) {
   return this._id ? this._id.toString() : '';
 });

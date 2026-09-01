@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { verifyAdminAuth } from '@/lib/admin-auth';
 import { dbConnect } from '@/lib/mongodb';
 import TimelineMilestone from '@/lib/models/TimelineMilestone';
@@ -27,6 +28,13 @@ export async function PUT(
       return NextResponse.json({ success: false, message: 'Timeline milestone not found' }, { status: 404 });
     }
 
+    try {
+      revalidatePath('/api/timeline');
+      revalidatePath('/timeline');
+    } catch (cacheErr) {
+      console.warn('[PUT /api/admin/timeline/[id]] Cache revalidation error:', cacheErr);
+    }
+
     return NextResponse.json({ success: true, data: updated });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || 'Server error' }, { status: 500 });
@@ -53,8 +61,16 @@ export async function DELETE(
       return NextResponse.json({ success: false, message: 'Timeline milestone not found' }, { status: 404 });
     }
 
+    try {
+      revalidatePath('/api/timeline');
+      revalidatePath('/timeline');
+    } catch (cacheErr) {
+      console.warn('[DELETE /api/admin/timeline/[id]] Cache revalidation error:', cacheErr);
+    }
+
     return NextResponse.json({ success: true, message: 'Timeline milestone deleted successfully' });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || 'Server error' }, { status: 500 });
   }
 }
+

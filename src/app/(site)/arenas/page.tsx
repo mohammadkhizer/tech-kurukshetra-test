@@ -249,38 +249,38 @@ function ArenaCard({ arena, onClick }: { arena: Arena; onClick: () => void }) {
       <div>
         {/* Footer Stats Row (Prize / Team Size / Duration) */}
         <div className="grid grid-cols-3 gap-2 pt-4 border-t border-white/10 mb-4">
-          <div className="flex flex-col items-start">
+          <div className="flex flex-col items-start min-w-0">
             <div className="flex items-center gap-1 text-tk-text-muted text-[9px] uppercase tracking-wider font-semibold">
               <Trophy size={11} style={{ color: 'var(--tk-accent)' }} />
               <span>Prize</span>
             </div>
-            <span className="text-xs font-headline font-bold text-tk-text mt-0.5 truncate">{prizeDisplay}</span>
+            <span className="text-xs font-headline font-bold text-tk-text mt-0.5 truncate w-full">{prizeDisplay.startsWith('[PLACEHOLDER') ? 'TBD' : prizeDisplay}</span>
           </div>
 
-          <div className="flex flex-col items-start border-l border-white/5 pl-2">
+          <div className="flex flex-col items-start border-l border-white/5 pl-2 min-w-0">
             <div className="flex items-center gap-1 text-tk-text-muted text-[9px] uppercase tracking-wider font-semibold">
               <Users size={11} style={{ color: 'var(--tk-accent)' }} />
               <span>Team</span>
             </div>
-            <span className="text-xs font-headline font-bold text-tk-text mt-0.5 truncate">{teamSizeDisplay}</span>
+            <span className="text-xs font-headline font-bold text-tk-text mt-0.5 truncate w-full">{teamSizeDisplay}</span>
           </div>
 
-          <div className="flex flex-col items-start border-l border-white/5 pl-2">
+          <div className="flex flex-col items-start border-l border-white/5 pl-2 min-w-0">
             <div className="flex items-center gap-1 text-tk-text-muted text-[9px] uppercase tracking-wider font-semibold">
               <Clock size={11} style={{ color: 'var(--tk-accent)' }} />
               <span>Duration</span>
             </div>
-            <span className="text-xs font-headline font-bold text-tk-text mt-0.5 truncate">{arena.duration || '24h'}</span>
+            <span className="text-xs font-headline font-bold text-tk-text mt-0.5 truncate w-full">{arena.duration || '24h'}</span>
           </div>
         </div>
 
         <Link
           href={`/arenas/${arena.slug || arena.id}`}
           onClick={(e) => e.stopPropagation()}
-          className="flex items-center gap-1.5 text-[11px] font-headline font-bold tracking-[0.15em] uppercase group-hover:gap-3 transition-all duration-200"
+          className="inline-flex items-center min-h-[44px] py-2 text-[11px] font-headline font-bold tracking-[0.15em] uppercase group-hover:gap-3 transition-all duration-200"
           style={{ color: 'var(--tk-accent)' }}
         >
-          VIEW ARENA <ArrowRight size={12} />
+          VIEW ARENA <ArrowRight size={12} className="ml-1.5" />
         </Link>
       </div>
     </motion.div>
@@ -342,13 +342,18 @@ export default function ArenasPage() {
 
       {/* Filter Tabs (All / TECH / NON-TECH / Solo / Team) */}
       <div className="sticky top-14 z-30 backdrop-blur-md" style={{ background: 'rgba(17,17,17,0.90)', borderBottom: '1px solid var(--tk-border)' }}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto sm:px-6 relative">
+          {/* Right-edge fade — visible only when tabs overflow (mobile) */}
+          <div
+            className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 z-10 sm:hidden"
+            style={{ background: 'linear-gradient(to right, transparent, rgba(17,17,17,0.95))' }}
+          />
           <div className="flex gap-0 overflow-x-auto no-scrollbar">
             {FILTER_TABS.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveFilter(tab)}
-                className={`relative px-6 py-4 text-xs font-bold uppercase tracking-[0.2em] whitespace-nowrap transition-colors duration-200 border-b-2 ${
+                className={`relative px-4 py-4 min-h-[44px] text-[11px] font-bold uppercase tracking-[0.15em] whitespace-nowrap transition-colors duration-200 border-b-2 ${
                   activeFilter === tab
                     ? 'border-b-2'
                     : 'text-tk-text-muted hover:text-tk-text border-transparent'

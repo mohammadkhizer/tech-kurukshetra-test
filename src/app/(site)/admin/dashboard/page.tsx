@@ -688,8 +688,8 @@ export default function DashboardPage() {
 
   const handleSeedDays = async () => {
     const daysToSeed = [
-        { title: 'Day 1', date: '2026-04-10', description: 'Opening Ceremony and Technical Events', status: 'Upcoming' },
-        { title: 'Day 2', date: '2026-04-11', description: 'Non-Technical Events and Closing Ceremony', status: 'Upcoming' },
+        { title: 'Day 1 — Tech Arenas & Opening Ceremony', date: '2027-01-20', description: 'Opening ceremony followed by 24h Hackathon, Project Showcase, CTF, and Esports qualifiers.', status: 'Upcoming' },
+        { title: 'Day 2 — Final Arenas & Closing Ceremony', date: '2027-01-21', description: 'Code Sprint, Workshop, Cultural Stage, Box Cricket finals, and Grand Award Ceremony.', status: 'Upcoming' },
     ];
     for (const day of daysToSeed) {
       await fetch('/api/admin/timeline', {

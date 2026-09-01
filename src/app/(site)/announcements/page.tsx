@@ -149,7 +149,7 @@ export default function AnnouncementsPage() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-5 py-2 text-xs font-headline tracking-[0.2em] uppercase transition-all duration-200 border ${
+            className={`px-5 py-2.5 min-h-[44px] inline-flex items-center justify-center text-xs font-headline tracking-[0.2em] uppercase transition-all duration-200 border ${
               activeTab === tab
                 ? 'bg-tk-accent border-tk-accent text-tk-bg font-bold shadow-[0_0_15px_var(--tk-accent-glow)]'
                 : 'bg-tk-bg-surface border-tk-border text-tk-text-muted hover:text-tk-text hover:border-tk-border-accent'
@@ -248,6 +248,10 @@ export default function AnnouncementsPage() {
             );
           })}
         </motion.div>
+      ) : announcements.length === 0 ? (
+        <div className="text-center py-20 glass-panel border-white/10 rounded-none bg-black/40">
+          <p className="text-[#8A8A8A] uppercase tracking-[0.2em] text-xs">No announcements yet — check back soon.</p>
+        </div>
       ) : (
         <div className="text-center py-20 glass-panel border-white/10 rounded-none bg-black/40">
           <p className="text-[#8A8A8A] uppercase tracking-[0.2em] text-xs">No announcements match the selected filter.</p>

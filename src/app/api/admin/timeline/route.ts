@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { verifyAdminAuth } from '@/lib/admin-auth';
 import { dbConnect } from '@/lib/mongodb';
 import TimelineMilestone from '@/lib/models/TimelineMilestone';
@@ -53,6 +54,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Database connection failed' }, { status: 500 });
     }
     const newDoc = await TimelineMilestone.create(payload);
+
+    try {
+      revalidatePath('/api/timeline');
+      revalidatePath('/timeline');
+    } catch (cacheErr) {
+      console.warn('[POST /api/admin/timeline] Cache revalidation error:', cacheErr);
+    }
+
     return NextResponse.json({ success: true, data: newDoc });
   } catch (err: any) {
     return NextResponse.json(
@@ -61,3 +70,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

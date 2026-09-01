@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { verifyAdminAuth } from '@/lib/admin-auth';
 import { dbConnect } from '@/lib/mongodb';
 import Event from '@/lib/models/Event';
@@ -77,6 +78,18 @@ export async function POST(req: NextRequest) {
     }
 
     const newDoc = await Event.findOneAndUpdate({ slug }, { $set: payload }, { upsert: true, returnDocument: 'after' });
+
+    // Invalidate public and API cache paths instantly
+    try {
+      revalidatePath('/api/events');
+      revalidatePath(`/api/events/${slug}`);
+      revalidatePath('/arenas');
+      revalidatePath(`/arenas/${slug}`);
+      revalidateTag('events');
+    } catch (cacheErr) {
+      console.warn('[POST /api/admin/events] Cache revalidation error:', cacheErr);
+    }
+
     return NextResponse.json({ success: true, data: newDoc });
   } catch (err: any) {
     console.error('[POST /api/admin/events] Error:', err);
@@ -86,3 +99,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

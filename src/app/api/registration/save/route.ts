@@ -3,6 +3,7 @@ import { dbConnect } from '@/lib/mongodb';
 import Registration from '@/lib/models/Registration';
 import { sanitizeString } from '@/lib/sanitizer';
 import { RegistrationSaveSchema } from '@/lib/schemas';
+import { enqueueJob } from '@/lib/queue-processor';
 
 // In-memory fallback if MongoDB connection is unavailable
 const fallbackRegistrations: any[] = [];
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
       rawPayload:    rawPayload || { players, eventSlug, mode, teamName, registeredAt: new Date().toISOString() },
     };
 
-    // Save directly to DB (Registration collection)
+    // 1. Save directly & synchronously to DB (Registration collection)
     let saved: any;
     const conn = await dbConnect();
     if (conn) {
@@ -57,6 +58,11 @@ export async function POST(req: NextRequest) {
       saved = record;
     }
 
+    // 2. Queue background async tasks (Google Sheets sync & Email confirmation) without blocking response
+    enqueueJob('SHEETS_SYNC', payload);
+    enqueueJob('CONFIRMATION_EMAIL', payload);
+
+    // 3. Return immediate success response to user
     return NextResponse.json({ success: true, data: saved, fallback: !conn });
   } catch (err: any) {
     console.error('[POST /api/registration/save]', err);

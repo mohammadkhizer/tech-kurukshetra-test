@@ -232,12 +232,12 @@ export const EVENTS_DATA: EventItem[] = [
   {
     id: 'free-fire',
     slug: 'free-fire',
-    name: 'Free Fire Battle Royale',
+    name: 'Free Fire',
     category: 'NON-TECH',
     type: 'team',
     teamSize: { min: 4, max: 4 },
     description:
-      'High-octane mobile battle royale showdown. Squad up, drop in, and outplay rival teams to secure the Booyah!',
+      'High-octane mobile showdown. Squad up, drop in, and outplay rival teams to secure the Booyah!',
     rules: [
       '[PLACEHOLDER: Add Free Fire rules list]',
       '[PLACEHOLDER: Only official mobile clients permitted]',

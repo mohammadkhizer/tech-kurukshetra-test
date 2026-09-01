@@ -36,10 +36,10 @@ export default function Home() {
           style={{ background: 'radial-gradient(ellipse at center, transparent 30%, var(--tk-bg) 85%)' }}
         />
 
-        <div className="relative z-10 flex flex-col items-center text-center max-w-5xl mx-auto gap-7">
+        <div className="relative z-10 flex flex-col items-center text-center max-w-5xl mx-auto gap-6 sm:gap-7 w-full px-2 sm:px-0">
           {/* Eyebrow chip */}
           <div
-            className="inline-flex items-center gap-2 border px-4 py-1.5 text-[10px] sm:text-xs tracking-[0.3em] uppercase font-bold"
+            className="inline-flex items-center justify-center gap-1.5 sm:gap-2 border px-2.5 sm:px-4 py-1.5 text-[9px] sm:text-xs tracking-[0.15em] sm:tracking-[0.3em] uppercase font-bold max-w-full text-center flex-wrap"
             style={{
               borderColor: 'var(--tk-accent-border)',
               background: 'var(--tk-accent-subtle)',
@@ -47,29 +47,29 @@ export default function Home() {
               boxShadow: '0 0 14px var(--tk-accent-glow)',
             }}
           >
-            <Zap size={12} style={{ fill: 'var(--tk-accent)' }} className="animate-pulse" />
-            SVGU AHMEDABAD · UCPIT · JAN 2027
+            <Zap size={12} style={{ fill: 'var(--tk-accent)' }} className="animate-pulse flex-shrink-0" />
+            <span>SVGU AHMEDABAD · UCPIT · JAN 2027</span>
           </div>
 
           {/* Main title */}
-          <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black leading-[0.9] tracking-tighter font-headline select-none">
+          <h1 className="text-3xl min-[390px]:text-4xl min-[430px]:text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black leading-[0.9] tracking-tighter font-headline select-none max-w-full break-words">
             <GlitchText text="TECH" className="text-tk-text" />
             <br />
             <GlitchText text="KURUKSHETRA" className="text-tk-accent" />
           </h1>
 
           {/* Tagline */}
-          <p className="text-sm sm:text-base md:text-lg text-tk-text-muted tracking-[0.15em] uppercase max-w-lg font-bold">
+          <p className="text-xs sm:text-base md:text-lg text-tk-text-muted tracking-[0.12em] sm:tracking-[0.15em] uppercase max-w-lg font-bold">
             The Battlefield for India's Brightest Minds
           </p>
 
           {/* Countdown */}
-          <div className="my-2">
+          <div className="my-2 max-w-full flex justify-center">
             <Countdown />
           </div>
 
           {/* CTAs */}
-          <div className="w-full mt-2">
+          <div className="w-full mt-2 flex justify-center">
             <HeroCTA />
           </div>
         </div>

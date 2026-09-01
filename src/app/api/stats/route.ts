@@ -3,11 +3,17 @@ import { dbConnect } from '@/lib/mongodb';
 import Registration from '@/lib/models/Registration';
 import Event from '@/lib/models/Event';
 
+export const dynamic = 'force-dynamic';
+
+const NO_CACHE_HEADERS = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate',
+};
+
 export async function GET() {
   try {
     const conn = await dbConnect();
     if (!conn) {
-      return NextResponse.json({ success: true, data: null });
+      return NextResponse.json({ success: true, data: null }, { headers: NO_CACHE_HEADERS });
     }
 
     const [dbRegsCount, uniqueColleges, events] = await Promise.all([
@@ -18,7 +24,7 @@ export async function GET() {
 
     // If no real data exists in database yet, return data: null to hide stats section
     if (dbRegsCount === 0 && events.length === 0) {
-      return NextResponse.json({ success: true, data: null });
+      return NextResponse.json({ success: true, data: null }, { headers: NO_CACHE_HEADERS });
     }
 
     // Calculate total prize pool from event records
@@ -83,15 +89,19 @@ export async function GET() {
     }
 
     if (items.length === 0) {
-      return NextResponse.json({ success: true, data: null });
+      return NextResponse.json({ success: true, data: null }, { headers: NO_CACHE_HEADERS });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: items,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data: items,
+      },
+      { headers: NO_CACHE_HEADERS }
+    );
   } catch (err: any) {
     console.error('[GET /api/stats] Error:', err);
-    return NextResponse.json({ success: false, data: null }, { status: 500 });
+    return NextResponse.json({ success: false, data: null }, { status: 500, headers: NO_CACHE_HEADERS });
   }
 }
+

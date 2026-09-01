@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { verifyAdminAuth } from '@/lib/admin-auth';
 import { dbConnect } from '@/lib/mongodb';
 import Sponsor from '@/lib/models/Sponsor';
@@ -27,6 +28,12 @@ export async function PUT(
       return NextResponse.json({ success: false, message: 'Sponsor not found' }, { status: 404 });
     }
 
+    try {
+      revalidatePath('/api/sponsors');
+    } catch (cacheErr) {
+      console.warn('[PUT /api/admin/sponsors/[id]] Cache revalidation error:', cacheErr);
+    }
+
     return NextResponse.json({ success: true, data: updated });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || 'Server error' }, { status: 500 });
@@ -53,8 +60,15 @@ export async function DELETE(
       return NextResponse.json({ success: false, message: 'Sponsor not found' }, { status: 404 });
     }
 
+    try {
+      revalidatePath('/api/sponsors');
+    } catch (cacheErr) {
+      console.warn('[DELETE /api/admin/sponsors/[id]] Cache revalidation error:', cacheErr);
+    }
+
     return NextResponse.json({ success: true, message: 'Sponsor deleted successfully' });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || 'Server error' }, { status: 500 });
   }
 }
+

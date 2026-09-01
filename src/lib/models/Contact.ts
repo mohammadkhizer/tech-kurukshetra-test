@@ -12,13 +12,15 @@ export interface IContact extends Document {
 const ContactSchema: Schema = new Schema(
   {
     name:    { type: String, required: true },
-    email:   { type: String, required: true },
+    email:   { type: String, required: true, index: true },
     subject: { type: String, default: 'General Inquiry' },
     message: { type: String, required: true },
     status:  { type: String, default: 'new' },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
+
+ContactSchema.index({ createdAt: -1 });
 
 ContactSchema.virtual('id').get(function (this: any) {
   return this._id ? this._id.toString() : '';

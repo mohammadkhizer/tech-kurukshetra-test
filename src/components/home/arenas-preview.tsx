@@ -167,7 +167,7 @@ export function ArenasPreview() {
 
                   <Link
                     href={`/arenas/${event.slug || event.id}`}
-                    className="inline-flex items-center gap-2 text-[11px] font-headline tracking-[0.15em] uppercase text-[#FF6B00] group-hover:gap-3 transition-all duration-200 font-bold"
+                    className="inline-flex items-center min-h-[44px] py-2 gap-2 text-[11px] font-headline tracking-[0.15em] uppercase text-[#FF6B00] group-hover:gap-3 transition-all duration-200 font-bold"
                   >
                     VIEW ARENA <ArrowRight size={12} />
                   </Link>

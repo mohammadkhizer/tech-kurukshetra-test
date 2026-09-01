@@ -45,14 +45,14 @@ export function LegalLayout({ title, subtitle, lastUpdated, sections, children }
 
           {/* Jump Nav */}
           <aside className="lg:col-span-3">
-            <div className="lg:sticky lg:top-20 flex flex-col gap-1">
-              <div className="text-[9px] text-tk-text-muted uppercase tracking-[0.3em] mb-3 font-bold">ON THIS PAGE</div>
-              <nav className="flex flex-row lg:flex-col gap-2 flex-wrap overflow-x-auto">
+            <div className="lg:sticky lg:top-20 flex flex-col gap-2">
+              <div className="text-[9px] text-tk-text-muted uppercase tracking-[0.3em] font-bold">ON THIS PAGE</div>
+              <nav className="flex flex-row lg:flex-col gap-2 overflow-x-auto no-scrollbar py-1">
                 {sections.map(s => (
                   <a
                     key={s.id}
                     href={`#${s.id}`}
-                    className="text-xs text-tk-text-muted hover:text-tk-accent transition-colors duration-200 tracking-wide whitespace-nowrap lg:whitespace-normal py-1 border-b border-transparent hover:border-tk-border-accent lg:border-b-0 lg:border-l-2 lg:border-l-transparent lg:hover:border-l-tk-accent lg:pl-3"
+                    className="text-xs text-tk-text-muted hover:text-tk-accent transition-colors duration-200 tracking-wide whitespace-nowrap lg:whitespace-normal py-2.5 px-3 lg:py-1.5 lg:px-0 bg-tk-bg-surface lg:bg-transparent border border-tk-border lg:border-none lg:border-l-2 lg:border-l-transparent lg:hover:border-l-tk-accent lg:pl-3 min-h-[44px] lg:min-h-0 inline-flex items-center"
                   >
                     {s.title}
                   </a>

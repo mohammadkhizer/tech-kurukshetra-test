@@ -584,9 +584,9 @@ function DynamicRegisterForm() {
                       <button
                         type="button"
                         onClick={addPlayer}
-                        className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-tk-accent text-tk-bg hover:bg-tk-accent-dim transition-colors"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-3.5 py-2 min-h-[44px] bg-tk-accent text-tk-bg hover:bg-tk-accent-dim transition-colors"
                       >
-                        <Plus size={12} /> Add Player
+                        <Plus size={14} /> Add Player
                       </button>
                     )}
                   </div>

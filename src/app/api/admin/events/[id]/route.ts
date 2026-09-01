@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { verifyAdminAuth } from '@/lib/admin-auth';
 import { dbConnect } from '@/lib/mongodb';
 import Event from '@/lib/models/Event';
@@ -27,6 +28,16 @@ export async function PUT(
       return NextResponse.json({ success: false, message: 'Event not found' }, { status: 404 });
     }
 
+    try {
+      revalidatePath('/api/events');
+      if (updated.slug) revalidatePath(`/api/events/${updated.slug}`);
+      revalidatePath('/arenas');
+      if (updated.slug) revalidatePath(`/arenas/${updated.slug}`);
+      revalidateTag('events');
+    } catch (cacheErr) {
+      console.warn('[PUT /api/admin/events/[id]] Cache revalidation error:', cacheErr);
+    }
+
     return NextResponse.json({ success: true, data: updated });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || 'Server error' }, { status: 500 });
@@ -53,8 +64,17 @@ export async function DELETE(
       return NextResponse.json({ success: false, message: 'Event not found' }, { status: 404 });
     }
 
+    try {
+      revalidatePath('/api/events');
+      revalidatePath('/arenas');
+      revalidateTag('events');
+    } catch (cacheErr) {
+      console.warn('[DELETE /api/admin/events/[id]] Cache revalidation error:', cacheErr);
+    }
+
     return NextResponse.json({ success: true, message: 'Event deleted successfully' });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err?.message || 'Server error' }, { status: 500 });
   }
 }
+

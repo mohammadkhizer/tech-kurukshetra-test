@@ -3,6 +3,7 @@ import { dbConnect } from '@/lib/mongodb';
 import Contact from '@/lib/models/Contact';
 import { sanitizeString } from '@/lib/sanitizer';
 import { ContactSubmitSchema } from '@/lib/schemas';
+import { enqueueJob } from '@/lib/queue-processor';
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
       status:  'new' as const,
     };
 
-    // 3. Save directly to DB (Contact collection)
+    // 3. Save directly & synchronously to DB (Contact collection)
     let savedId: string | undefined;
     const conn = await dbConnect();
     if (conn) {
@@ -46,6 +47,9 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
+
+    // 4. Enqueue background notification email asynchronously without blocking response
+    enqueueJob('NOTIFICATION_EMAIL', payload);
 
     return NextResponse.json({ success: true, id: savedId });
   } catch (err: any) {

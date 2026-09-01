@@ -215,11 +215,17 @@ export default function TimelinePage() {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : milestones.length > 0 ? (
             <div className="relative">
               {milestones.map((m, i) => (
                 <MilestoneNode key={m.id} milestone={m} index={i} />
               ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 border border-tk-border bg-tk-bg-surface">
+              <p className="text-tk-text-muted uppercase tracking-[0.2em] text-xs">
+                Battle roadmap coming soon — check back shortly for official schedule updates.
+              </p>
             </div>
           )}
         </div>

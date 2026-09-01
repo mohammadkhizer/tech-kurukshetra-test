@@ -3,6 +3,12 @@ import { dbConnect } from '@/lib/mongodb';
 import Sponsor from '@/lib/models/Sponsor';
 import { decodeHtmlEntities } from '@/lib/sanitizer';
 
+export const revalidate = 300;
+
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+};
+
 export async function GET() {
   try {
     const conn = await dbConnect();
@@ -15,7 +21,7 @@ export async function GET() {
           logoUrl: item.logoUrl ? decodeHtmlEntities(item.logoUrl) : item.logoUrl,
           websiteUrl: item.websiteUrl ? decodeHtmlEntities(item.websiteUrl) : item.websiteUrl,
         }));
-        return NextResponse.json({ success: true, data: formatted });
+        return NextResponse.json({ success: true, data: formatted }, { headers: CACHE_HEADERS });
       }
     }
   } catch (err) {
@@ -23,5 +29,6 @@ export async function GET() {
   }
 
   // Return empty array when DB has no sponsors — no silent static fallback
-  return NextResponse.json({ success: true, data: [] });
+  return NextResponse.json({ success: true, data: [] }, { headers: CACHE_HEADERS });
 }
+

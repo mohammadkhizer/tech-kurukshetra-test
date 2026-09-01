@@ -15,7 +15,7 @@ const TimelineMilestoneSchema: Schema = new Schema(
     title: { type: String, required: true },
     description: { type: String, required: true },
     status: { type: String, enum: ['Completed', 'Live', 'Upcoming'], default: 'Upcoming' },
-    order: { type: Number, default: 0 },
+    order: { type: Number, default: 0, index: true },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );

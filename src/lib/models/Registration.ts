@@ -19,18 +19,21 @@ const RegistrationSchema: Schema = new Schema(
   {
     orderId: { type: String, required: true, unique: true, index: true },
     name: { type: String, required: true },
-    email: { type: String, required: true },
+    email: { type: String, required: true, index: true },
     phone: { type: String },
-    college: { type: String },
+    college: { type: String, index: true },
     mode: { type: String, enum: ['individual', 'team'], default: 'individual' },
     teamName: { type: String },
     teamSize: { type: String },
-    eventSlug: { type: String },
+    eventSlug: { type: String, index: true },
     paymentStatus: { type: String, default: 'completed' },
     rawPayload: { type: Schema.Types.Mixed },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
+
+RegistrationSchema.index({ email: 1, eventSlug: 1 });
+RegistrationSchema.index({ createdAt: -1 });
 
 RegistrationSchema.virtual('id').get(function (this: any) {
   return this._id ? this._id.toString() : '';

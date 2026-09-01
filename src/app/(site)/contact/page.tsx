@@ -26,7 +26,7 @@ function InputField({
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`bg-tk-bg-raised border text-tk-text text-sm px-4 py-3 outline-none transition-all duration-200 placeholder:text-tk-text-dim
+        className={`bg-tk-bg-raised border text-tk-text text-sm px-4 py-3 min-h-[44px] outline-none transition-all duration-200 placeholder:text-tk-text-dim
           ${
             error
               ? 'border-red-600 bg-red-600/[0.05]'

@@ -17,7 +17,7 @@ const TeamMemberSchema: Schema = new Schema(
     group: { type: String, default: 'Volunteers' },
     linkedinUrl: { type: String },
     photoUrl: { type: String },
-    order: { type: Number, default: 99 },
+    order: { type: Number, default: 99, index: true },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );

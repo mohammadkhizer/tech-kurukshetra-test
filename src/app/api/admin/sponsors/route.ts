@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { verifyAdminAuth } from '@/lib/admin-auth';
 import { dbConnect } from '@/lib/mongodb';
 import Sponsor from '@/lib/models/Sponsor';
@@ -57,6 +58,13 @@ export async function POST(req: NextRequest) {
     }
 
     const newDoc = await Sponsor.create(payload);
+
+    try {
+      revalidatePath('/api/sponsors');
+    } catch (cacheErr) {
+      console.warn('[POST /api/admin/sponsors] Cache revalidation error:', cacheErr);
+    }
+
     return NextResponse.json({ success: true, data: newDoc });
   } catch (err: any) {
     return NextResponse.json(
@@ -65,3 +73,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

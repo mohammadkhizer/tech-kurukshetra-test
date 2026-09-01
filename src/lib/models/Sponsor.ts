@@ -15,7 +15,7 @@ const SponsorSchema: Schema = new Schema(
     category: { type: String, default: 'Partner' },
     logoUrl: { type: String },
     websiteUrl: { type: String },
-    order: { type: Number, default: 0 },
+    order: { type: Number, default: 0, index: true },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
