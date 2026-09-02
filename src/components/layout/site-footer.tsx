@@ -6,8 +6,8 @@ import { motion } from 'framer-motion';
 
 const EASE_OUT = { duration: 0.3, ease: 'easeOut' };
 const FADE_UP = {
-  hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: EASE_OUT },
+    hidden: { opacity: 0, y: 16 },
+    visible: { opacity: 1, y: 0, transition: EASE_OUT },
 };
 
 const publicPages = [
@@ -15,20 +15,20 @@ const publicPages = [
     { title: "About", url: "/#about" },
     { title: "Arenas", url: "/arenas" },
     { title: "Timeline", url: "/timeline" },
+    { title: "Announcements", url: "/announcements" },
 ];
 
 const connectLinks = [
-    { title: "Announcement", url: "/announcements" },
     { title: "Contact Us", url: "/contact" },
     { title: "Register", url: "/register" },
     { title: "Feedback", url: "/feedback" },
-    { title: "Terms and conditions", url: "/terms-of-entry" },
-    { title: "Privacy policy", url: "/privacy-protocol" },
+    { title: "Terms of Entry", url: "/terms-of-entry" },
+    { title: "Privacy Protocol", url: "/privacy-protocol" },
     { title: "Code of Conduct", url: "/code-of-conduct" },
 ];
 
 
-function FooterLinkColumn({ title, links }: { title: string, links: {title: string, url: string}[]}) {
+function FooterLinkColumn({ title, links }: { title: string, links: { title: string, url: string }[] }) {
     return (
         <div className="space-y-4">
             <h3 className="font-headline text-xs tracking-[0.2em] text-accent uppercase font-bold">{title}</h3>
@@ -56,18 +56,18 @@ export function SiteFooter() {
                 <motion.div variants={FADE_UP} className="space-y-4">
                     <h2 className="font-headline text-2xl text-primary tracking-wider uppercase">TECH KURUKSHETRA</h2>
                     <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
-                    The most immersive tech battlefield of the year. Join 1,000+ warriors of code to reshape the future.
+                        The most immersive tech battlefield of the year. Join 1,000+ warriors of code to reshape the future.
                     </p>
                 </motion.div>
 
                 <motion.div variants={FADE_UP}>
                     <FooterLinkColumn title="Public Pages" links={publicPages} />
                 </motion.div>
-                
+
                 <motion.div variants={FADE_UP}>
                     <FooterLinkColumn title="Connect" links={connectLinks} />
                 </motion.div>
-                
+
                 <motion.div variants={FADE_UP} className="space-y-4">
                     <h3 className="font-headline text-xs tracking-[0.2em] text-accent uppercase font-bold">Location and Contact</h3>
                     <ul className="space-y-3 text-sm text-muted-foreground font-light">

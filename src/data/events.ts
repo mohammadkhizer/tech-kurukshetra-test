@@ -41,7 +41,7 @@ export const EVENTS_DATA: EventItem[] = [
     name: 'Hackathon',
     category: 'TECH',
     type: 'team',
-    teamSize: { min: 1, max: 5 },
+    teamSize: { min: 5, max: 5 },
     description:
       'A 24-hour high-intensity software and hardware hackathon. Build innovative solutions for real-world challenges, prototype under pressure, and pitch to industry judges.',
     rules: [

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle, AlertCircle, Star, MessageSquareHeart } from 'lucide-react';
-import { EVENTS_DATA } from '@/data/events';
+import { useFetch } from '@/hooks/use-fetch';
 
 const EASE_OUT = { duration: 0.3, ease: 'easeOut' };
 const FADE_UP = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: EASE_OUT } };
@@ -156,8 +156,15 @@ export default function FeedbackPage() {
     }
   };
 
+  const { data: rawEvents } = useFetch<any>('/api/events');
+  const eventsList = Array.isArray(rawEvents)
+    ? rawEvents
+    : rawEvents?.data && Array.isArray(rawEvents.data)
+    ? rawEvents.data
+    : [];
+
   // Source list of events dynamically from event metadata + General option
-  const eventOptions = ['General/Overall', ...EVENTS_DATA.map((ev) => ev.name)];
+  const eventOptions = ['General/Overall', ...eventsList.map((ev: any) => ev.name)];
 
   return (
     <div className="min-h-screen bg-tk-bg text-tk-text pb-20">

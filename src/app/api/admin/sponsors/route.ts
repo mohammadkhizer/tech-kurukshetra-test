@@ -44,9 +44,11 @@ export async function POST(req: NextRequest) {
     }
 
     const data = parsed.data;
+    // 'tier' (admin form field) takes precedence over 'category' (legacy field name)
+    const resolvedCategory = data.tier || data.category || 'Partner';
     const payload = {
       name: sanitizeString(data.name),
-      category: sanitizeString(data.category),
+      category: sanitizeString(resolvedCategory),
       logoUrl: sanitizeUrl(data.logoUrl),
       websiteUrl: sanitizeUrl(data.websiteUrl),
       order: data.order,

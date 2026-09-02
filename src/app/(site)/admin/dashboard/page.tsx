@@ -79,6 +79,39 @@ const architectCategories = [
   "Management planing and operational Team"
 ];
 
+function AdminSponsorRow({ sponsor, onDelete }: { sponsor: any; onDelete: (id: string) => void }) {
+  const [imgErr, setImgErr] = useState(false);
+  const logoUrl = decodeHtmlEntities(sponsor.logoUrl || '');
+
+  return (
+    <div className="glass-panel p-4 border-white/5 bg-white/5 flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 glass-panel flex items-center justify-center p-1 bg-[#111] border border-white/10 relative overflow-hidden rounded">
+          {logoUrl && !imgErr ? (
+            <img
+              src={logoUrl}
+              alt={sponsor.name}
+              onError={() => setImgErr(true)}
+              className="max-w-full max-h-full object-contain"
+            />
+          ) : (
+            <span className="text-xs font-bold text-[#FF6B00] font-headline tracking-widest uppercase">
+              {sponsor.name?.substring(0, 2) || 'SP'}
+            </span>
+          )}
+        </div>
+        <div>
+          <h4 className="font-headline text-[11px] text-white tracking-widest uppercase">{sponsor.name}</h4>
+          <p className="text-[8px] text-[#FF6B00] uppercase tracking-widest font-bold">{sponsor.tier || sponsor.category || 'Partner'}</p>
+        </div>
+      </div>
+      <Button onClick={() => onDelete(sponsor.id)} variant="ghost" className="text-muted-foreground hover:text-destructive p-2">
+        <Trash2 className="w-4 h-4" />
+      </Button>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { toast } = useToast();
   const router = useRouter();
@@ -241,6 +274,7 @@ export default function DashboardPage() {
     prizePool: '',
     registrationDeadline: '',
     location: '',
+    eventDate: '',
     festivalDayId: '',
     startTime: '',
     coordinatorContactName: '',
@@ -426,16 +460,15 @@ export default function DashboardPage() {
     if (!newEvent.category) return { error: "Event Category (TECH or NON-TECH) is required." };
     if (!newEvent.description.trim()) return { error: "Event Description is required." };
     if (!newEvent.location.trim()) return { error: "Location / Venue is required." };
-    if (!newEvent.festivalDayId) return { error: "Festival Day is required." };
-    if (!newEvent.startTime) return { error: "Start Time is required." };
     if (!newEvent.duration.trim()) return { error: "Duration is required." };
     if (!newEvent.prizePool.trim()) return { error: "Prize Pool is required." };
     if (!newEvent.registrationDeadline) return { error: "Registration Deadline date is required." };
 
-    // Date check: registrationDeadline must be on or before Festival Day date
+    // Date check: registrationDeadline must be on or before Event Date / Festival Day
     const selectedDay = festivalDays?.find((d: any) => d.id === newEvent.festivalDayId);
-    if (selectedDay?.date && newEvent.registrationDeadline > selectedDay.date) {
-      return { error: `Registration Deadline (${newEvent.registrationDeadline}) must be on or before Festival Day (${selectedDay.date}).` };
+    const finalDate = newEvent.eventDate || selectedDay?.date || newEvent.festivalDayId || '';
+    if (finalDate && newEvent.registrationDeadline > finalDate.substring(0, 10)) {
+      return { error: `Registration Deadline (${newEvent.registrationDeadline}) must be on or before Event Date (${finalDate.substring(0, 10)}).` };
     }
 
     // Coordinator Contact validation
@@ -469,10 +502,10 @@ export default function DashboardPage() {
       rules: newEvent.rules,
       venue: newEvent.location.trim(),
       location: newEvent.location.trim(),
-      date: selectedDay?.date || newEvent.festivalDayId,
+      date: finalDate,
       festivalDayId: newEvent.festivalDayId,
-      time: newEvent.startTime,
-      startTime: newEvent.startTime,
+      time: newEvent.startTime.trim() || 'TBA',
+      startTime: newEvent.startTime.trim() || 'TBA',
       duration: newEvent.duration.trim(),
       entryFee: feeValue,
       registrationFee: String(feeValue),
@@ -550,7 +583,8 @@ export default function DashboardPage() {
       prizePool: event.prizePool || event.prize || '',
       registrationDeadline: event.registrationDeadline ? event.registrationDeadline.substring(0, 10) : '',
       location: event.location || event.venue || '',
-      festivalDayId: event.festivalDayId || event.date || '',
+      eventDate: event.date ? event.date.substring(0, 10) : '',
+      festivalDayId: event.festivalDayId || '',
       startTime: event.startTime || event.time || '',
       coordinatorContactName: contact.name || event.eventHead || '',
       coordinatorContactPhone: contact.phone || '',
@@ -579,6 +613,7 @@ export default function DashboardPage() {
       prizePool: '',
       registrationDeadline: '',
       location: '',
+      eventDate: '',
       festivalDayId: '',
       startTime: '',
       coordinatorContactName: '',
@@ -1164,76 +1199,79 @@ export default function DashboardPage() {
                 </div>
               )}
               {sponsors?.map((sponsor) => (
-                <div key={sponsor.id} className="glass-panel p-4 border-white/5 bg-white/5 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 glass-panel flex items-center justify-center p-1 bg-white relative">
-                      <Image src={decodeHtmlEntities(sponsor.logoUrl || '') || '/favicon.ico'} alt={sponsor.name} width={48} height={48} className="max-w-full max-h-full object-contain" />
-                    </div>
-                    <div>
-                      <h4 className="font-headline text-[11px] text-white tracking-widest uppercase">{sponsor.name}</h4>
-                      <p className="text-[8px] text-accent uppercase tracking-widest font-bold">{sponsor.tier}</p>
-                    </div>
-                  </div>
-                  <Button onClick={() => handleDeleteSponsor(sponsor.id)} variant="ghost" className="text-muted-foreground hover:text-destructive p-2">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+                <AdminSponsorRow key={sponsor.id} sponsor={sponsor} onDelete={handleDeleteSponsor} />
               ))}
             </div>
           </div>
         </TabsContent>
 
         <TabsContent value="events">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <Card className="glass-panel border-primary/20 rounded-none bg-black/40 h-fit">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                <CardTitle className="font-headline text-lg tracking-widest flex items-center gap-2 uppercase">
-                  {editingEvent ? <Pencil className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
-                  {editingEvent ? 'EDIT ARENA' : 'ADD ARENA'}
-                </CardTitle>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowCardPreview(!showCardPreview)}
-                  className="border-primary/40 text-primary hover:bg-primary/10 rounded-none text-[10px] uppercase font-headline tracking-widest"
-                >
-                  <Eye className="w-3.5 h-3.5 mr-1" />
-                  {showCardPreview ? 'Hide Preview' : 'Live Preview'}
-                </Button>
+          <div className="space-y-8">
+            {/* Redesigned Admin Add/Edit Arena Form Header */}
+            <Card className="glass-panel border-primary/20 rounded-none bg-black/40">
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-white/10">
+                <div>
+                  <CardTitle className="font-headline text-xl tracking-widest flex items-center gap-2 uppercase text-primary font-black">
+                    {editingEvent ? <Pencil className="w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
+                    {editingEvent ? `EDIT ARENA: ${editingEvent.name}` : 'ADD NEW ARENA'}
+                  </CardTitle>
+                  <CardDescription className="text-xs text-muted-foreground mt-1">
+                    Manage festival battleground metadata, team rules, fee structure, and contact points.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCardPreview(!showCardPreview)}
+                    className="border-primary/40 text-primary hover:bg-primary/10 rounded-none text-xs font-headline tracking-widest uppercase"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    {showCardPreview ? 'Hide Preview' : 'Live Card Preview'}
+                  </Button>
+                  <Button
+                    onClick={handleSeedDatabase}
+                    variant="outline"
+                    className="border-accent/30 text-accent hover:bg-accent/10 rounded-none font-headline tracking-widest text-xs uppercase"
+                  >
+                    <DatabaseZap className="w-4 h-4 mr-2" /> SEED DEFAULT ARENAS
+                  </Button>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+
+              <CardContent className="space-y-6 pt-6">
                 {/* Live Card Preview Panel */}
                 {showCardPreview && (
-                  <div className="glass-panel p-4 border-primary/30 bg-primary/5 rounded-none mb-6 space-y-3">
+                  <div className="glass-panel p-5 border-primary/40 bg-primary/[0.04] rounded-none mb-6 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-headline font-bold text-primary tracking-widest uppercase">
-                        PREVIEW: PUBLIC ARENA CARD
+                      <span className="text-xs font-headline font-bold text-primary tracking-widest uppercase flex items-center gap-2">
+                        <Eye className="w-4 h-4" /> PREVIEW: PUBLIC ARENA CARD ON /ARENAS
                       </span>
-                      <Badge variant="outline" className="text-[9px] border-primary/40 text-primary uppercase rounded-none">
+                      <Badge variant="outline" className="text-[10px] border-primary/40 text-primary uppercase rounded-none font-headline tracking-wider">
                         {newEvent.category || 'TECH'}
                       </Badge>
                     </div>
 
-                    <div className="border border-white/10 p-4 bg-black/80 space-y-3">
+                    <div className="border border-white/10 p-5 bg-black/90 space-y-4 max-w-sm">
                       <div className="flex items-start justify-between gap-2">
-                        <div className="p-2 bg-primary/10 border border-primary/30 text-primary">
-                          <Gamepad2 className="w-5 h-5" />
+                        <div className="p-2.5 bg-primary/10 border border-primary/30 text-primary">
+                          <Gamepad2 className="w-6 h-6" />
                         </div>
-                        <span className="px-2 py-0.5 text-[9px] font-headline font-bold tracking-widest uppercase border border-primary/30 text-primary bg-primary/10">
+                        <span className="px-2.5 py-0.5 text-[10px] font-headline font-bold tracking-widest uppercase border border-primary/30 text-primary bg-primary/10">
                           {newEvent.category || 'TECH'}
                         </span>
                       </div>
 
-                      <h3 className="text-lg font-black tracking-tight font-headline text-white">
-                        {newEvent.name || 'Arena Title Placeholder'}
-                      </h3>
+                      <div>
+                        <h3 className="text-xl font-black tracking-tight font-headline text-white mb-1">
+                          {newEvent.name || 'Arena Title Placeholder'}
+                        </h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                          {newEvent.description || 'Arena description will appear here...'}
+                        </p>
+                      </div>
 
-                      <p className="text-xs text-muted-foreground line-clamp-2">
-                        {newEvent.description || 'Arena description will appear here...'}
-                      </p>
-
-                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/10 text-xs">
+                      <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/10 text-xs">
                         <div>
                           <div className="text-[8px] text-muted-foreground uppercase tracking-widest">Prize Pool</div>
                           <div className="font-headline font-bold text-primary truncate">{newEvent.prizePool || 'TBA'}</div>
@@ -1250,374 +1288,525 @@ export default function DashboardPage() {
                         </div>
                       </div>
 
-                      <div className="text-[9px] text-muted-foreground pt-1 flex justify-between border-t border-white/5">
+                      <div className="text-[10px] text-muted-foreground pt-2 flex justify-between border-t border-white/10">
                         <span>Venue: {newEvent.location || 'TBA'}</span>
-                        <span className="text-primary">Fee: {newEvent.isFree ? 'Free' : (newEvent.registrationFee || 'Free')}</span>
+                        <span className="text-primary font-bold">Fee: {newEvent.isFree ? 'Free' : (newEvent.registrationFee || 'Free')}</span>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* 1. Event Name */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Event Name <span className="text-destructive">*</span></Label>
-                  <Input
-                    name="name"
-                    value={newEvent.name}
-                    onChange={handleNewEventChange}
-                    onBlur={handleNameBlur}
-                    placeholder="e.g. Cyber Strike Arena"
-                    className="bg-white/5 border-white/10 rounded-none text-white text-xs"
-                  />
-                </div>
+                {/* 6 Structured Cards in 2-Column Responsive Grid (768px-1024px tablet friendly) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                {/* 2. Slug / ID */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-[10px] uppercase tracking-widest">Arena ID / Slug <span className="text-destructive">*</span></Label>
-                    <button
-                      type="button"
-                      onClick={handleNameBlur}
-                      className="text-[9px] text-primary hover:underline uppercase tracking-wider"
-                    >
-                      Auto-Generate
-                    </button>
-                  </div>
-                  <Input
-                    name="id"
-                    value={newEvent.id}
-                    onChange={(e) => setNewEvent(prev => ({ ...prev, id: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))}
-                    placeholder="cyber-strike-arena"
-                    className="bg-white/5 border-white/10 rounded-none text-white text-xs font-mono"
-                  />
-                  <p className="text-[9px] text-muted-foreground">Unique identifier used in URLs (kebab-case).</p>
-                </div>
+                  {/* CARD 1: BASIC INFORMATION */}
+                  <Card className="glass-panel border-primary/20 bg-black/60 rounded-none">
+                    <CardHeader className="pb-3 border-b border-white/10">
+                      <CardTitle className="font-headline text-xs tracking-widest uppercase flex items-center gap-2 text-primary font-bold">
+                        <Info className="w-4 h-4" /> 1. Basic Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 pt-4">
+                      {/* Event Name */}
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] uppercase tracking-widest">Event Name <span className="text-destructive">*</span></Label>
+                        <Input
+                          name="name"
+                          value={newEvent.name}
+                          onChange={handleNewEventChange}
+                          onBlur={handleNameBlur}
+                          placeholder="e.g. Cyber Strike Arena"
+                          className={`bg-white/5 border-white/10 rounded-none text-white text-xs ${!newEvent.name.trim() ? 'border-red-500/40' : ''}`}
+                        />
+                      </div>
 
-                {/* 3. Event Category Dropdown (TECH vs NON-TECH) */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Event Category <span className="text-destructive">*</span></Label>
-                  <Select 
-                    value={newEvent.category} 
-                    onValueChange={handleEventCategoryChange}
-                  >
-                    <SelectTrigger className="w-full bg-white/5 border border-white/10 p-2 text-xs rounded-none text-white h-auto">
-                      <SelectValue placeholder="Select Category" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-black/90 backdrop-blur-md border-white/10 text-white rounded-none">
-                      <SelectItem value="TECH">TECH (Technical Events)</SelectItem>
-                      <SelectItem value="NON-TECH">NON-TECH (Sports, Gaming & Non-Technical)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                      {/* Slug / ID */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-[10px] uppercase tracking-widest">Arena ID / Slug <span className="text-destructive">*</span></Label>
+                          <button
+                            type="button"
+                            onClick={handleNameBlur}
+                            className="text-[9px] text-primary hover:underline uppercase tracking-wider font-semibold"
+                          >
+                            Auto-Generate
+                          </button>
+                        </div>
+                        <Input
+                          name="id"
+                          value={newEvent.id}
+                          onChange={(e) => setNewEvent(prev => ({ ...prev, id: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))}
+                          placeholder="cyber-strike-arena"
+                          className="bg-white/5 border-white/10 rounded-none text-white text-xs font-mono"
+                        />
+                        <p className="text-[9px] text-muted-foreground">Unique URL identifier (kebab-case).</p>
+                      </div>
 
-                {/* 4. Event Type (Solo vs Team) */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Event Type <span className="text-destructive">*</span></Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      type="button"
-                      variant={newEvent.type === 'solo' ? 'default' : 'outline'}
-                      onClick={() => handleEventTypeChange('solo')}
-                      className={`rounded-none text-xs uppercase font-headline tracking-widest ${newEvent.type === 'solo' ? 'bg-primary text-background' : 'border-white/10 text-white'}`}
-                    >
-                      Solo Event
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={newEvent.type === 'team' ? 'default' : 'outline'}
-                      onClick={() => handleEventTypeChange('team')}
-                      className={`rounded-none text-xs uppercase font-headline tracking-widest ${newEvent.type === 'team' ? 'bg-primary text-background' : 'border-white/10 text-white'}`}
-                    >
-                      Team Event
-                    </Button>
-                  </div>
-                </div>
+                      {/* Category (TECH vs NON-TECH) */}
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] uppercase tracking-widest">Category <span className="text-destructive">*</span></Label>
+                        <Select value={newEvent.category} onValueChange={handleEventCategoryChange}>
+                          <SelectTrigger className="w-full bg-white/5 border-white/10 p-2 text-xs rounded-none text-white h-auto">
+                            <SelectValue placeholder="Select Category" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-black/95 border-white/10 text-white rounded-none">
+                            <SelectItem value="TECH">TECH (Technical Events)</SelectItem>
+                            <SelectItem value="NON-TECH">NON-TECH (Sports, Gaming &amp; Cultural)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                {/* Conditional Team Size Inputs */}
-                {newEvent.type === 'team' && (
-                  <div className="grid grid-cols-2 gap-3 p-3 glass-panel border-white/10 bg-white/5 rounded-none">
-                    <div className="space-y-1">
-                      <Label className="text-[9px] uppercase tracking-widest">Min Team Size <span className="text-destructive">*</span></Label>
-                      <Input
-                        type="number"
-                        min={1}
-                        value={newEvent.minTeamSize}
-                        onChange={(e) => setNewEvent(prev => ({ ...prev, minTeamSize: Math.max(1, parseInt(e.target.value) || 1) }))}
-                        className="bg-white/5 border-white/10 rounded-none text-white text-xs h-8"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-[9px] uppercase tracking-widest">Max Team Size <span className="text-destructive">*</span></Label>
-                      <Input
-                        type="number"
-                        min={newEvent.minTeamSize}
-                        value={newEvent.maxTeamSize}
-                        onChange={(e) => setNewEvent(prev => ({ ...prev, maxTeamSize: Math.max(1, parseInt(e.target.value) || 1) }))}
-                        className="bg-white/5 border-white/10 rounded-none text-white text-xs h-8"
-                      />
-                    </div>
-                  </div>
-                )}
+                      {/* Description + Character Counter */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-[10px] uppercase tracking-widest">Event Description <span className="text-destructive">*</span></Label>
+                          <span className={`text-[9px] font-mono ${newEvent.description.length < 50 ? 'text-amber-400' : 'text-primary'}`}>
+                            {newEvent.description.length} chars (2-3 lines guidance)
+                          </span>
+                        </div>
+                        <Textarea
+                          name="description"
+                          value={newEvent.description}
+                          onChange={handleNewEventChange}
+                          rows={3}
+                          placeholder="Provide a concise 2-3 sentence overview of the arena mission..."
+                          className="bg-white/5 border-white/10 rounded-none text-white text-xs leading-relaxed"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                {/* 5. Duration */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Event Duration <span className="text-destructive">*</span></Label>
-                  <Input
-                    name="duration"
-                    value={newEvent.duration}
-                    onChange={handleNewEventChange}
-                    placeholder="e.g. 3 hours, 24h, 2 days"
-                    className="bg-white/5 border-white/10 rounded-none text-white text-xs"
-                  />
-                </div>
+                  {/* CARD 2: FORMAT & TEAM CONSTRAINTS */}
+                  <Card className="glass-panel border-primary/20 bg-black/60 rounded-none">
+                    <CardHeader className="pb-3 border-b border-white/10">
+                      <CardTitle className="font-headline text-xs tracking-widest uppercase flex items-center gap-2 text-primary font-bold">
+                        <Users className="w-4 h-4" /> 2. Format &amp; Team Constraints
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 pt-4">
+                      {/* Format Toggle */}
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] uppercase tracking-widest">Participation Format <span className="text-destructive">*</span></Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            type="button"
+                            variant={newEvent.type === 'solo' ? 'default' : 'outline'}
+                            onClick={() => handleEventTypeChange('solo')}
+                            className={`rounded-none text-xs uppercase font-headline tracking-widest ${newEvent.type === 'solo' ? 'bg-primary text-background font-black' : 'border-white/10 text-white'}`}
+                          >
+                            Solo Event
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={newEvent.type === 'team' ? 'default' : 'outline'}
+                            onClick={() => handleEventTypeChange('team')}
+                            className={`rounded-none text-xs uppercase font-headline tracking-widest ${newEvent.type === 'team' ? 'bg-primary text-background font-black' : 'border-white/10 text-white'}`}
+                          >
+                            Team Event
+                          </Button>
+                        </div>
+                      </div>
 
-                {/* 6. Prize Pool */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Prize Pool <span className="text-destructive">*</span></Label>
-                  <Input
-                    name="prizePool"
-                    value={newEvent.prizePool}
-                    onChange={handleNewEventChange}
-                    placeholder="e.g. ₹15,000 or Trophies & Certificates"
-                    className="bg-white/5 border-white/10 rounded-none text-white text-xs"
-                  />
-                </div>
-
-                {/* 7. Registration Deadline */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Registration Deadline Date <span className="text-destructive">*</span></Label>
-                  <Input
-                    type="date"
-                    name="registrationDeadline"
-                    value={newEvent.registrationDeadline}
-                    onChange={handleNewEventChange}
-                    className="bg-white/5 border-white/10 rounded-none text-white text-xs"
-                  />
-                  <p className="text-[9px] text-muted-foreground">Must be on or before the Festival Day.</p>
-                </div>
-
-                {/* 8. Festival Day */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Festival Day <span className="text-destructive">*</span></Label>
-                  <Select
-                    name="festivalDayId"
-                    value={newEvent.festivalDayId}
-                    onValueChange={handleEventDayChange}
-                  >
-                    <SelectTrigger className="w-full bg-white/5 border-white/10 p-2 text-xs rounded-none text-white h-auto" disabled={festivalDaysLoading}>
-                      <SelectValue placeholder="Select a day" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-black/90 backdrop-blur-md border-white/10 text-white rounded-none">
-                      {festivalDays && festivalDays.length > 0 ? (
-                        festivalDays.map(day => (
-                          <SelectItem key={day.id} value={day.id}>{day.name} ({day.date || 'TBA'})</SelectItem>
-                        ))
+                      {/* Team Size Min / Max */}
+                      {newEvent.type === 'team' ? (
+                        <div className="space-y-3 p-3 glass-panel border-white/10 bg-white/5 rounded-none">
+                          <div className="text-[9px] uppercase tracking-widest text-primary font-semibold">Team Size Boundaries</div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-[9px] uppercase tracking-widest">Min Team Size <span className="text-destructive">*</span></Label>
+                              <Input
+                                type="number"
+                                min={1}
+                                value={newEvent.minTeamSize}
+                                onChange={(e) => setNewEvent(prev => ({ ...prev, minTeamSize: Math.max(1, parseInt(e.target.value) || 1) }))}
+                                className="bg-white/5 border-white/10 rounded-none text-white text-xs h-8"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[9px] uppercase tracking-widest">Max Team Size <span className="text-destructive">*</span></Label>
+                              <Input
+                                type="number"
+                                min={newEvent.minTeamSize}
+                                value={newEvent.maxTeamSize}
+                                onChange={(e) => setNewEvent(prev => ({ ...prev, maxTeamSize: Math.max(1, parseInt(e.target.value) || 1) }))}
+                                className="bg-white/5 border-white/10 rounded-none text-white text-xs h-8"
+                              />
+                            </div>
+                          </div>
+                          {newEvent.maxTeamSize < newEvent.minTeamSize && (
+                            <p className="text-[9px] text-destructive">Max team size must be greater than or equal to min team size.</p>
+                          )}
+                          {newEvent.minTeamSize === newEvent.maxTeamSize && (
+                            <p className="text-[9px] text-primary">Fixed team size of {newEvent.minTeamSize} players.</p>
+                          )}
+                        </div>
                       ) : (
-                        <div className="text-muted-foreground text-xs p-4 text-center">
-                          Go to the 'Schedule' tab to add days.
+                        <div className="p-3 border border-white/10 bg-white/5 text-xs text-muted-foreground rounded-none">
+                          Solo format automatically locks team size to <span className="text-white font-mono font-bold">1 Player</span>.
                         </div>
                       )}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    </CardContent>
+                  </Card>
 
-                {/* 9. Start Time */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Start Time <span className="text-destructive">*</span></Label>
-                  <Input
-                    name="startTime"
-                    value={newEvent.startTime}
-                    onChange={handleNewEventChange}
-                    type="datetime-local"
-                    className="bg-white/5 border-white/10 rounded-none text-white text-xs"
-                  />
-                </div>
-
-                {/* 10. Location / Venue */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Venue / Location <span className="text-destructive">*</span></Label>
-                  <Input
-                    name="location"
-                    value={newEvent.location}
-                    onChange={handleNewEventChange}
-                    placeholder="e.g. Lab 402, Main Auditorium, Ground"
-                    className="bg-white/5 border-white/10 rounded-none text-white text-xs"
-                  />
-                </div>
-
-                {/* 11. Event Description */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Event Description <span className="text-destructive">*</span></Label>
-                  <Textarea
-                    name="description"
-                    value={newEvent.description}
-                    onChange={handleNewEventChange}
-                    rows={3}
-                    placeholder="Provide a comprehensive summary of the event..."
-                    className="bg-white/5 border-white/10 rounded-none text-white text-xs"
-                  />
-                </div>
-
-                {/* 12. Coordinator Contact (3 required sub-fields) */}
-                <div className="space-y-2 pt-2 border-t border-white/10">
-                  <Label className="text-[10px] uppercase tracking-widest text-primary font-headline">
-                    Coordinator Contact <span className="text-destructive">*</span>
-                  </Label>
-                  <div className="space-y-2 p-3 glass-panel border-white/10 bg-white/5 rounded-none">
-                    <div>
-                      <Label className="text-[9px] uppercase tracking-widest">Contact Name <span className="text-destructive">*</span></Label>
-                      <Input
-                        name="coordinatorContactName"
-                        value={newEvent.coordinatorContactName}
-                        onChange={handleNewEventChange}
-                        placeholder="e.g. Alex Vance"
-                        className="bg-white/5 border-white/10 rounded-none text-white text-xs h-8 mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-[9px] uppercase tracking-widest">Contact Phone <span className="text-destructive">*</span></Label>
-                      <Input
-                        name="coordinatorContactPhone"
-                        value={newEvent.coordinatorContactPhone}
-                        onChange={handleNewEventChange}
-                        placeholder="+91 9876543210"
-                        className="bg-white/5 border-white/10 rounded-none text-white text-xs h-8 mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-[9px] uppercase tracking-widest">Contact Email <span className="text-destructive">*</span></Label>
-                      <Input
-                        name="coordinatorContactEmail"
-                        value={newEvent.coordinatorContactEmail}
-                        onChange={handleNewEventChange}
-                        placeholder="alex@techkurukshetra.in"
-                        className="bg-white/5 border-white/10 rounded-none text-white text-xs h-8 mt-1"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* 13. Registration Fee (Number or Free Toggle) */}
-                <div className="space-y-2 pt-2 border-t border-white/10">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-[10px] uppercase tracking-widest">Registration Fee</Label>
-                    <label className="flex items-center gap-2 text-xs text-primary cursor-pointer font-headline uppercase text-[10px] tracking-wider">
-                      <input
-                        type="checkbox"
-                        checked={newEvent.isFree}
-                        onChange={(e) => setNewEvent(prev => ({ ...prev, isFree: e.target.checked }))}
-                        className="accent-primary"
-                      />
-                      Free Entry
-                    </label>
-                  </div>
-                  {!newEvent.isFree && (
-                    <Input
-                      name="registrationFee"
-                      value={newEvent.registrationFee}
-                      onChange={handleNewEventChange}
-                      placeholder="e.g. ₹100 or 100 per person"
-                      className="bg-white/5 border-white/10 rounded-none text-white text-xs"
-                    />
-                  )}
-                </div>
-
-                {/* 14. Event Rules Add-List */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Event Rules &amp; Guidelines</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={currentRule}
-                      onChange={(e) => setCurrentRule(e.target.value)}
-                      placeholder="Type a rule and press Enter or Add"
-                      className="bg-white/5 border-white/10 rounded-none text-white text-xs"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddRule();
-                        }
-                      }}
-                    />
-                    <Button type="button" onClick={handleAddRule} className="bg-primary hover:bg-primary/80 rounded-none px-4 text-background text-xs uppercase font-headline tracking-widest">
-                      Add Rule
-                    </Button>
-                  </div>
-                  <div className="space-y-2 pt-2 max-h-40 overflow-y-auto">
-                    {newEvent.rules.length > 0 ? newEvent.rules.map((rule, index) => (
-                      <div key={index} className="flex items-center justify-between text-xs glass-panel p-2 border-white/5 bg-white/5 rounded-none">
-                        <span className="text-muted-foreground break-all">◈ {rule}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteRule(index)}
-                          className="text-muted-foreground hover:text-destructive h-6 w-6 ml-2 flex-shrink-0"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                  {/* CARD 3: SCHEDULE & LOCATION */}
+                  <Card className="glass-panel border-primary/20 bg-black/60 rounded-none">
+                    <CardHeader className="pb-3 border-b border-white/10">
+                      <CardTitle className="font-headline text-xs tracking-widest uppercase flex items-center gap-2 text-primary font-bold">
+                        <CalendarIcon className="w-4 h-4" /> 3. Schedule &amp; Location
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 pt-4">
+                      {/* Date & Time */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] uppercase tracking-widest">Event Date <span className="text-destructive">*</span></Label>
+                          <Input
+                            type="date"
+                            name="eventDate"
+                            value={newEvent.eventDate}
+                            onChange={handleNewEventChange}
+                            className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] uppercase tracking-widest">Start Time <span className="text-destructive">*</span></Label>
+                          <Input
+                            type="text"
+                            name="startTime"
+                            value={newEvent.startTime}
+                            onChange={handleNewEventChange}
+                            placeholder="e.g. 09:00 AM"
+                            className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                          />
+                        </div>
                       </div>
-                    )) : (
-                      <p className="text-[10px] text-muted-foreground text-center py-2">No rules added yet.</p>
-                    )}
-                  </div>
-                </div>
 
-                {/* 15. Event Logo / Banner Image URL */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-widest">Banner / Logo Image URL</Label>
-                  <Input
-                    name="imageUrl"
-                    value={newEvent.imageUrl}
-                    onChange={handleNewEventChange}
-                    placeholder="https://images.unsplash.com/..."
-                    className="bg-white/5 border-white/10 rounded-none text-white text-xs"
-                  />
+                      {/* Duration & Venue */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] uppercase tracking-widest">Duration <span className="text-destructive">*</span></Label>
+                          <Input
+                            name="duration"
+                            value={newEvent.duration}
+                            onChange={handleNewEventChange}
+                            placeholder="e.g. 24 Hours, 3 Hours"
+                            className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] uppercase tracking-widest">Venue / Location <span className="text-destructive">*</span></Label>
+                          <Input
+                            name="location"
+                            value={newEvent.location}
+                            onChange={handleNewEventChange}
+                            placeholder="e.g. Lab 302, Main Ground"
+                            className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Festival Day */}
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] uppercase tracking-widest">Festival Day <span className="text-destructive">*</span></Label>
+                        <Select value={newEvent.festivalDayId} onValueChange={handleEventDayChange}>
+                          <SelectTrigger className="w-full bg-white/5 border-white/10 p-2 text-xs rounded-none text-white h-auto">
+                            <SelectValue placeholder="Select Festival Day" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-black/95 border-white/10 text-white rounded-none">
+                            {festivalDays && festivalDays.length > 0 ? (
+                              festivalDays.map(day => (
+                                <SelectItem key={day.id} value={day.id}>{day.name} ({day.date || 'TBA'})</SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="Day 1">Day 1 (Jan 20)</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* CARD 4: PRIZE POOL & FEES */}
+                  <Card className="glass-panel border-primary/20 bg-black/60 rounded-none">
+                    <CardHeader className="pb-3 border-b border-white/10">
+                      <CardTitle className="font-headline text-xs tracking-widest uppercase flex items-center gap-2 text-primary font-bold">
+                        <Rocket className="w-4 h-4" /> 4. Prize Pool &amp; Fees
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 pt-4">
+                      {/* Prize Pool */}
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] uppercase tracking-widest">Prize Pool <span className="text-destructive">*</span></Label>
+                        <Input
+                          name="prizePool"
+                          value={newEvent.prizePool}
+                          onChange={handleNewEventChange}
+                          placeholder="e.g. ₹50,000 or Trophies &amp; Certificates"
+                          className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                        />
+                      </div>
+
+                      {/* Entry Fee & Free Checkbox */}
+                      <div className="space-y-2 p-3 glass-panel border-white/10 bg-white/5 rounded-none">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-[10px] uppercase tracking-widest text-primary font-semibold">Entry Fee Structure</Label>
+                          <label className="flex items-center gap-2 text-xs text-primary cursor-pointer font-headline uppercase text-[10px] tracking-wider font-bold">
+                            <input
+                              type="checkbox"
+                              checked={newEvent.isFree}
+                              onChange={(e) => setNewEvent(prev => ({ ...prev, isFree: e.target.checked }))}
+                              className="accent-primary w-3.5 h-3.5"
+                            />
+                            Free Entry
+                          </label>
+                        </div>
+                        {!newEvent.isFree && (
+                          <div className="space-y-1">
+                            <Label className="text-[9px] uppercase tracking-widest">Entry Fee Amount (INR)</Label>
+                            <Input
+                              name="registrationFee"
+                              value={newEvent.registrationFee}
+                              onChange={handleNewEventChange}
+                              placeholder="e.g. 100 or ₹100"
+                              className="bg-white/5 border-white/10 rounded-none text-white text-xs h-8"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* CARD 5: COORDINATOR CONTACT */}
+                  <Card className="glass-panel border-primary/20 bg-black/60 rounded-none md:col-span-2">
+                    <CardHeader className="pb-3 border-b border-white/10">
+                      <CardTitle className="font-headline text-xs tracking-widest uppercase flex items-center gap-2 text-primary font-bold">
+                        <Mail className="w-4 h-4" /> 5. Coordinator Contact (3 Required Sub-Fields)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 pt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] uppercase tracking-widest">Contact Name <span className="text-destructive">*</span></Label>
+                          <Input
+                            name="coordinatorContactName"
+                            value={newEvent.coordinatorContactName}
+                            onChange={handleNewEventChange}
+                            placeholder="e.g. Alex Vance"
+                            className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] uppercase tracking-widest">Contact Phone <span className="text-destructive">*</span></Label>
+                          <Input
+                            name="coordinatorContactPhone"
+                            value={newEvent.coordinatorContactPhone}
+                            onChange={handleNewEventChange}
+                            placeholder="+91 9876543210"
+                            className={`bg-white/5 border-white/10 rounded-none text-white text-xs ${
+                              newEvent.coordinatorContactPhone && !isValidPhone(newEvent.coordinatorContactPhone) ? 'border-red-500' : ''
+                            }`}
+                          />
+                          {newEvent.coordinatorContactPhone && !isValidPhone(newEvent.coordinatorContactPhone) && (
+                            <p className="text-[9px] text-destructive">Format: 7 to 15 digits (e.g. +91 9876543210)</p>
+                          )}
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] uppercase tracking-widest">Contact Email <span className="text-destructive">*</span></Label>
+                          <Input
+                            name="coordinatorContactEmail"
+                            value={newEvent.coordinatorContactEmail}
+                            onChange={handleNewEventChange}
+                            placeholder="coordinator@svgu.ac.in"
+                            className={`bg-white/5 border-white/10 rounded-none text-white text-xs ${
+                              newEvent.coordinatorContactEmail && !isValidEmail(newEvent.coordinatorContactEmail) ? 'border-red-500' : ''
+                            }`}
+                          />
+                          {newEvent.coordinatorContactEmail && !isValidEmail(newEvent.coordinatorContactEmail) && (
+                            <p className="text-[9px] text-destructive">Invalid email address format.</p>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* CARD 6: MEDIA, DEADLINES & RULES */}
+                  <Card className="glass-panel border-primary/20 bg-black/60 rounded-none md:col-span-2">
+                    <CardHeader className="pb-3 border-b border-white/10">
+                      <CardTitle className="font-headline text-xs tracking-widest uppercase flex items-center gap-2 text-primary font-bold">
+                        <FileText className="w-4 h-4" /> 6. Media, Guidelines &amp; Deadlines
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 pt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Banner Image URL + Live Thumbnail Preview */}
+                        <div className="space-y-2">
+                          <Label className="text-[10px] uppercase tracking-widest">Banner / Logo Image URL</Label>
+                          <Input
+                            name="imageUrl"
+                            value={newEvent.imageUrl}
+                            onChange={handleNewEventChange}
+                            placeholder="/images/events/hackathon-banner.jpg or https://..."
+                            className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                          />
+                          {/* Live Thumbnail Preview */}
+                          {newEvent.imageUrl && (
+                            <div className="mt-2 p-2 border border-primary/30 bg-black/60 rounded-none flex items-center gap-3">
+                              <div className="relative w-16 h-12 bg-white/5 overflow-hidden border border-white/10 flex-shrink-0">
+                                <img
+                                  src={newEvent.imageUrl}
+                                  alt="Banner Preview"
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                                />
+                              </div>
+                              <div className="text-[9px] text-muted-foreground truncate font-mono">
+                                <span className="text-primary font-bold uppercase block">Live Banner Thumbnail</span>
+                                {newEvent.imageUrl}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Registration Deadline */}
+                        <div className="space-y-2">
+                          <Label className="text-[10px] uppercase tracking-widest">Registration Deadline <span className="text-destructive">*</span></Label>
+                          <Input
+                            type="date"
+                            name="registrationDeadline"
+                            value={newEvent.registrationDeadline}
+                            onChange={handleNewEventChange}
+                            className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                          />
+                          <p className="text-[9px] text-muted-foreground">Must be on or before the event date.</p>
+                        </div>
+                      </div>
+
+                      {/* Rules Add/Remove List */}
+                      <div className="space-y-2 pt-2 border-t border-white/10">
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-semibold">Rules &amp; Guidelines List</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={currentRule}
+                            onChange={(e) => setCurrentRule(e.target.value)}
+                            placeholder="Type a rule and press Enter or click Add"
+                            className="bg-white/5 border-white/10 rounded-none text-white text-xs"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddRule();
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            onClick={handleAddRule}
+                            className="bg-primary hover:bg-primary/80 rounded-none px-4 text-background text-xs uppercase font-headline tracking-widest font-bold"
+                          >
+                            Add Rule
+                          </Button>
+                        </div>
+
+                        <div className="space-y-2 pt-2 max-h-40 overflow-y-auto">
+                          {newEvent.rules.length > 0 ? (
+                            newEvent.rules.map((rule, index) => (
+                              <div key={index} className="flex items-center justify-between text-xs glass-panel p-2 border-white/10 bg-white/5 rounded-none">
+                                <span className="text-muted-foreground break-all">◈ {rule}</span>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDeleteRule(index)}
+                                  className="text-muted-foreground hover:text-destructive h-6 w-6 ml-2 flex-shrink-0"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-[10px] text-muted-foreground text-center py-2">No rules added yet.</p>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
                 </div>
 
                 {/* Submit Buttons */}
-                <Button
-                  onClick={editingEvent ? handleUpdateEvent : handleAddEvent}
-                  className="w-full bg-primary text-background hover:bg-primary/80 rounded-none font-headline tracking-widest text-[10px] py-4 uppercase mt-4"
-                >
-                  {editingEvent ? 'UPDATE ARENA METADATA' : 'INITIALIZE ARENA METADATA'}
-                </Button>
-
-                {editingEvent && (
-                  <Button onClick={handleCancelEdit} variant="secondary" className="w-full rounded-none font-headline tracking-widest text-[10px] py-4 uppercase mt-2">
-                    CANCEL EDIT
+                <div className="space-y-2 pt-4">
+                  <Button
+                    onClick={editingEvent ? handleUpdateEvent : handleAddEvent}
+                    className="w-full bg-primary text-background hover:bg-primary/90 rounded-none font-headline tracking-widest text-xs py-6 uppercase font-black"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {editingEvent ? 'SAVE & UPDATE ARENA METADATA' : 'INITIALIZE & SAVE NEW ARENA'}
                   </Button>
-                )}
 
-                <Button onClick={handleSeedDatabase} variant="outline" className="w-full border-accent/20 text-accent hover:bg-accent/10 rounded-none font-headline tracking-widest text-[10px] py-4 uppercase">
-                  <DatabaseZap className="w-4 h-4 mr-2" /> SEED INITIAL EVENTS
-                </Button>
+                  {editingEvent && (
+                    <Button
+                      onClick={handleCancelEdit}
+                      variant="secondary"
+                      className="w-full rounded-none font-headline tracking-widest text-xs py-4 uppercase"
+                    >
+                      CANCEL EDITING
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
-            <div className="lg:col-span-2 space-y-4">
-              <h3 className="font-headline text-xs tracking-widest text-primary uppercase mb-4">ACTIVE ARENAS</h3>
-              {eventsLoading && <div className="text-center"><Loader2 className="mx-auto animate-spin" /></div>}
-              {events?.map((event) => (
-                <div key={event.id} className="glass-panel p-4 border-white/5 bg-white/5 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 glass-panel flex items-center justify-center text-primary">
-                      <Gamepad2 className="w-5 h-5" />
+            {/* Active Arenas List Section */}
+            <div className="space-y-4 pt-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-headline text-sm tracking-widest text-primary uppercase font-bold flex items-center gap-2">
+                  <Gamepad2 className="w-4 h-4" /> ACTIVE FESTIVAL ARENAS IN DATABASE ({events?.length || 0})
+                </h3>
+              </div>
+              
+              {eventsLoading && <div className="text-center py-8"><Loader2 className="mx-auto animate-spin text-primary" /></div>}
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {events?.map((event) => (
+                  <div key={event.id || event._id} className="glass-panel p-4 border-white/10 bg-black/60 flex flex-col justify-between space-y-3 rounded-none">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline" className="text-[9px] border-primary/40 text-primary uppercase rounded-none font-headline tracking-wider">
+                          {event.category || 'TECH'}
+                        </Badge>
+                        <span className="text-[9px] font-mono text-muted-foreground uppercase">{event.type || 'team'}</span>
+                      </div>
+                      <h4 className="font-headline text-sm font-bold text-white tracking-widest uppercase truncate">{event.name}</h4>
+                      <p className="text-[10px] text-muted-foreground line-clamp-2">{event.description}</p>
                     </div>
-                    <div>
-                      <h4 className="font-headline text-[11px] text-white tracking-widest uppercase">{event.name}</h4>
-                      <p className="text-[8px] text-muted-foreground uppercase tracking-widest">{event.type}</p>
+
+                    <div className="pt-2 border-t border-white/10 flex items-center justify-between">
+                      <div className="text-[9px] font-mono text-primary font-bold">
+                        {event.prizePool || event.prize || 'TBA'}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          onClick={() => handleEditClick(event)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-primary hover:text-white hover:bg-primary/20 h-7 text-[10px] uppercase font-headline tracking-wider px-2"
+                        >
+                          <Pencil className="w-3 h-3 mr-1" /> Edit
+                        </Button>
+                        <Button
+                          onClick={() => handleDeleteEvent(event.id || event._id)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-7 text-[10px] uppercase font-headline tracking-wider px-2"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Button onClick={() => handleEditClick(event)} variant="ghost" size="icon" className="text-muted-foreground hover:text-primary h-8 w-8">
-                        <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button onClick={() => handleDeleteEvent(event.id)} variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive h-8 w-8">
-                        <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </TabsContent>

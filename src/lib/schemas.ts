@@ -111,6 +111,8 @@ export const AnnouncementSaveSchema = z.object({
 
 export const SponsorSaveSchema = z.object({
   name: z.string().trim().min(2, 'Sponsor name is required').max(100),
+  // 'tier' is what the Admin form sends; 'category' is the DB field name — accept both, tier wins
+  tier: z.string().trim().max(100).optional(),
   category: z.string().trim().max(100).optional().default('Partner'),
   logoUrl: z.string().trim().max(1000).optional().default(''),
   websiteUrl: z.string().trim().max(1000).optional().default(''),

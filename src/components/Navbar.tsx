@@ -13,7 +13,6 @@ const navItems = [
   { name: 'Timeline', path: '/timeline' },
   { name: 'Announcements', path: '/announcements' },
   { name: 'Contact', path: '/contact' },
-  { name: 'Feedback', path: '/feedback' },
 ];
 
 export function Navbar() {
@@ -47,11 +46,10 @@ export function Navbar() {
                 <Link
                   key={item.name}
                   href={item.path}
-                  className={`text-[10px] font-semibold uppercase tracking-[0.2em] transition-colors duration-200 ${
-                    isActive
+                  className={`text-[10px] font-semibold uppercase tracking-[0.2em] transition-colors duration-200 ${isActive
                       ? 'text-tk-accent font-bold border-b border-tk-accent pb-0.5'
                       : 'text-tk-text-muted hover:text-tk-text'
-                  }`}
+                    }`}
                 >
                   {item.name}
                 </Link>
@@ -59,11 +57,10 @@ export function Navbar() {
             })}
             <Link
               href="/register"
-              className={`border text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2 transition-all duration-200 active:scale-95 ${
-                pathname === '/register'
+              className={`border text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2 transition-all duration-200 active:scale-95 ${pathname === '/register'
                   ? 'bg-[var(--tk-accent)] text-[var(--tk-bg)] border-[var(--tk-accent)]'
                   : 'border-[var(--tk-accent)] text-[var(--tk-accent)] hover:bg-[var(--tk-accent)] hover:text-[var(--tk-bg)]'
-              }`}
+                }`}
             >
               REGISTER
             </Link>
@@ -96,9 +93,8 @@ export function Navbar() {
                 key={item.name}
                 href={item.path}
                 onClick={() => setOpen(false)}
-                className={`text-xs font-semibold uppercase tracking-[0.2em] transition-colors ${
-                  isActive ? 'text-tk-accent font-bold' : 'text-tk-text-muted hover:text-tk-text'
-                }`}
+                className={`text-xs font-semibold uppercase tracking-[0.2em] transition-colors ${isActive ? 'text-tk-accent font-bold' : 'text-tk-text-muted hover:text-tk-text'
+                  }`}
               >
                 {item.name}
               </Link>

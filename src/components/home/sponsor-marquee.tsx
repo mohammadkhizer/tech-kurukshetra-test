@@ -1,71 +1,85 @@
 'use client';
 
-import Image from 'next/image';
+import { useState } from 'react';
 import { useFetch } from '@/hooks/use-fetch';
 import { decodeHtmlEntities } from '@/lib/sanitizer';
+import { ExternalLink, ShieldCheck } from 'lucide-react';
 
 function LogoCard({ sponsor }: { sponsor: any }) {
+  const [imageError, setImageError] = useState(false);
   const logoUrl = sponsor.logoUrl ? decodeHtmlEntities(sponsor.logoUrl) : null;
+  const rawWebsite = (sponsor.websiteUrl || '').trim();
+  const websiteUrl = rawWebsite
+    ? rawWebsite.startsWith('http://') || rawWebsite.startsWith('https://')
+      ? rawWebsite
+      : `https://${rawWebsite}`
+    : '#';
+
+  const categoryOrTier = sponsor.category || sponsor.tier || 'Official Partner';
 
   return (
-    <div className="group flex-shrink-0 flex items-center justify-center px-4" style={{ height: '80px' }}>
-      <div
-        className="flex items-center justify-center w-full h-full transition-all duration-300 cursor-pointer"
-        style={{
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,107,0,0.15)',
-          borderRadius: '8px',
-          padding: '16px 24px',
-          minWidth: '150px',
-          transition: 'transform 300ms ease, box-shadow 300ms ease, border-color 300ms ease',
-        }}
-        onMouseEnter={(e) => {
-          const el = e.currentTarget as HTMLDivElement;
-          el.style.transform = 'translateY(-3px)';
-          el.style.boxShadow = '0 0 20px rgba(255,107,0,0.25)';
-          el.style.borderColor = 'rgba(255,107,0,0.5)';
-        }}
-        onMouseLeave={(e) => {
-          const el = e.currentTarget as HTMLDivElement;
-          el.style.transform = 'translateY(0)';
-          el.style.boxShadow = '0 0 0 rgba(255,107,0,0)';
-          el.style.borderColor = 'rgba(255,107,0,0.15)';
-        }}
-      >
-        {logoUrl ? (
-          <Image
+    <a
+      href={websiteUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex-shrink-0 flex flex-col justify-between p-4 transition-all duration-300 rounded-lg cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+      style={{
+        width: '210px',
+        height: '145px',
+        background: 'rgba(255,255,255,0.02)',
+        border: '1px solid rgba(255,107,0,0.2)',
+        backdropFilter: 'blur(8px)',
+      }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget;
+        el.style.borderColor = 'rgba(255,107,0,0.6)';
+        el.style.boxShadow = '0 0 20px rgba(255,107,0,0.25)';
+        el.style.transform = 'translateY(-3px)';
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget;
+        el.style.borderColor = 'rgba(255,107,0,0.2)';
+        el.style.boxShadow = 'none';
+        el.style.transform = 'translateY(0)';
+      }}
+    >
+      {/* Tier Badge & External Link Icon */}
+      <div className="w-full flex items-center justify-between gap-1 text-[10px] uppercase font-headline font-bold text-gray-400">
+        <span className="tracking-wider text-[#FF6B00] flex items-center gap-1">
+          <ShieldCheck size={11} className="text-[#FF6B00]" />
+          {categoryOrTier}
+        </span>
+        <ExternalLink
+          size={12}
+          className="text-gray-400 group-hover:text-[#FF6B00] transition-colors"
+        />
+      </div>
+
+      {/* Enlarged Logo Container with Graceful Fallback */}
+      <div className="w-full h-14 flex items-center justify-center my-1 relative overflow-hidden px-2">
+        {logoUrl && !imageError ? (
+          <img
             src={logoUrl}
             alt={sponsor.name}
-            width={120}
-            height={40}
-            loading="lazy"
-            unoptimized
-            className="h-8 sm:h-9 w-auto object-contain transition-all duration-300"
-            style={{
-              filter: 'grayscale(1) brightness(1.2)',
-              opacity: 0.7,
-            }}
-            onMouseEnter={(e) => {
-              const img = e.currentTarget as HTMLImageElement;
-              img.style.filter = 'grayscale(0) brightness(1)';
-              img.style.opacity = '1';
-            }}
-            onMouseLeave={(e) => {
-              const img = e.currentTarget as HTMLImageElement;
-              img.style.filter = 'grayscale(1) brightness(1.2)';
-              img.style.opacity = '0.7';
-            }}
+            onError={() => setImageError(true)}
+            className="max-h-12 w-auto max-w-[170px] object-contain transition-all duration-300 grayscale group-hover:grayscale-0 group-hover:scale-105"
           />
         ) : (
-          <span
-            className="text-xs font-headline tracking-widest uppercase text-center leading-tight transition-colors duration-300 font-bold"
-            style={{ color: 'rgba(255,255,255,0.7)' }}
-          >
-            {sponsor.name}
-          </span>
+          <div className="w-full h-full border border-[#FF6B00]/30 bg-[#FF6B00]/10 rounded flex items-center justify-center px-2">
+            <span className="text-xs font-headline font-black text-[#FF6B00] tracking-widest uppercase text-center truncate">
+              {sponsor.name}
+            </span>
+          </div>
         )}
       </div>
-    </div>
+
+      {/* Sponsor Name Visible Text */}
+      <div className="w-full pt-1 border-t border-white/5 text-center">
+        <span className="text-xs font-headline font-bold uppercase tracking-wider text-gray-200 group-hover:text-[#FF6B00] transition-colors block truncate">
+          {sponsor.name}
+        </span>
+      </div>
+    </a>
   );
 }
 
@@ -74,12 +88,14 @@ function MarqueeRow({ sponsors, direction }: { sponsors: any[]; direction: 'left
 
   return (
     <div
-      className="overflow-hidden"
+      className="overflow-hidden w-full"
       onMouseEnter={(e) => {
-        (e.currentTarget.firstChild as HTMLElement).style.animationPlayState = 'paused';
+        const target = e.currentTarget.firstChild as HTMLElement;
+        if (target) target.style.animationPlayState = 'paused';
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget.firstChild as HTMLElement).style.animationPlayState = 'running';
+        const target = e.currentTarget.firstChild as HTMLElement;
+        if (target) target.style.animationPlayState = 'running';
       }}
     >
       <div
@@ -87,12 +103,12 @@ function MarqueeRow({ sponsors, direction }: { sponsors: any[]; direction: 'left
         style={{
           display: 'flex',
           width: 'max-content',
-          gap: '16px',
+          gap: '20px',
           willChange: 'transform',
         }}
       >
         {track.map((sponsor, i) => (
-          <LogoCard key={`${sponsor.id ?? sponsor.name}-${i}`} sponsor={sponsor} />
+          <LogoCard key={`${sponsor.id ?? sponsor._id ?? sponsor.name}-${i}`} sponsor={sponsor} />
         ))}
       </div>
     </div>
@@ -110,22 +126,20 @@ export function SponsorMarquee() {
 
   if (isLoading) {
     return (
-      <div className="py-8 text-center text-xs text-[#8A8A8A] tracking-[0.2em] uppercase animate-pulse">
-        Loading sponsors...
+      <div className="py-12 text-center text-xs text-[#8A8A8A] tracking-[0.2em] uppercase animate-pulse">
+        Loading sponsors & partners...
       </div>
     );
   }
 
-  // Marked TODO: Empty state when database has no sponsors added via admin CMS
   if (sponsorsList.length === 0) {
     return (
-      <div className="relative select-none py-8 text-center">
+      <div className="relative select-none py-12 text-center">
         <div
           aria-hidden
           style={{ height: '1px', background: 'linear-gradient(to right, transparent, #FF6B00, transparent)', marginBottom: '24px' }}
         />
-        {/* TODO: Add sponsors via the admin dashboard CMS (/admin/dashboard) */}
-        <p className="text-xs text-[#8A8A8A] tracking-[0.25em] uppercase">Sponsors managed via Admin CMS</p>
+        <p className="text-xs text-[#8A8A8A] tracking-[0.25em] uppercase">No partners listed yet</p>
         <div
           aria-hidden
           style={{ height: '1px', background: 'linear-gradient(to right, transparent, #FF6B00, transparent)', marginTop: '24px' }}
@@ -139,23 +153,23 @@ export function SponsorMarquee() {
   const row2 = sponsorsList.slice(half).length > 0 ? sponsorsList.slice(half) : sponsorsList;
 
   return (
-    <div className="relative select-none">
+    <div className="relative select-none w-full max-w-full overflow-hidden">
       <div
         aria-hidden
         style={{
           height: '1px',
           background: 'linear-gradient(to right, transparent, #FF6B00, transparent)',
-          marginBottom: '32px',
+          marginBottom: '28px',
         }}
       />
 
       <div
         style={{
-          maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
-          WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
+          maskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
+          gap: '20px',
         }}
       >
         <MarqueeRow sponsors={row1} direction="left" />
@@ -167,7 +181,7 @@ export function SponsorMarquee() {
         style={{
           height: '1px',
           background: 'linear-gradient(to right, transparent, #FF6B00, transparent)',
-          marginTop: '32px',
+          marginTop: '28px',
         }}
       />
     </div>

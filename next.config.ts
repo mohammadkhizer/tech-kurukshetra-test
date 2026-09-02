@@ -41,6 +41,37 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      // Sponsor logo CDN hosts
+      {
+        protocol: 'https',
+        hostname: 'github.githubassets.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.vercel.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'supabase.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.getpostman.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.gstatic.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   async headers() {
