@@ -127,9 +127,9 @@ tech-kurukshetra-test/
    ADMIN_SESSION_SECRET=a_very_secure_random_32_character_string_here
    SMTP_HOST=smtp.gmail.com
    SMTP_PORT=587
-   SMTP_USER=btech_events@svgu.ac.in
+   SMTP_USER=your_app_mail
    SMTP_PASS=your_app_password
-   ADMIN_NOTIFICATION_EMAIL=btech_events@svgu.ac.in
+   ADMIN_NOTIFICATION_EMAIL=your_app_mail
    ```
 
 4. **Run the Development Server**:
