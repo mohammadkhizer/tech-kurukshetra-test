@@ -123,6 +123,33 @@ export function middleware(req: NextRequest) {
     }
   }
 
+  if (pathname === '/api/feedback') {
+    if (req.method === 'POST') {
+      const limitResult = checkRateLimit(req, 'feedback_submit', 5, 15 * 60 * 1000);
+      response.headers.set('X-RateLimit-Limit', String(limitResult.limit));
+      response.headers.set('X-RateLimit-Remaining', String(limitResult.remaining));
+      response.headers.set('X-RateLimit-Reset', String(limitResult.resetInSeconds));
+
+      if (!limitResult.success) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Too many feedback submissions. Please try again in ${limitResult.resetInSeconds} seconds.`,
+          },
+          {
+            status: 429,
+            headers: {
+              'Retry-After': String(limitResult.resetInSeconds),
+              'X-RateLimit-Limit': String(limitResult.limit),
+              'X-RateLimit-Remaining': '0',
+              'X-RateLimit-Reset': String(limitResult.resetInSeconds),
+            },
+          }
+        );
+      }
+    }
+  }
+
   // 3. Admin Page Protection — matches both /admin/... and (site)/admin/...
   if (pathname.startsWith('/admin/dashboard') || pathname.includes('/admin/dashboard')) {
     const sessionCookie = req.cookies.get(ADMIN_COOKIE_NAME);
@@ -157,5 +184,6 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*', '/api/registration/:path*', '/api/contact'],
+  matcher: ['/admin/:path*', '/api/admin/:path*', '/api/registration/:path*', '/api/contact', '/api/feedback'],
 };
+

@@ -140,3 +140,18 @@ export const UserSaveSchema = z.object({
   status: z.enum(['pending', 'approved', 'rejected']).default('approved'),
   role: z.enum(['admin', 'superadmin']).default('admin'),
 });
+
+export const FeedbackSubmitSchema = z.object({
+  name: z.string().trim().min(2, 'Full name is required').max(100),
+  email: z.string().trim().email('Invalid email address format').max(255),
+  phone: z.string().trim().max(20).optional().default(''),
+  eventsAttended: z.array(z.string().trim()).min(1, 'Please select at least one event or General/Overall'),
+  rating: z.number().int().min(1, 'Rating is required').max(5, 'Rating must be between 1 and 5'),
+  likedMost: z.string().trim().max(2000).optional().default(''),
+  improvements: z.string().trim().min(5, 'Please provide suggestions on what could be improved').max(2000),
+  wouldRecommend: z.enum(['Yes', 'No', 'Maybe'], {
+    errorMap: () => ({ message: 'Please select whether you would recommend Tech Kurukshetra' }),
+  }),
+  hp: z.string().max(HONEYPOT_MAX, 'Bot detected').optional().default(''),
+});
+

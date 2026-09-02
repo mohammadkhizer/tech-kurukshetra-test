@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
@@ -12,10 +13,12 @@ const navItems = [
   { name: 'Timeline', path: '/timeline' },
   { name: 'Announcements', path: '/announcements' },
   { name: 'Contact', path: '/contact' },
+  { name: 'Feedback', path: '/feedback' },
 ];
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <>
@@ -28,36 +31,39 @@ export function Navbar() {
       >
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="font-black tracking-tighter text-base font-headline hover:opacity-80 transition-opacity" style={{ color: 'var(--tk-accent)' }}>
+          <Link
+            href="/"
+            className="font-black tracking-tighter text-base font-headline hover:opacity-80 transition-opacity"
+            style={{ color: 'var(--tk-accent)' }}
+          >
             TK·<span className="text-tk-text">2027</span>
           </Link>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.path}
-                className="text-[10px] font-semibold uppercase tracking-[0.2em] text-tk-text-muted hover:text-tk-text transition-colors duration-200"
-              >
-                {item.name}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const isActive = pathname === item.path;
+              return (
+                <Link
+                  key={item.name}
+                  href={item.path}
+                  className={`text-[10px] font-semibold uppercase tracking-[0.2em] transition-colors duration-200 ${
+                    isActive
+                      ? 'text-tk-accent font-bold border-b border-tk-accent pb-0.5'
+                      : 'text-tk-text-muted hover:text-tk-text'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              );
+            })}
             <Link
               href="/register"
-              className="border text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2 transition-all duration-200 active:scale-95"
-              style={{
-                borderColor: 'var(--tk-accent)',
-                color: 'var(--tk-accent)',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLAnchorElement).style.background = 'var(--tk-accent)';
-                (e.currentTarget as HTMLAnchorElement).style.color = 'var(--tk-bg)';
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLAnchorElement).style.background = 'transparent';
-                (e.currentTarget as HTMLAnchorElement).style.color = 'var(--tk-accent)';
-              }}
+              className={`border text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2 transition-all duration-200 active:scale-95 ${
+                pathname === '/register'
+                  ? 'bg-[var(--tk-accent)] text-[var(--tk-bg)] border-[var(--tk-accent)]'
+                  : 'border-[var(--tk-accent)] text-[var(--tk-accent)] hover:bg-[var(--tk-accent)] hover:text-[var(--tk-bg)]'
+              }`}
             >
               REGISTER
             </Link>
@@ -83,21 +89,30 @@ export function Navbar() {
           className="fixed top-14 left-0 right-0 z-30 border-b flex flex-col py-6 px-6 gap-5"
           style={{ background: 'var(--tk-bg)', borderColor: 'var(--tk-border)' }}
         >
-          {navItems.map((item) => (
-            <Link
-              key={item.name}
-              href={item.path}
-              onClick={() => setOpen(false)}
-              className="text-xs font-semibold uppercase tracking-[0.2em] text-tk-text-muted hover:text-tk-text transition-colors"
-            >
-              {item.name}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const isActive = pathname === item.path;
+            return (
+              <Link
+                key={item.name}
+                href={item.path}
+                onClick={() => setOpen(false)}
+                className={`text-xs font-semibold uppercase tracking-[0.2em] transition-colors ${
+                  isActive ? 'text-tk-accent font-bold' : 'text-tk-text-muted hover:text-tk-text'
+                }`}
+              >
+                {item.name}
+              </Link>
+            );
+          })}
           <Link
             href="/register"
             onClick={() => setOpen(false)}
             className="border text-xs font-black uppercase tracking-[0.2em] px-5 py-3 text-center mt-2"
-            style={{ borderColor: 'var(--tk-accent)', color: 'var(--tk-accent)' }}
+            style={{
+              borderColor: 'var(--tk-accent)',
+              color: pathname === '/register' ? 'var(--tk-bg)' : 'var(--tk-accent)',
+              backgroundColor: pathname === '/register' ? 'var(--tk-accent)' : 'transparent',
+            }}
           >
             REGISTER NOW
           </Link>

@@ -62,6 +62,8 @@ import {
   Megaphone,
   Mail,
   MessageSquare,
+  Star,
+  MessageSquareHeart,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFetch } from '@/hooks/use-fetch';
@@ -158,7 +160,60 @@ export default function DashboardPage() {
   const { data: teamMembers, isLoading: teamMembersLoading, refetch: refetchTeamMembers } = useFetch<any[]>(isAuthorized ? '/api/admin/team' : null);
   const { data: announcements, isLoading: announcementsLoading, refetch: refetchAnnouncements } = useFetch<any[]>(isAuthorized ? '/api/admin/announcements' : null);
   const { data: contactMessages, isLoading: contactMessagesLoading } = { data: [] as any[], isLoading: false };
+  const { data: feedbackList, isLoading: feedbackLoading, refetch: refetchFeedback } = useFetch<any[]>(isAuthorized ? '/api/admin/feedback' : null);
 
+  const [selectedFeedback, setSelectedFeedback] = useState<any | null>(null);
+  const [feedbackRatingFilter, setFeedbackRatingFilter] = useState<string>('ALL');
+  const [feedbackEventFilter, setFeedbackEventFilter] = useState<string>('ALL');
+  const [feedbackSearch, setFeedbackSearch] = useState<string>('');
+
+  const handleDeleteFeedback = async (id: string) => {
+    if (!id) return;
+    try {
+      const res = await fetch(`/api/admin/feedback/${id}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        toast({ title: "Feedback Deleted", description: "Feedback submission removed." });
+        refetchFeedback();
+      } else {
+        toast({ variant: "destructive", title: "Delete Failed", description: json.message || "Failed to delete feedback." });
+      }
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Error", description: "Could not delete feedback." });
+    }
+  };
+
+  const filteredFeedback = useMemo(() => {
+    if (!feedbackList) return [];
+    return feedbackList.filter((f) => {
+      if (feedbackRatingFilter === 'LOW' && f.rating > 2) return false;
+      if (['1', '2', '3', '4', '5'].includes(feedbackRatingFilter) && String(f.rating) !== feedbackRatingFilter) return false;
+      if (feedbackEventFilter !== 'ALL') {
+        const eventsArr = Array.isArray(f.eventsAttended) ? f.eventsAttended : [];
+        if (!eventsArr.includes(feedbackEventFilter)) return false;
+      }
+      if (feedbackSearch.trim()) {
+        const q = feedbackSearch.toLowerCase().trim();
+        const nameMatch = f.name?.toLowerCase().includes(q);
+        const emailMatch = f.email?.toLowerCase().includes(q);
+        const improvementsMatch = f.improvements?.toLowerCase().includes(q);
+        const likedMatch = f.likedMost?.toLowerCase().includes(q);
+        if (!nameMatch && !emailMatch && !improvementsMatch && !likedMatch) return false;
+      }
+      return true;
+    });
+  }, [feedbackList, feedbackRatingFilter, feedbackEventFilter, feedbackSearch]);
+
+  const allFeedbackEvents = useMemo(() => {
+    if (!feedbackList) return [];
+    const set = new Set<string>();
+    feedbackList.forEach((f) => {
+      if (Array.isArray(f.eventsAttended)) {
+        f.eventsAttended.forEach((ev: string) => set.add(ev));
+      }
+    });
+    return Array.from(set);
+  }, [feedbackList]);
 
   const sortedTeamMembers = useMemo(() => 
     teamMembers?.slice().sort((a, b) => (a.order || 0) - (b.order || 0)) || [],
@@ -780,42 +835,59 @@ export default function DashboardPage() {
     };
 
     const handleDeleteRegistration = async (id: string) => {
-      // Instead of Firestore, tell the Sheets API to delete it
-      setRegistrationsLoading(true);
+      if (!id) {
+        toast({ variant: "destructive", title: "Error", description: "Invalid registration ID." });
+        return;
+      }
+
+      // Optimistically remove record from UI state instantly
+      setRegistrations((prev) => prev.filter((r) => r.id !== id && r.orderId !== id));
+
       try {
-        await fetch('/api/sheets', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'delete_registration', payload: { orderId: id } })
+        const res = await fetch(`/api/admin/registrations/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
         });
-        toast({ title: "Registration Deleted", description: "The participant's record has been removed." });
-        await fetchRegistrations();
-      } catch (e) {
-        toast({ title: "Error", description: "Could not drop participant from sheets." });
-      } finally {
-        setRegistrationsLoading(false);
+        const json = await res.json();
+        if (res.ok && json.success) {
+          toast({ title: "Registration Deleted", description: "The participant's record has been removed." });
+          await fetchRegistrations();
+        } else {
+          toast({ variant: "destructive", title: "Deletion Failed", description: json.message || "Could not delete record." });
+          await fetchRegistrations(); // Rollback / resync
+        }
+      } catch (e: any) {
+        toast({ variant: "destructive", title: "Error", description: "Could not delete participant." });
+        await fetchRegistrations(); // Rollback / resync
       }
     };
     
     const handleUpdateRegistration = async () => {
       if (!editingRegistration) return;
-      const { id, ...dataToUpdate } = editingRegistration;
+      const { id, orderId, ...dataToUpdate } = editingRegistration;
+      const targetId = id || orderId;
+
+      if (!targetId) {
+        toast({ variant: "destructive", title: "Error", description: "Invalid registration ID." });
+        return;
+      }
       
       setRegistrationsLoading(true);
       try {
-        await fetch('/api/sheets', {
-          method: 'POST',
+        const res = await fetch(`/api/admin/registrations/${encodeURIComponent(targetId)}`, {
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            action: 'update_registration', 
-            payload: { orderId: id, ...dataToUpdate } 
-          })
+          body: JSON.stringify(dataToUpdate),
         });
-        toast({ title: "Registration Updated", description: "Participant details have been saved to Google Sheets." });
-        setEditingRegistration(null);
-        await fetchRegistrations();
-      } catch (e) {
-        toast({ title: "Error", description: "Failed to update participant in sheets." });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          toast({ title: "Registration Updated", description: "Participant details have been saved." });
+          setEditingRegistration(null);
+          await fetchRegistrations();
+        } else {
+          toast({ variant: "destructive", title: "Update Failed", description: json.message || "Failed to update participant." });
+        }
+      } catch (e: any) {
+        toast({ variant: "destructive", title: "Error", description: "Failed to update participant." });
       } finally {
         setRegistrationsLoading(false);
       }
@@ -899,6 +971,7 @@ export default function DashboardPage() {
             <TabsTrigger value="announcements" className="rounded-none font-headline text-[10px] tracking-widest py-3 uppercase whitespace-nowrap">Announcements</TabsTrigger>
             <TabsTrigger value="team" className="rounded-none font-headline text-[10px] tracking-widest py-3 uppercase whitespace-nowrap">Team</TabsTrigger>
             <TabsTrigger value="registrations" className="rounded-none font-headline text-[10px] tracking-widest py-3 uppercase whitespace-nowrap">Registrations</TabsTrigger>
+            <TabsTrigger value="feedback" className="rounded-none font-headline text-[10px] tracking-widest py-3 uppercase whitespace-nowrap">Feedback</TabsTrigger>
             <TabsTrigger value="admins" className="rounded-none font-headline text-[10px] tracking-widest py-3 uppercase whitespace-nowrap">Admins</TabsTrigger>
             <TabsTrigger value="messages" className="rounded-none font-headline text-[10px] tracking-widest py-3 uppercase whitespace-nowrap">Messages</TabsTrigger>
           </TabsList>
@@ -1925,7 +1998,7 @@ export default function DashboardPage() {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel className="rounded-none uppercase text-xs tracking-widest">Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteRegistration(reg.id)} className="bg-destructive hover:bg-destructive/80 rounded-none uppercase text-xs tracking-widest">Delete</AlertDialogAction>
+                              <AlertDialogAction onClick={() => handleDeleteRegistration(reg.id || reg.orderId)} className="bg-destructive hover:bg-destructive/80 rounded-none uppercase text-xs tracking-widest">Delete</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
@@ -2193,6 +2266,258 @@ export default function DashboardPage() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="feedback" className="space-y-6">
+          <Card className="glass-panel border-primary/20 rounded-none bg-black/40">
+            <CardHeader className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <CardTitle className="font-headline text-xl tracking-widest flex items-center gap-2 uppercase">
+                  <MessageSquareHeart className="w-5 h-5 text-accent" /> PARTICIPANT FEEDBACK ARCHIVE
+                </CardTitle>
+                <CardDescription className="text-[10px] uppercase tracking-widest mt-1">
+                  Live Submissions · {feedbackList?.length ?? 0} Total · Avg Rating: {
+                    feedbackList && feedbackList.length > 0
+                      ? (feedbackList.reduce((acc: number, f: any) => acc + (Number(f.rating) || 0), 0) / feedbackList.length).toFixed(1)
+                      : '0.0'
+                  }/5
+                </CardDescription>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <Input
+                  placeholder="Search by name / email / feedback..."
+                  value={feedbackSearch}
+                  onChange={(e) => setFeedbackSearch(e.target.value)}
+                  className="bg-white/5 border-white/10 rounded-none text-xs w-full sm:w-60"
+                />
+                <Select value={feedbackRatingFilter} onValueChange={setFeedbackRatingFilter}>
+                  <SelectTrigger className="w-full sm:w-44 bg-white/5 border-white/10 text-xs rounded-none text-white">
+                    <SelectValue placeholder="Rating Filter" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black/90 border-white/10 text-white rounded-none">
+                    <SelectItem value="ALL">All Ratings</SelectItem>
+                    <SelectItem value="LOW">🔻 Low Ratings (1-2★)</SelectItem>
+                    <SelectItem value="1">1 Star (★☆☆☆☆)</SelectItem>
+                    <SelectItem value="2">2 Stars (★★☆☆☆)</SelectItem>
+                    <SelectItem value="3">3 Stars (★★★☆☆)</SelectItem>
+                    <SelectItem value="4">4 Stars (★★★★☆)</SelectItem>
+                    <SelectItem value="5">5 Stars (★★★★★)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={feedbackEventFilter} onValueChange={setFeedbackEventFilter}>
+                  <SelectTrigger className="w-full sm:w-44 bg-white/5 border-white/10 text-xs rounded-none text-white">
+                    <SelectValue placeholder="Event Filter" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black/90 border-white/10 text-white rounded-none">
+                    <SelectItem value="ALL">All Arenas</SelectItem>
+                    {allFeedbackEvents.map((ev) => (
+                      <SelectItem key={ev} value={ev}>{ev}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              <Table>
+                <TableHeader className="border-white/10">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="text-[10px] uppercase tracking-widest">Participant</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-widest">Contact</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-widest">Events Attended</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-widest">Rating</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-widest">Improvements Excerpt</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-widest">Recommend</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-widest">Date</TableHead>
+                    <TableHead className="text-[10px] uppercase tracking-widest text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {feedbackLoading && (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8">
+                        <Loader2 className="mx-auto animate-spin" />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!feedbackLoading && (!filteredFeedback || filteredFeedback.length === 0) && (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-12 text-muted-foreground text-xs uppercase tracking-widest">
+                        No feedback submissions found matching selected filters.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {filteredFeedback?.map((fb: any) => (
+                    <TableRow key={fb.id || fb._id} className="border-white/5 hover:bg-white/5 align-top">
+                      <TableCell>
+                        <p className="text-[10px] uppercase font-bold text-white tracking-widest">{fb.name || '—'}</p>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-[10px] text-muted-foreground">{fb.email || '—'}</p>
+                        {fb.phone && <p className="text-[9px] text-muted-foreground/60 mt-0.5">{fb.phone}</p>}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1 max-w-xs">
+                          {Array.isArray(fb.eventsAttended) && fb.eventsAttended.length > 0 ? (
+                            fb.eventsAttended.map((e: string, i: number) => (
+                              <span key={i} className="text-[8px] px-1.5 py-0.5 bg-accent/10 text-accent border border-accent/20 font-mono uppercase">
+                                {e}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-[9px] text-muted-foreground">General</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-[10px] font-bold text-accent whitespace-nowrap">
+                          {'★'.repeat(Math.max(1, Math.min(5, fb.rating || 1)))} ({fb.rating}/5)
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-xs text-muted-foreground/90 max-w-xs truncate" title={fb.improvements}>
+                          {fb.improvements || '—'}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={`text-[9px] uppercase tracking-widest ${
+                            fb.wouldRecommend === 'Yes'
+                              ? 'text-green-400 border-green-400/40'
+                              : fb.wouldRecommend === 'No'
+                              ? 'text-red-400 border-red-400/40'
+                              : 'text-amber-400 border-amber-400/40'
+                          }`}
+                        >
+                          {fb.wouldRecommend || '—'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-[9px] font-code text-muted-foreground/60 whitespace-nowrap">
+                        {fb.createdAt ? new Date(fb.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                      </TableCell>
+                      <TableCell className="text-right whitespace-nowrap">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setSelectedFeedback(fb)}
+                          className="text-muted-foreground hover:text-primary mr-1"
+                          title="View Full Feedback"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" title="Delete Feedback">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="glass-panel border-destructive/40 bg-black/60 rounded-none">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="font-headline text-destructive uppercase">Confirm Deletion</AlertDialogTitle>
+                              <AlertDialogDescription className="text-muted-foreground">
+                                Are you sure you want to delete the feedback submission from <strong>{fb.name}</strong>? This cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="rounded-none uppercase text-xs tracking-widest">Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteFeedback(fb.id || fb._id)}
+                                className="bg-destructive hover:bg-destructive/80 rounded-none uppercase text-xs tracking-widest"
+                              >
+                                Delete Feedback
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Full Feedback Detail Dialog */}
+          <Dialog open={!!selectedFeedback} onOpenChange={(open) => !open && setSelectedFeedback(null)}>
+            <DialogContent className="glass-panel border-primary/20 bg-black/80 rounded-none max-w-xl">
+              <DialogHeader>
+                <DialogTitle className="font-headline uppercase tracking-widest text-primary text-sm flex items-center gap-2">
+                  <MessageSquareHeart size={16} /> Feedback Submission Details — {selectedFeedback?.name}
+                </DialogTitle>
+              </DialogHeader>
+              {selectedFeedback && (
+                <div className="space-y-4 py-3 text-xs text-white">
+                  <div className="grid grid-cols-2 gap-3 bg-white/5 p-3 border border-white/10">
+                    <div>
+                      <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Participant Name</p>
+                      <p className="font-bold text-white text-sm mt-0.5">{selectedFeedback.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Email Address</p>
+                      <p className="text-primary mt-0.5">{selectedFeedback.email}</p>
+                    </div>
+                    {selectedFeedback.phone && (
+                      <div>
+                        <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Phone Number</p>
+                        <p className="text-white mt-0.5">{selectedFeedback.phone}</p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Submitted At</p>
+                      <p className="text-muted-foreground mt-0.5">
+                        {selectedFeedback.createdAt ? new Date(selectedFeedback.createdAt).toLocaleString() : '—'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 bg-white/5 p-3 border border-white/10">
+                    <div>
+                      <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Overall Rating</p>
+                      <p className="text-accent font-bold text-sm mt-0.5">
+                        {'★'.repeat(Math.max(1, Math.min(5, selectedFeedback.rating || 1)))} ({selectedFeedback.rating}/5)
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Would Recommend?</p>
+                      <p className="font-bold text-white mt-0.5">{selectedFeedback.wouldRecommend || '—'}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-[9px] uppercase tracking-widest text-muted-foreground mb-1">Event(s) Attended</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {Array.isArray(selectedFeedback.eventsAttended) && selectedFeedback.eventsAttended.length > 0 ? (
+                        selectedFeedback.eventsAttended.map((ev: string, idx: number) => (
+                          <span key={idx} className="px-2 py-1 bg-accent/10 border border-accent/20 text-accent font-mono text-[10px]">
+                            {ev}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-muted-foreground">General/Overall</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedFeedback.likedMost && (
+                    <div className="bg-green-500/10 border-l-4 border-green-500 p-3.5 space-y-1">
+                      <p className="text-[10px] font-bold text-green-400 uppercase tracking-widest">WHAT THEY LIKED MOST</p>
+                      <p className="text-green-100 whitespace-pre-wrap leading-relaxed">{selectedFeedback.likedMost}</p>
+                    </div>
+                  )}
+
+                  <div className="bg-orange-500/10 border-l-4 border-orange-500 p-3.5 space-y-1">
+                    <p className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">WHAT COULD BE IMPROVED</p>
+                    <p className="text-orange-100 whitespace-pre-wrap leading-relaxed">{selectedFeedback.improvements}</p>
+                  </div>
+                </div>
+              )}
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setSelectedFeedback(null)} className="rounded-none uppercase text-xs tracking-widest">
+                  Close Detail
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
       </Tabs>
     </div>

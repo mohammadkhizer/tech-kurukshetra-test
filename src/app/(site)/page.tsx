@@ -7,7 +7,6 @@ import { StatsSection } from '@/components/home/stats-section';
 import { ArenasPreviewClient } from '@/components/home/arenas-preview-client';
 import { AboutSectionClient } from '@/components/home/about-section-client';
 import { SponsorMarqueeClient } from '@/components/home/sponsor-marquee-client';
-import { FaqSection } from '@/components/home/faq-section';
 import {
   buildPageMeta,
   ORGANIZATION_SCHEMA,
@@ -142,10 +141,6 @@ export default function Home() {
         {/* 1px gradient divider */}
         <div className="tk-divider" />
 
-        {/* ═══════════════════════════════════
-            5. FAQ SECTION (AEO / GEO)
-        ═══════════════════════════════════ */}
-        <FaqSection />
 
         {/* 1px gradient divider */}
         <div className="tk-divider" />

@@ -21,6 +21,7 @@ const connectLinks = [
     { title: "Announcement", url: "/announcements" },
     { title: "Contact Us", url: "/contact" },
     { title: "Register", url: "/register" },
+    { title: "Feedback", url: "/feedback" },
     { title: "Terms and conditions", url: "/terms-of-entry" },
     { title: "Privacy policy", url: "/privacy-protocol" },
     { title: "Code of Conduct", url: "/code-of-conduct" },

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Mail, Instagram, MapPin, CheckCircle, AlertCircle } from 'lucide-react';
+import { FaqSection } from '@/components/home/faq-section';
 
 const EASE_OUT = { duration: 0.3, ease: 'easeOut' };
 const FADE_UP = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: EASE_OUT } };
@@ -262,6 +263,9 @@ export default function ContactPage() {
           </motion.div>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <FaqSection />
     </div>
   );
 }

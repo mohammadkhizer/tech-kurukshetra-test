@@ -6,7 +6,7 @@
 
 export interface QueueJob {
   id: string;
-  type: 'SHEETS_SYNC' | 'CONFIRMATION_EMAIL' | 'NOTIFICATION_EMAIL';
+  type: 'SHEETS_SYNC' | 'CONFIRMATION_EMAIL' | 'NOTIFICATION_EMAIL' | 'FEEDBACK_NOTIFICATION';
   payload: Record<string, any>;
   attempts: number;
   maxRetries: number;
@@ -64,6 +64,11 @@ async function processJob(job: QueueJob): Promise<void> {
       case 'NOTIFICATION_EMAIL':
         await sendNotificationEmail(job.payload);
         console.log(`[QueueProcessor] Job ${job.id} (NOTIFICATION_EMAIL) succeeded on attempt ${job.attempts}.`);
+        break;
+
+      case 'FEEDBACK_NOTIFICATION':
+        await sendFeedbackNotificationEmail(job.payload);
+        console.log(`[QueueProcessor] Job ${job.id} (FEEDBACK_NOTIFICATION) succeeded on attempt ${job.attempts}.`);
         break;
 
       default:
@@ -127,7 +132,7 @@ async function syncToGoogleSheets(payload: Record<string, any>): Promise<void> {
   }
 }
 
-import { sendContactAdminNotification, sendRegistrationAdminNotification } from './email-service';
+import { sendContactAdminNotification, sendRegistrationAdminNotification, sendFeedbackAdminNotification } from './email-service';
 
 /**
  * Worker helper for sending registration admin notification email
@@ -141,6 +146,13 @@ async function sendConfirmationEmail(payload: Record<string, any>): Promise<void
  */
 async function sendNotificationEmail(payload: Record<string, any>): Promise<void> {
   await sendContactAdminNotification(payload as any);
+}
+
+/**
+ * Worker helper for sending feedback form admin notification email
+ */
+async function sendFeedbackNotificationEmail(payload: Record<string, any>): Promise<void> {
+  await sendFeedbackAdminNotification(payload as any);
 }
 
 /**
