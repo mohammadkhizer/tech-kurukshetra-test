@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import * as LucideIcons from 'lucide-react';
 import { ArrowRight, CircleHelp, Trophy, Users, Clock } from 'lucide-react';
 import { useFetch } from '@/hooks/use-fetch';
-import { formatTeamSize } from '@/lib/format-helpers';
+import { formatTeamSize, formatPrize } from '@/lib/format-helpers';
 
 function SkeletonArenaCard() {
   return (
@@ -76,6 +76,7 @@ export function ArenasPreview() {
         >
           {events.slice(0, 4).map((event: any) => {
             const Icon = (LucideIcons as any)[event.iconName || ''] || CircleHelp;
+            const prizeDisplay = formatPrize(event.prizePool || event.prize);
             return (
               <motion.div
                 key={event.id || event.slug}
@@ -132,29 +133,44 @@ export function ArenasPreview() {
                 </div>
 
                 <div>
-                  <div className="grid grid-cols-3 gap-2 pt-4 border-t border-white/10 mb-4">
-                    <div className="flex flex-col items-start">
+                  <div className="grid grid-cols-2 min-[360px]:grid-cols-3 gap-2 min-[360px]:gap-x-3 gap-y-2 pt-4 border-t border-white/10 mb-4">
+                    <div className="flex flex-col items-start min-w-0 w-full">
                       <div className="flex items-center gap-1 text-[#8A8A8A] text-[9px] uppercase tracking-wider font-semibold">
                         <Trophy size={11} className="text-[#FF6B00]" />
                         <span>Prize</span>
                       </div>
-                      <span className="text-xs font-headline font-bold text-[#F1F1F1] mt-0.5 truncate">{event.prize || 'TBA'}</span>
+                      <span
+                        className="text-[11px] min-[360px]:text-xs font-headline font-bold text-[#F1F1F1] mt-0.5 truncate w-full block max-w-full"
+                        style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                      >
+                        {prizeDisplay}
+                      </span>
                     </div>
 
-                    <div className="flex flex-col items-start border-l border-white/5 pl-2">
+                    <div className="flex flex-col items-start border-l border-white/5 pl-2 min-w-0 w-full">
                       <div className="flex items-center gap-1 text-[#8A8A8A] text-[9px] uppercase tracking-wider font-semibold">
                         <Users size={11} className="text-[#FF6B00]" />
                         <span>Team</span>
                       </div>
-                      <span className="text-xs font-headline font-bold text-[#F1F1F1] mt-0.5 truncate">{formatTeamSize(event.teamSize)}</span>
+                      <span
+                        className="text-[11px] min-[360px]:text-xs font-headline font-bold text-[#F1F1F1] mt-0.5 truncate w-full block max-w-full"
+                        style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                      >
+                        {formatTeamSize(event.teamSize)}
+                      </span>
                     </div>
 
-                    <div className="flex flex-col items-start border-l border-white/5 pl-2">
+                    <div className="flex flex-col items-start min-[360px]:border-l min-[360px]:border-white/5 min-[360px]:pl-2 min-w-0 w-full">
                       <div className="flex items-center gap-1 text-[#8A8A8A] text-[9px] uppercase tracking-wider font-semibold">
                         <Clock size={11} className="text-[#FF6B00]" />
                         <span>Time</span>
                       </div>
-                      <span className="text-xs font-headline font-bold text-[#F1F1F1] mt-0.5 truncate">{event.duration || '24h'}</span>
+                      <span
+                        className="text-[11px] min-[360px]:text-xs font-headline font-bold text-[#F1F1F1] mt-0.5 truncate w-full block max-w-full"
+                        style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                      >
+                        {event.duration || '24h'}
+                      </span>
                     </div>
                   </div>
 

@@ -43,3 +43,25 @@ export function formatCoordinatorContact(
     email: String(contact.email || ''),
   };
 }
+
+/**
+ * Formats prize/prizePool value for display.
+ * Sanitizes literal "[PLACEHOLDER: ...]" strings and returns clean value or "TBA".
+ */
+export function formatPrize(prize: string | null | undefined): string {
+  if (!prize) return 'TBA';
+  const str = String(prize).trim();
+  if (!str) return 'TBA';
+  
+  if (str.toLowerCase().includes('placeholder')) {
+    // Attempt to extract currency amount if present inside placeholder string
+    const match = str.match(/(₹[\d,]+|\$\d[\d,]*|\b\d+\s*(INR|Rupees|K)\b)/i);
+    if (match) {
+      return match[1];
+    }
+    return 'TBA';
+  }
+  
+  return str;
+}
+

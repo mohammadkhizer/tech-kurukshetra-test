@@ -60,6 +60,7 @@ async function run() {
     await mongoose.connect(MONGODB_URI!);
     console.log('Connected to MongoDB');
     const db = mongoose.connection.db;
+    if (!db) throw new Error('DB connection failed');
     const collection = db.collection('sponsors');
 
     await collection.deleteMany({});

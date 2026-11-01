@@ -13,9 +13,10 @@ if (!MONGODB_URI) {
 
 async function run() {
   try {
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(MONGODB_URI as string);
     console.log('Connected to MongoDB');
     const db = mongoose.connection.db;
+    if (!db) throw new Error('DB connection failed');
     const collection = db.collection('events');
     
     // Clear old if any and insert fresh

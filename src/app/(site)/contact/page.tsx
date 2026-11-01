@@ -211,8 +211,8 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8A8A8A] mb-1">Venue</div>
-                  <p className="text-sm text-[#F1F1F1]">Chimanbhai Patel Institute of Computer Applications (UCPIT)</p>
-                  <p className="text-xs text-[#8A8A8A] mt-0.5">S.G. Highway, Ahmedabad, Gujarat 380060</p>
+                  <p className="text-sm text-[#F1F1F1]">UCP Institute of Technology (UCPIT), SVGU</p>
+                  <p className="text-xs text-[#8A8A8A] mt-0.5">Chimanbhai Patel Institute Campus, S.G. Highway, Ahmedabad, Gujarat 380015</p>
                 </div>
               </div>
 
@@ -234,9 +234,9 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8A8A8A] mb-1">Instagram</div>
-                  <a href="https://instagram.com/techkurukshetra" target="_blank" rel="noopener noreferrer"
+                  <a href="https://www.instagram.com/svgutechkurukshetra" target="_blank" rel="noopener noreferrer"
                     className="text-sm text-[#F1F1F1] hover:text-[#FF6B00] transition-colors">
-                    @techkurukshetra
+                    @svgutechkurukshetra
                   </a>
                 </div>
               </div>

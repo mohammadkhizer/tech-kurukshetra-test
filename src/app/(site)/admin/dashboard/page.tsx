@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { formatPrize, formatTeamSize } from '@/lib/format-helpers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -135,6 +136,33 @@ export default function DashboardPage() {
 
   const [activeTab, setActiveTab] = useState('dashboard');
 
+  // Global safety net for unhandled promise rejections / raw browser Events
+  useEffect(() => {
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const reason = event.reason;
+      let message = 'An unexpected action error occurred.';
+
+      if (reason instanceof Error) {
+        message = reason.message;
+      } else if (typeof reason === 'string') {
+        message = reason;
+      } else if (reason && typeof reason === 'object') {
+        message = reason.message || reason.statusText || (reason.type ? `Browser Event (${reason.type})` : 'Operation failed');
+      }
+
+      console.error('[Admin Dashboard Unhandled Rejection]:', reason);
+      toast({
+        variant: 'destructive',
+        title: 'Action Failed',
+        description: message,
+      });
+      event.preventDefault();
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    return () => window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+  }, [toast]);
+
   const { data: sponsors, isLoading: sponsorsLoading, refetch: refetchSponsors } = useFetch<any[]>(isAuthorized ? '/api/admin/sponsors' : null);
   const { data: events, isLoading: eventsLoading, refetch: refetchEvents } = useFetch<any[]>(isAuthorized ? '/api/admin/events' : null);
   const { data: festivalDays, isLoading: festivalDaysLoading } = useFetch<any[]>(isAuthorized ? '/api/admin/timeline' : null);
@@ -204,15 +232,17 @@ export default function DashboardPage() {
     if (!id) return;
     try {
       const res = await fetch(`/api/admin/feedback/${id}`, { method: 'DELETE' });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({ success: false, message: 'Invalid response from server' }));
       if (res.ok && json.success) {
         toast({ title: "Feedback Deleted", description: "Feedback submission removed." });
-        refetchFeedback();
+        if (typeof refetchFeedback === 'function') refetchFeedback();
       } else {
-        toast({ variant: "destructive", title: "Delete Failed", description: json.message || "Failed to delete feedback." });
+        const errMsg = typeof json.message === 'string' ? json.message : `Deletion failed (${res.status})`;
+        toast({ variant: "destructive", title: "Delete Failed", description: errMsg });
       }
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Error", description: "Could not delete feedback." });
+      const errMsg = e instanceof Error ? e.message : 'Network error during feedback deletion.';
+      toast({ variant: "destructive", title: "Error", description: errMsg });
     }
   };
 
@@ -387,9 +417,21 @@ export default function DashboardPage() {
   };
 
   const handleDeleteSponsor = async (id: string) => {
-      await fetch(`/api/admin/sponsors/${id}`, { method: 'DELETE' });
-      refetchSponsors();
-      toast({ title: "Partner Terminated", description: "Sponsor removed from the roster." });
+    if (!id) return;
+    try {
+      const res = await fetch(`/api/admin/sponsors/${id}`, { method: 'DELETE' });
+      const json = await res.json().catch(() => ({ success: false, message: 'Invalid response from server' }));
+      if (res.ok && json.success) {
+        if (typeof refetchSponsors === 'function') refetchSponsors();
+        toast({ title: "Partner Terminated", description: "Sponsor removed from the roster." });
+      } else {
+        const errMsg = typeof json.message === 'string' ? json.message : `Deletion failed (${res.status})`;
+        toast({ variant: "destructive", title: "Delete Failed", description: errMsg });
+      }
+    } catch (e: any) {
+      const errMsg = e instanceof Error ? e.message : 'Network error during sponsor deletion.';
+      toast({ variant: "destructive", title: "Error", description: errMsg });
+    }
   };
   
   const handleNewEventChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -556,9 +598,21 @@ export default function DashboardPage() {
   };
 
   const handleDeleteEvent = async (id: string) => {
-    await fetch(`/api/admin/events/${id}`, { method: 'DELETE' });
-    refetchEvents();
-    toast({ title: "Arena Decommissioned", description: "Event removed from the schedule." });
+    if (!id) return;
+    try {
+      const res = await fetch(`/api/admin/events/${id}`, { method: 'DELETE' });
+      const json = await res.json().catch(() => ({ success: false, message: 'Invalid response from server' }));
+      if (res.ok && json.success) {
+        if (typeof refetchEvents === 'function') refetchEvents();
+        toast({ title: "Arena Decommissioned", description: "Event removed from the schedule." });
+      } else {
+        const errMsg = typeof json.message === 'string' ? json.message : `Deletion failed (${res.status})`;
+        toast({ variant: "destructive", title: "Delete Failed", description: errMsg });
+      }
+    } catch (e: any) {
+      const errMsg = e instanceof Error ? e.message : 'Network error during arena deletion.';
+      toast({ variant: "destructive", title: "Error", description: errMsg });
+    }
   };
 
   const handleEditClick = (event: any) => {
@@ -1274,12 +1328,12 @@ export default function DashboardPage() {
                       <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/10 text-xs">
                         <div>
                           <div className="text-[8px] text-muted-foreground uppercase tracking-widest">Prize Pool</div>
-                          <div className="font-headline font-bold text-primary truncate">{newEvent.prizePool || 'TBA'}</div>
+                          <div className="font-headline font-bold text-primary truncate">{formatPrize(newEvent.prizePool)}</div>
                         </div>
                         <div className="border-l border-white/10 pl-2">
                           <div className="text-[8px] text-muted-foreground uppercase tracking-widest">Team Size</div>
                           <div className="font-headline font-bold text-white truncate">
-                            {newEvent.type === 'solo' ? 'Solo' : `${newEvent.minTeamSize}-${newEvent.maxTeamSize} Players`}
+                            {formatTeamSize(newEvent.type === 'solo' ? { min: 1, max: 1 } : { min: newEvent.minTeamSize, max: newEvent.maxTeamSize })}
                           </div>
                         </div>
                         <div className="border-l border-white/10 pl-2">
@@ -1783,7 +1837,7 @@ export default function DashboardPage() {
 
                     <div className="pt-2 border-t border-white/10 flex items-center justify-between">
                       <div className="text-[9px] font-mono text-primary font-bold">
-                        {event.prizePool || event.prize || 'TBA'}
+                        {formatPrize(event.prizePool || event.prize)}
                       </div>
                       <div className="flex items-center gap-1">
                         <Button

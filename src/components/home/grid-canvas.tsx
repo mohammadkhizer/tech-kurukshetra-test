@@ -1,9 +1,39 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export function GridCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      setMousePos({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+    };
+
+    const handleMouseLeave = () => {
+      setMousePos(null);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('mouseleave', handleMouseLeave);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (container) {
+        container.removeEventListener('mouseleave', handleMouseLeave);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -16,13 +46,16 @@ export function GridCanvas() {
     let isTabActive = !document.hidden;
 
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      ctx.scale(dpr, dpr);
     };
     resize();
     window.addEventListener('resize', resize);
 
-    // Particle system simulating tactical data dust & energetic embers
+    // Particle system: delicate ambient data dust / floating embers
+    const particleCount = Math.min(45, Math.floor(window.innerWidth / 35));
     const particles: {
       x: number;
       y: number;
@@ -34,18 +67,16 @@ export function GridCanvas() {
       color: string;
     }[] = [];
 
-    const particleCount = Math.min(60, Math.floor(window.innerWidth / 25));
-
     for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5 - 0.1, // subtle upward drift
-        size: Math.random() * 2 + 0.8,
+        vx: (Math.random() - 0.5) * 0.35,
+        vy: -0.15 - Math.random() * 0.35, // gentle upward drift
+        size: Math.random() * 1.6 + 0.6,
         life: Math.random() * 250,
         maxLife: 200 + Math.random() * 150,
-        color: Math.random() > 0.3 ? 'rgba(255, 107, 0,' : 'rgba(200, 30, 30,',
+        color: Math.random() > 0.4 ? 'rgba(255, 140, 50,' : 'rgba(255, 210, 140,',
       });
     }
 
@@ -55,73 +86,43 @@ export function GridCanvas() {
         return;
       }
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const dpr = window.devicePixelRatio || 1;
+      const width = canvas.width / dpr;
+      const height = canvas.height / dpr;
 
-      const width = canvas.width;
-      const height = canvas.height;
+      ctx.clearRect(0, 0, width, height);
 
-      // Perspective cyber grid lines
-      ctx.strokeStyle = 'rgba(255, 107, 0, 0.05)';
-      ctx.lineWidth = 1;
-      const gSize = 64;
-
-      for (let x = 0; x < width; x += gSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
-        ctx.stroke();
-      }
-
-      for (let y = 0; y < height; y += gSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
-        ctx.stroke();
-      }
-
-      // Draw active particles
+      // Draw subtle ambient particles
       particles.forEach((p) => {
         p.life++;
         if (p.life > p.maxLife) {
           p.x = Math.random() * width;
-          p.y = Math.random() * height;
+          p.y = height + 10;
           p.life = 0;
         }
         p.x += p.vx;
         p.y += p.vy;
 
-        const alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.7;
+        // Wrap around horizontally
+        if (p.x < 0) p.x = width;
+        if (p.x > width) p.x = 0;
+
+        const progress = p.life / p.maxLife;
+        const alpha = Math.sin(progress * Math.PI) * 0.55;
+
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fillStyle = `${p.color}${alpha})`;
         ctx.fill();
 
-        // Glow ring around larger particles
-        if (p.size > 1.8) {
+        // Soft outer glow for slightly larger particles
+        if (p.size > 1.3) {
           ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * 2.5, 0, Math.PI * 2);
-          ctx.fillStyle = `${p.color}${alpha * 0.25})`;
+          ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
+          ctx.fillStyle = `${p.color}${alpha * 0.2})`;
           ctx.fill();
         }
       });
-
-      // Animated laser scanning line
-      const t = Date.now() * 0.0008;
-      const scanY = (Math.sin(t) * 0.5 + 0.5) * height;
-      const grad = ctx.createLinearGradient(0, scanY - 90, 0, scanY + 90);
-      grad.addColorStop(0, 'rgba(255,107,0,0)');
-      grad.addColorStop(0.5, 'rgba(255,107,0,0.04)');
-      grad.addColorStop(1, 'rgba(255,107,0,0)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, scanY - 90, width, 180);
-
-      // Bright laser beam line
-      ctx.beginPath();
-      ctx.moveTo(0, scanY);
-      ctx.lineTo(width, scanY);
-      ctx.strokeStyle = 'rgba(255, 107, 0, 0.15)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
 
       rafId = requestAnimationFrame(draw);
     };
@@ -143,11 +144,8 @@ export function GridCanvas() {
       (entries) => {
         const [entry] = entries;
         isVisible = entry.isIntersecting;
-        if (isVisible) {
-          startLoop();
-        } else {
-          stopLoop();
-        }
+        if (isVisible) startLoop();
+        else stopLoop();
       },
       { threshold: 0.05 }
     );
@@ -155,11 +153,8 @@ export function GridCanvas() {
 
     const handleVisibilityChange = () => {
       isTabActive = !document.hidden;
-      if (isTabActive && isVisible) {
-        startLoop();
-      } else {
-        stopLoop();
-      }
+      if (isTabActive && isVisible) startLoop();
+      else stopLoop();
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -173,5 +168,71 @@ export function GridCanvas() {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />;
+  return (
+    <div
+      ref={containerRef}
+      className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none"
+      aria-hidden="true"
+    >
+      {/* 1. Base Smooth Light Grid (Crisp 1px lines with generous smooth radial fade) */}
+      <div
+        className="absolute inset-0 w-full h-full"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 1px, transparent 1px)
+          `,
+          backgroundSize: '48px 48px',
+          maskImage: 'radial-gradient(ellipse 75% 65% at 50% 45%, #000 25%, transparent 80%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 75% 65% at 50% 45%, #000 25%, transparent 80%)',
+        }}
+      />
+
+      {/* 2. Brand warm light grid accent layer (subtle glowing warmth in the center) */}
+      <div
+        className="absolute inset-0 w-full h-full"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(255, 122, 47, 0.10) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 122, 47, 0.10) 1px, transparent 1px)
+          `,
+          backgroundSize: '48px 48px',
+          maskImage: 'radial-gradient(ellipse 55% 50% at 50% 40%, #000 15%, transparent 70%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 55% 50% at 50% 40%, #000 15%, transparent 70%)',
+        }}
+      />
+
+      {/* 3. Smooth ambient central light aura behind hero headline */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[950px] h-[450px] sm:h-[600px] pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at center, rgba(255, 122, 47, 0.14) 0%, rgba(255, 90, 20, 0.04) 45%, transparent 70%)',
+          filter: 'blur(40px)',
+        }}
+      />
+
+      {/* 4. Interactive Smooth Mouse Light Spotlight */}
+      {mousePos && (
+        <div
+          className="absolute pointer-events-none transition-opacity duration-300"
+          style={{
+            left: `${mousePos.x}px`,
+            top: `${mousePos.y}px`,
+            width: '460px',
+            height: '460px',
+            transform: 'translate(-50%, -50%)',
+            background: 'radial-gradient(circle, rgba(255, 140, 50, 0.18) 0%, rgba(255, 122, 47, 0.07) 40%, transparent 70%)',
+            filter: 'blur(25px)',
+          }}
+        />
+      )}
+
+      {/* 5. Delicate ambient floating particle canvas */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        style={{ width: '100%', height: '100%' }}
+      />
+    </div>
+  );
 }

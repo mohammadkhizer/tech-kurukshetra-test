@@ -16,7 +16,7 @@ export const LOGO_URL   = `${SITE_URL}/favicon.ico`;
 export const EVENT_YEAR       = '2027';
 export const EVENT_START_DATE = '2027-01-20';
 export const EVENT_END_DATE   = '2027-01-21';
-export const EVENT_VENUE_NAME = 'UCPIT — Chimanbhai Patel Institute Campus';
+export const EVENT_VENUE_NAME = 'UCP Institute of Technology (UCPIT), SVGU';
 export const EVENT_VENUE_ADDR = 'SG Highway, Near Prahlad Nagar, Ahmedabad, Gujarat 380015, India';
 export const CONTACT_EMAIL    = 'btech_events@svgu.ac.in';
 
@@ -125,7 +125,7 @@ export const FAQ_ITEMS: Array<{ question: string; answer: string }> = [
   },
   {
     question: `Where is Tech Kurukshetra ${EVENT_YEAR} held?`,
-    answer  : `Tech Kurukshetra ${EVENT_YEAR} is held at UCPIT — Chimanbhai Patel Institute Campus, SG Highway, Near Prahlad Nagar, Ahmedabad, Gujarat 380015, India, under SVGU (Sardar Vallabhbhai Global University).`,
+    answer  : `Tech Kurukshetra ${EVENT_YEAR} is held at UCP Institute of Technology (UCPIT), SVGU, Chimanbhai Patel Institute Campus, SG Highway, Near Prahlad Nagar, Ahmedabad, Gujarat 380015, India.`,
   },
   {
     question: `How do I register for Tech Kurukshetra ${EVENT_YEAR}?`,

@@ -34,7 +34,7 @@ function FooterLinkColumn({ title, links }: { title: string, links: { title: str
             <h3 className="font-headline text-xs tracking-[0.2em] text-accent uppercase font-bold">{title}</h3>
             <ul className="space-y-2 text-sm text-muted-foreground font-light">
                 {links.map(link => (
-                    <li key={link.title}><Link href={link.url} className="hover:text-primary transition-colors">{link.title}</Link></li>
+                    <li key={link.url}><Link href={link.url} className="hover:text-primary transition-colors">{link.title}</Link></li>
                 ))}
             </ul>
         </div>
@@ -77,7 +77,7 @@ export function SiteFooter() {
                         </li>
                         <li className="flex items-start gap-3">
                             <MapPin className="w-4 h-4 text-primary mt-1 shrink-0" />
-                            <span>Chimanbhai Patel Institute Campus, SG Highway, Near Prahlad Nagar, Ahmedabad, Gujarat - 380015.</span>
+                            <span>UCP Institute of Technology (UCPIT), SVGU, Chimanbhai Patel Institute Campus, SG Highway, Near Prahlad Nagar, Ahmedabad, Gujarat - 380015.</span>
                         </li>
                         <li className="flex items-center gap-3">
                             <Instagram className="w-4 h-4 text-primary shrink-0" />
@@ -102,7 +102,7 @@ export function SiteFooter() {
                 transition={{ ...EASE_OUT, delay: 0.3 }}
                 className="max-w-7xl mx-auto mt-16 pt-8 border-t border-primary/5 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-muted-foreground/50 font-medium"
             >
-                <p>© {new Date().getFullYear()} TECH KURUKSHETRA. All rights reserved.</p>
+                <p suppressHydrationWarning>© {new Date().getFullYear()} TECH KURUKSHETRA. All rights reserved.</p>
                 <p className="tracking-widest uppercase">Design and Develop by <a href="https://www.linkedin.com/in/mohammad-khizer-shaikh-14a362275/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Mohammed Khizer</a> and <a href="https://www.linkedin.com/in/0xdhy4n/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Dhyan Jain</a></p>
             </motion.div>
         </footer>

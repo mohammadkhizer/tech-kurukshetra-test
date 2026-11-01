@@ -54,7 +54,7 @@ export const EVENTS_DATA: EventItem[] = [
     time: '[PLACEHOLDER: Add event start time, e.g., 09:00 AM]',
     duration: '24 Hours',
     entryFee: 'Free',
-    prizePool: '[PLACEHOLDER: Add prize pool amount, e.g., ₹50,000]',
+    prizePool: '₹50,000',
     coordinatorContact: {
       name: '[PLACEHOLDER: Tech Coordinator Name]',
       phone: '[PLACEHOLDER: +91 9876543210]',
@@ -86,7 +86,7 @@ export const EVENTS_DATA: EventItem[] = [
     time: '[PLACEHOLDER: Add event start time, e.g., 10:00 AM]',
     duration: '6 Hours',
     entryFee: 'Free',
-    prizePool: '[PLACEHOLDER: Add prize pool amount, e.g., ₹25,000]',
+    prizePool: '₹25,000',
     coordinatorContact: {
       name: '[PLACEHOLDER: Showcase Coordinator Name]',
       phone: '[PLACEHOLDER: +91 9876543211]',
@@ -118,7 +118,7 @@ export const EVENTS_DATA: EventItem[] = [
     time: '[PLACEHOLDER: Add event start time, e.g., 09:30 AM]',
     duration: '4 Hours',
     entryFee: 'Free',
-    prizePool: '[PLACEHOLDER: N/A - Certification & Kits Provided]',
+    prizePool: 'Certification & Kits',
     coordinatorContact: {
       name: '[PLACEHOLDER: Workshop Lead Name]',
       phone: '[PLACEHOLDER: +91 9876543212]',
@@ -150,7 +150,7 @@ export const EVENTS_DATA: EventItem[] = [
     time: '[PLACEHOLDER: Add event start time, e.g., 02:00 PM]',
     duration: '3 Hours',
     entryFee: 'Free',
-    prizePool: '[PLACEHOLDER: Add prize pool amount, e.g., ₹20,000]',
+    prizePool: '₹20,000',
     coordinatorContact: {
       name: '[PLACEHOLDER: Code Sprint Lead Name]',
       phone: '[PLACEHOLDER: +91 9876543213]',
@@ -182,7 +182,7 @@ export const EVENTS_DATA: EventItem[] = [
     time: '[PLACEHOLDER: Add event start time, e.g., 11:00 AM]',
     duration: '5 Hours',
     entryFee: 'Free',
-    prizePool: '[PLACEHOLDER: Add prize pool amount, e.g., ₹15,000]',
+    prizePool: '₹15,000',
     coordinatorContact: {
       name: '[PLACEHOLDER: CTF Lead Name]',
       phone: '[PLACEHOLDER: +91 9876543214]',
@@ -216,7 +216,7 @@ export const EVENTS_DATA: EventItem[] = [
     time: '[PLACEHOLDER: Add event start time, e.g., 01:00 PM]',
     duration: '6 Hours',
     entryFee: 'Free',
-    prizePool: '[PLACEHOLDER: Add prize pool amount, e.g., ₹30,000]',
+    prizePool: '₹30,000',
     coordinatorContact: {
       name: '[PLACEHOLDER: Esports Coordinator Name]',
       phone: '[PLACEHOLDER: +91 9876543215]',
@@ -248,7 +248,7 @@ export const EVENTS_DATA: EventItem[] = [
     time: '[PLACEHOLDER: Add event start time, e.g., 10:00 AM]',
     duration: '5 Hours',
     entryFee: 'Free',
-    prizePool: '[PLACEHOLDER: Add prize pool amount, e.g., ₹20,000]',
+    prizePool: '₹20,000',
     coordinatorContact: {
       name: '[PLACEHOLDER: Gaming Coordinator Name]',
       phone: '[PLACEHOLDER: +91 9876543216]',
@@ -280,7 +280,7 @@ export const EVENTS_DATA: EventItem[] = [
     time: '[PLACEHOLDER: Add event start time, e.g., 06:00 PM]',
     duration: '4 Hours',
     entryFee: 'Free',
-    prizePool: '[PLACEHOLDER: Add prize pool amount, e.g., ₹25,000]',
+    prizePool: '₹25,000',
     coordinatorContact: {
       name: '[PLACEHOLDER: Cultural Head Name]',
       phone: '[PLACEHOLDER: +91 9876543217]',
@@ -312,7 +312,7 @@ export const EVENTS_DATA: EventItem[] = [
     time: '[PLACEHOLDER: Add event start time, e.g., 11:00 AM]',
     duration: '3 Hours',
     entryFee: 'Free',
-    prizePool: '[PLACEHOLDER: Add prize pool amount, e.g., ₹15,000]',
+    prizePool: '₹15,000',
     coordinatorContact: {
       name: '[PLACEHOLDER: Hunt Coordinator Name]',
       phone: '[PLACEHOLDER: +91 9876543218]',
@@ -344,7 +344,7 @@ export const EVENTS_DATA: EventItem[] = [
     time: '[PLACEHOLDER: Add event start time, e.g., 02:30 PM]',
     duration: '2.5 Hours',
     entryFee: 'Free',
-    prizePool: '[PLACEHOLDER: Add prize pool amount, e.g., ₹10,000]',
+    prizePool: '₹10,000',
     coordinatorContact: {
       name: '[PLACEHOLDER: Quizmaster Name]',
       phone: '[PLACEHOLDER: +91 9876543219]',
@@ -376,7 +376,7 @@ export const EVENTS_DATA: EventItem[] = [
     time: '[PLACEHOLDER: Add event start time, e.g., 08:00 AM]',
     duration: 'Full Day',
     entryFee: 'Free',
-    prizePool: '[PLACEHOLDER: Add prize pool amount, e.g., ₹20,000]',
+    prizePool: '₹20,000',
     coordinatorContact: {
       name: '[PLACEHOLDER: Sports Head Name]',
       phone: '[PLACEHOLDER: +91 9876543220]',
@@ -408,7 +408,7 @@ export const EVENTS_DATA: EventItem[] = [
     time: '[PLACEHOLDER: Add event start time, e.g., 08:30 AM]',
     duration: 'Full Day',
     entryFee: 'Free',
-    prizePool: '[PLACEHOLDER: Add prize pool amount, e.g., ₹15,000]',
+    prizePool: '₹15,000',
     coordinatorContact: {
       name: '[PLACEHOLDER: Volleyball Coordinator Name]',
       phone: '[PLACEHOLDER: +91 9876543221]',

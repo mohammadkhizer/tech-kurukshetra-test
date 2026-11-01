@@ -24,7 +24,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { useFetch } from '@/hooks/use-fetch';
-import { formatTeamSize } from '@/lib/format-helpers';
+import { formatTeamSize, formatPrize } from '@/lib/format-helpers';
 
 const EASE_OUT = { duration: 0.3, ease: 'easeOut' };
 const FADE_UP = {
@@ -96,16 +96,20 @@ export default function ArenaDetailPage() {
 
   if (!event) {
     return (
-      <div className="pt-32 pb-40 px-6 max-w-5xl mx-auto min-h-screen text-center">
-        <h1 className="font-headline text-5xl md:text-6xl tracking-tighter text-red-500 mb-6 uppercase">
-          Arena Not Found
-        </h1>
-        <p className="text-xl text-tk-text-muted font-light leading-relaxed">
-          The event you are looking for does not exist or has not been listed yet.
-        </p>
-        <Button asChild size="lg" className="mt-8 bg-tk-accent hover:bg-tk-accent-dim text-tk-bg px-12 py-8 font-headline tracking-widest text-lg rounded-none w-full md:w-auto">
-          <Link href="/arenas">VIEW ALL ARENAS</Link>
-        </Button>
+      <div className="min-h-screen bg-tk-bg text-tk-text flex items-center justify-center p-6">
+        <div className="text-center space-y-4 max-w-md">
+          <h1 className="text-3xl font-black font-headline text-tk-text">ARENA NOT FOUND</h1>
+          <p className="text-xs text-tk-text-muted leading-relaxed">
+            The requested arena slug does not exist or has been removed.
+          </p>
+          <Link
+            href="/arenas"
+            className="inline-flex items-center gap-2 px-6 py-3 text-xs font-black uppercase tracking-[0.2em] transition-colors"
+            style={{ background: 'var(--tk-accent)', color: 'var(--tk-bg)' }}
+          >
+            <ArrowLeft size={14} /> BACK TO ARENAS
+          </Link>
+        </div>
       </div>
     );
   }
@@ -113,7 +117,7 @@ export default function ArenaDetailPage() {
   const placeholderObj = !event.imageUrl && Array.isArray(PlaceHolderImages) ? PlaceHolderImages.find((i: any) => i.id === event.imgId) : null;
   const imgSrc = event.imageUrl || event.bannerImage || (placeholderObj && typeof placeholderObj === 'object' ? placeholderObj.imageUrl : '') || '';
 
-  const prizeDisplay = event.prizePool || event.prize || 'TBA';
+  const prizeDisplay = formatPrize(event.prizePool || event.prize);
   const venueDisplay = event.venue || event.location || 'Location TBD';
   const teamSizeDisplay = formatTeamSize(event.teamSize);
   const contact = event.coordinatorContact;

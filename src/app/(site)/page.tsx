@@ -56,14 +56,8 @@ export default function Home() {
           className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 sm:px-6 pt-16 pb-12"
           style={{ background: 'var(--tk-grad-hero)' }}
         >
-          {/* Particle canvas */}
+          {/* Smooth Light Grid and particle canvas */}
           <GridCanvasClient />
-
-          {/* Vignette */}
-          <div
-            className="absolute inset-0 pointer-events-none z-[1]"
-            style={{ background: 'radial-gradient(ellipse at center, transparent 30%, var(--tk-bg) 85%)' }}
-          />
 
           <div className="relative z-10 flex flex-col items-center text-center max-w-5xl mx-auto gap-6 sm:gap-7 w-full px-2 sm:px-0">
             {/* Eyebrow chip */}
@@ -77,7 +71,7 @@ export default function Home() {
               }}
             >
               <Zap size={12} style={{ fill: 'var(--tk-accent)' }} className="animate-pulse flex-shrink-0" />
-              <span>SVGU AHMEDABAD · UCPIT · JAN 2027</span>
+              <span>SVGU AHMEDABAD · UCPIT · FEB 2027</span>
             </div>
 
             {/* Main title */}
